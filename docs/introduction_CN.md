@@ -53,13 +53,15 @@ import log from '../dxmodules/dxLogger.js'
 import std from '../dxmodules/dxStd.js'
 import bus from '../dxmodules/dxEventBus.js'
 import code from '../dxmodules/dxCode.js'
+import common from '../dxmodules/dxCommon.js'
 
 //1. init qrcode module:dxCode
 code.worker.beforeLoop({ id: 'capturer1', path: '/dev/video11' }, { id: 'decoder1', name: "decoder v4", width: 800, height: 600 })
 //2. subscribe qrcode event:device scaned the qrcode and fire an event
 bus.on(code.RECEIVE_MSG, function (data) {
     //3. handle the event
-    log.info(data)
+    let str = common.utf8HexToStr(common.arrayBufferToHexString(data))
+    log.info(str)
 })
 
 std.setInterval(() => {
