@@ -1,3 +1,6 @@
+<p align="right">
+    <b>English</b>| <a href="./dxHttpClient_cn.md">中文</a>
+</p>
 # dxHttpClient Module
 ## 1. Overview
 This module is part of the official system module library of [dejaOS](https://github.com/DejaOS/DejaOS), used for accessing HTTP servers via the HTTP protocol.
