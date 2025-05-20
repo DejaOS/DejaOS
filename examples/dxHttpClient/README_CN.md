@@ -1,6 +1,7 @@
 <p align="right">
-    <a href="./dxHttpCient.md">English</a>| <b>中文</b>
+    <a href="./README.md">English</a>| <b>中文</b>
 </p>
+
 # dxHttpClient 组件
 ## 1. 概述
 本组件是 [dejaOS](https://github.com/DejaOS/DejaOS) 官方系统组件库中的一个组件，用于通过http协议访问http server。

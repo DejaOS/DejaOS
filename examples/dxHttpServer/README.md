@@ -1,6 +1,7 @@
 <p align="right">
-    <b>English</b>| <a href="./dxHttpServer_cn.md">中文</a>
+    <b>English</b>| <a href="./README_CN.md">中文</a>
 </p>
+
 # dxHttpServer Module
 ## 1. Overview
 This module is part of the official system module library of [dejaOS](https://github.com/DejaOS/DejaOS), used to start an HTTP Web service, listen on ports, and allow clients to access the device through the HTTP protocol. It is typically used to control devices through a computer browser within a local area network, provided that the device's IP address is known.

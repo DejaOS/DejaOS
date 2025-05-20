@@ -1,6 +1,7 @@
 <p align="right">
-    <a href="./dxHttpServer.md">English</a>| <b>中文</b>
+    <a href="./README.md">English</a>| <b>中文</b>
 </p>
+
 # dxHttpServer 组件
 ## 1. 概述
 本组件是 [dejaOS](https://github.com/DejaOS/DejaOS) 官方系统组件库中的一个组件，用于启动 HTTP Web服务，监听端口，让客户端通过http协议可以访问设备。通常用于在局域网内通过电脑浏览器来控制设备，前提是需要知道设备的 IP 地址。
