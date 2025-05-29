@@ -14,14 +14,14 @@
 - dxHttpServer.js
 - libvbar-m-dxhttpcserver.so (内嵌 mongoose)
 
-> 确保在项目根目录下的子目录 dxmoudles 下包含这2个文件
+> 确保在项目根目录下的子目录 dxmodules 下包含这2个文件
 ## 3. 依赖
 - 无
 
-## 3. 适配设备
+## 4. 适配设备
 适配所有安装 dejaOS v2.0+ 的设备
 
-## 4. 使用方式
+## 5. 使用方式
 ### 初始化
 
 - `httpserver.init()`
@@ -50,7 +50,9 @@
 
 - `httpserver.serveStatic(pathPrefix, directory)`
 
-- 更详细的用法参考 Demo: test_server.js
+更详细的用法参考 Demo: demo/test_server.js,demo/web
+截图如下：其中 192.168.50.212 是设备的 IP 地址
+![](https://dxiot-autobackup.oss-cn-hangzhou.aliyuncs.com/mydiagram/rdmsAdmin/ec5636b0f035bc8c.png)
 
-## 5. 关联
+## 6. 关联
 和另外一个 dxWebserver 组件关联，功能相似，dxHttpServer 是 dxWebserver 的替代，dxWebserver 逐步废弃

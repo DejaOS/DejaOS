@@ -36,7 +36,7 @@ try {
         log.info('progress:', dTotal, dLoaded, uTotal, uLoaded);
         // Output: progress: xxx yyy 0 0
     });
-    log.info(client.__native__.downloadToFile("/tmp/bigfile.txt"));
+    log.info(client.getNative().downloadToFile("/tmp/bigfile.txt"));
     log.info('download file length:', std.loadFile("/tmp/bigfile.txt").length);
     // Output: {"code":0} download file length: xxxx
 

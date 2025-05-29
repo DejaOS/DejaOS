@@ -16,14 +16,14 @@
 - dxHttpClient.js
 - libvbar-m-dxhttpclient.so
 
-> 确保在项目根目录下的子目录 dxmoudles 下包含这2个文件
+> 确保在项目根目录下的子目录 dxmodules 下包含这2个文件
 ## 3. 依赖
 - libcurl : curl 库
 
-## 3. 适配设备
+## 4. 适配设备
 适配所有安装 dejaOS v2.0+ 的设备
 
-## 4. 使用方式
+## 5. 使用方式
 - 简单的GET/POST 直接使用对应的函数
 ``` javascript
 client.get(urlroot + "/get?name=quickjs&age=1")
@@ -42,5 +42,5 @@ log.info(client.request());
 
 - 更详细的用法参考 Demo: test_client.js,test_server.js
 
-## 5. 关联
+## 6. 关联
 和另外一个 dxHttp 组件关联，功能相似，dxHttpclient 是 dxHttp的替代，dxHttp 逐步废弃

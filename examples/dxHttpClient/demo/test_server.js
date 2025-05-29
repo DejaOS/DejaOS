@@ -1,4 +1,5 @@
 // This is an HTTP server implemented with Node.js for the dxHttpClient module demo
+// This code runs on a computer for testing the dxHttpClient module, not on the device.
 // The corresponding client code is in test_client.js
 const express = require('express');
 const multer = require('multer');

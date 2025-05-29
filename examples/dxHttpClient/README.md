@@ -21,10 +21,10 @@ It includes common HTTP client features:
 ## 3. Dependencies
 - libcurl: curl library
 
-## 3. Compatible Devices
+## 4. Compatible Devices
 Compatible with all devices running dejaOS v2.0+
 
-## 4. Usage
+## 5. Usage
 - For simple GET/POST requests, use the corresponding functions directly
 ``` javascript
 client.get(urlroot + "/get?name=quickjs&age=1")
@@ -43,5 +43,5 @@ log.info(client.request());
 
 - For more detailed usage, refer to the Demo: test_client.js, test_server.js
 
-## 5. Related Modules
+## 6. Related Modules
 Related to another module called dxHttp, with similar functionality. dxHttpClient is the replacement for dxHttp, and dxHttp is being gradually deprecated. 

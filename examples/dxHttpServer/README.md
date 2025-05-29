@@ -14,15 +14,15 @@ Includes common HTTP Web service features:
 - dxHttpServer.js
 - libvbar-m-dxhttpcserver.so (embedded mongoose)
 
-> Ensure these 2 files are included in the dxmoudles subdirectory under the project root directory
+> Ensure these 2 files are included in the dxmodules subdirectory under the project root directory
 
 ## 3. Dependencies
 - None
 
-## 3. Compatible Devices
+## 4. Compatible Devices
 Compatible with all devices running dejaOS v2.0+
 
-## 4. Usage
+## 5. Usage
 ### Initialization
 
 - `httpserver.init()`
@@ -51,7 +51,9 @@ Compatible with all devices running dejaOS v2.0+
 
 - `httpserver.serveStatic(pathPrefix, directory)`
 
-- For more detailed usage, refer to Demo: test_server.js
+For more detailed usage, refer to Demo: demo/test_server.js,demo/web
+scrrenshot as below: 192.168.50.212 is the device IP
+![](https://dxiot-autobackup.oss-cn-hangzhou.aliyuncs.com/mydiagram/rdmsAdmin/ec5636b0f035bc8c.png)
 
-## 5. Related Modules
+## 6. Related Modules
 Related to another module dxWebserver, with similar functionality. dxHttpServer is a replacement for dxWebserver, and dxWebserver is being gradually deprecated
