@@ -2,9 +2,9 @@
 This is a demo for upgrading the current application by scanning a QR code. The steps are as follows:
 
 1. Build the new code into a app package file. Click the 'package' button in VSCode,a dpk file will generated in .temp folder
-2. Upload the compressed package at a network address and obtain an MD5 hash value.
-3. Convert the network address and MD5 into a QR code.
-5. The device scans the QR code to obtain the network address and MD5, then calls the dxOta.update() function,the function will :
+2. Upload the compressed package at a web server and obtain an download url.
+3. Convert the download url and MD5 into a QR code.
+5. The device scans the QR code to obtain the download url and MD5, then calls the dxOta.update() function,the function will :
     - to download the compressed package and verify its completeness using the MD5 hash.
     - After reboot, os will unzip the package and overwrite the existing code.
 
