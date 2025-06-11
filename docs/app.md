@@ -29,7 +29,7 @@ For DejaOS2.0, packaging can be done using the DejaOS plugin in VScode. Refer to
 
 Application installation is a built-in feature supported by the DejaOS system. No additional application logic is required. Both development and production devices support it.
 
-- RS485 + dejaos_tools ([Click to download](tools/tools.zip))
+- RS485 + dejaos_tools ([Click to download](../tools/tools.zip))
 
 ### Application Upgrade
 

@@ -26,7 +26,7 @@ DejaOS2.0打包可以使用VScode中DejaOS插件完成，参考如下截图：
 ### 应用安装
 应用安装是DejaOS系统支持的功能，不需要额外的应用实现，DejaOS开发设备和生产设备都支持。
 
-- RS485 + dejaos_tools  ([点击下载](tools/tools.zip))
+- RS485 + dejaos_tools  ([点击下载](../tools/tools.zip))
 
 
 
