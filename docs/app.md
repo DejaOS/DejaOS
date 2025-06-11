@@ -4,72 +4,87 @@
 
 
 # Application Packaging, Installation, and Upgrade
-
 ## Overview
 
-After development is complete, dejaOS applications need to be packaged and installed on other devices. Taking DW200 as an example (other devices are similar or the same), the typical process is as follows:
+After development is complete, applications on dejaOS need to be packaged and installed onto other devices. Taking the DW200 as an example (other devices are similar or identical), the typical process is as follows:
 
-1. Purchase a small number of DW200 development devices, possibly only one. Develop your own JavaScript code, debug and test until the expected requirements are met, then package the application.
-2. Purchase multiple DW200 production devices and install the packaged application on these devices.
+1. Purchase a small number of DW200 development devices (possibly just one), develop your own JavaScript code, debug and test until all requirements are met, and then package the application.
+2. Purchase multiple DW200 production devices and install the packaged application onto these devices.
 
-There are differences in packaging, installation, and upgrade between `DejaOS1.0` and `DejaOS2.0`. We will address them separately. (DejaOS1.0 is a much older version; currently sold devices are all DejaOS2.0.)
+Packaging, installation, and upgrade differ between `DejaOS1.0` and `DejaOS2.0`. We’ll cover them separately. (DejaOS1.0 is an older version; all newly sold devices use DejaOS2.0.)
 
 > How to check the DejaOS version?
-> - Use the `dejaos_tools` tool to connect to the device and check its version. If the connection is successful and information is retrieved, it is DejaOS2.0. If it cannot connect or retrieve information, it is DejaOS1.0.
+> - Use the `dejaos_tools` tool to connect to the device and check the system version. If the connection is successful and version info is retrieved, it’s DejaOS2.0. If not, it’s DejaOS1.0.
 
 ## DejaOS2.0
-
 ### Application Packaging
-
-For DejaOS2.0, packaging can be done using the DejaOS plugin in VScode. Refer to the screenshot below:
+Packaging on DejaOS2.0 can be done using the DejaOS plugin in VS Code. See screenshot below:
 
 ![alt text](image/app_dpk.png)
 
 ### Application Installation
-
-Application installation is a built-in feature supported by the DejaOS system. No additional application logic is required. Both development and production devices support it.
+Application installation is natively supported by the DejaOS system and requires no additional implementation. Both development and production devices support it.
 
 - RS485 + dejaos_tools ([Click to download](../tools/tools.zip))
 
 ### Application Upgrade
+Application upgrades are handled within the application itself. This allows custom logic tailored to your app.  
+For example, our access control app supports upgrades via MQTT and QR codes.
 
-Application upgrade refers to the application’s own built-in upgrade capabilities. A self-upgrade feature allows seamless integration into the application. For example, our access control standard application supports MQTT and QR code scanning; therefore, we support upgrades via MQTT control and QR scanning. This is why we strongly recommend implementing upgrade capabilities in your own applications. You can use the [dxOta](/src/dxOta/dxOta.js) component and refer to the [GitHub repository](https://github.com/duoxianwulian/DejaOS/tree/main/demos/dw200/dw200_update_new) to implement application upgrades.
+`It is strongly recommended that developers implement upgrade logic in their own applications.`  
+You can use the [dxOta](/src/dxOta/dxOta.js) component and follow the guide on [GitHub](https://github.com/duoxianwulian/DejaOS/tree/main/demos/dw200/dw200_update_new) to implement upgrade capabilities.
 
-- DejaOS2.0 application upgrades use the `dxOta.updateHttp` or `dxOta.updateFile` methods to place the file in a specific upgrade path via HTTP or a file path. DejaOS2.0 handles unzipping and completes the upgrade process.
+- DejaOS2.0 applications use `dxOta.updateHttp` or `dxOta.updateFile` methods. These allow upgrades via HTTP or file path. Place the upgrade file at the designated path and restart the device — DejaOS2.0 will handle decompression and installation.
 
-> Note: The upgrade package and installation package are the same file. "Installation" and "Upgrade" are used to distinguish whether the application is initially flashed or updated.
+**Clarification**
 
-### Development to Production
+`Upgrade packages` and `installation packages` can be the same file with identical build logic.  
+The terms "installation" and "upgrade" distinguish whether DejaOS system features or in-app logic is used. Installation typically applies when the app is missing or corrupted, while upgrade is an internal app function.
 
-After completing application development on the development device, production devices need to be procured. Unless otherwise specified, production devices are shipped with the official standard applications by default. The upgrade capabilities of these standard applications follow the principles below:
+### From Development to Production
+After development and debugging are complete, you can scale to multiple production devices using the following methods:
 
-- Access control standard devices support MQTT upgrade
-- QR code scanning devices support QR scan upgrade
-- Reader standard devices support RS485 or USB wired upgrade
+**Method 1**  
+Directly purchase production devices of the same model. These devices come preloaded with official standard apps, which include upgrade functionality.  
+However, the specific upgrade method depends on the model and type:
 
-The upgrade methods may be combined depending on the version. For example, a QR-code access control standard device supports both QR scan and MQTT upgrades. If you have any questions at this stage, please contact official support.
+- **By app type**
+  - Access control apps: Support MQTT-based upgrades
 
-There is currently no formal documentation for the upgrade process of standard applications (MQTT / QR Scan / RS485). Please contact official support for assistance.
+- **By device capability**
+  - QR devices: Support QR-based upgrades (scan a code containing an upgrade HTTP path)
+
+Some devices may support multiple upgrade methods. For example, a QR-capable access control device can use both QR and MQTT upgrades.  
+If you’re unsure, please contact official support.
+
+**Method 2**  
+DejaOS developers can directly give the dpk file completed by development and debugging to the DejaOS official.  DejaOS officials will assign a specified version id to the dpk.  Developers can purchase equipment based on this version id.  Version id example: `vf205_v12_dejaxxx_2.0.0`.  DejaOS official will install dpk into the device when it is shipped.  The official shipment is to only observe whether the `dpk` start effect is normal, and the `dpk` will not be tested in detail by default.
+
+**Method 3**  
+Developers can buy devices freely and use RS485-to-USB cable + `dejaos_tools` to install the app. This method supports DejaOS2.0 and above.
+
+**Method 4**  
+A new version of `dejaos_tools` with batch install functionality is under development. Release date TBD.
+
+![](../docs/image/app_prod_en.png)
+
+> Refer to the image above for a comparison of these methods. Choose based on your scenario. If none meet your needs, contact us for customized support.
 
 <br>
 <br>
 
 ## DejaOS1.0
-
 ### Application Packaging
-
-Packaging in DejaOS1.0 must be done manually. Compress the project's `dxmodules` directory, `src`, and any other custom directories into a zip file. Refer to the screenshot below:
+For DejaOS1.0, packaging must be done manually. Compress the `dxmodules`, `src`, and other custom directories into a `.zip` file, as shown:
 
 ![alt text](image/app_zip1.png)
 
 ### Application Installation
-
-- None
+- Not supported.
 
 ### Application Upgrade
+- DejaOS1.0 upgrades are done using `dxOta.update`, which decompresses a `.zip` package downloaded to `/ota/download.zip`.
 
-- DejaOS1.0 applications can be upgraded using the `dxOta.update` method. Place the `zip` upgrade package at `/ota/download.zip`. `dxOta.update` will handle unzipping and complete the upgrade.
+- Alternatively, download the `.zip` upgrade package to `/app/data/upgrades/APP_1_0.zip` and restart the device — DejaOS1.0 will automatically decompress and apply the upgrade.
 
-- Alternatively, place the `zip` upgrade package at `/app/data/upgrades/APP_1_0.zip`. After reboot, DejaOS1.0 will automatically unzip and complete the upgrade.
-
-> Note: DejaOS1.0 users can continue using their existing upgrade methods. Each OS version supports upgrades from the previous version. It is recommended that DejaOS1.0 users contact official support to upgrade to DejaOS2.0. (Long-term use of DejaOS1.0 is not recommended, as official support and maintenance for it are being gradually phased out.)
+> Note: DejaOS1.0 users may continue using the original upgrade process. Each version supports upgrade from its previous version. However, it is highly recommended to upgrade to DejaOS2.0, as support for DejaOS1.0 is being phased out.
