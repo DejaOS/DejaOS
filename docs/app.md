@@ -39,7 +39,7 @@ You can use the [dxOta](/src/dxOta/dxOta.js) component and follow the guide on [
 **Clarification**
 
 `Upgrade packages` and `installation packages` can be the same file with identical build logic.  
-The terms "installation" and "upgrade" distinguish whether DejaOS system features or in-app logic is used. Installation typically applies when the app is missing or corrupted, while upgrade is an internal app function.
+The terms `Application Installation` and `Application Upgrade` distinguish whether DejaOS system features or in-app logic is used. Installation typically applies when the app is missing or corrupted, while upgrade is an internal app function.
 
 ### From Development to Production
 After development and debugging are complete, you can scale to multiple production devices using the following methods:
