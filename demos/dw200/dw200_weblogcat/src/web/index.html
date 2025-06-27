@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Device Log Viewer</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #111;
+      color: #0f0;
+      transition: background 0.3s, color 0.3s;
+    }
+    #log {
+      white-space: pre-wrap;
+      background: #000;
+      padding: 10px;
+      height: 720px;
+      overflow-y: scroll;
+      border: 1px solid #333;
+    }
+    .highlight {
+      background-color: yellow;
+      color: black;
+    }
+    .light-mode {
+      background: #f0f0f0;
+      color: #000;
+    }
+    .light-mode #log {
+      background: #fff;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <h2>Real time log console</h2>
+  <div>
+    <label>Refresh frequency: </label>
+    <select id="interval">
+      <option value="0">Stop</option>
+      <option value="1000" selected>1S</option>
+      <option value="5000">5S</option>
+    </select>
+
+    <button onclick="fetchLog()">⟳ Manually refresh</button>
+    <button onclick="clearLog()">🧹 Clear logs</button>
+    <button onclick="downloadLog()">📥 Download logs</button>
+    <label><input type="checkbox" id="autoscroll" checked> Automatic scrolling</label>
+    <label><input type="checkbox" id="darkmode" checked> Dark mode</label>
+  </div>
+  <div style="margin-top: 10px;">
+    <label>🔍 Search keywords: </label>
+    <input type="text" id="keyword" placeholder="error, fail..." oninput="highlightLog()">
+  </div>
+  <div id="log"></div>
+
+  <script>
+    const logDiv = document.getElementById('log');
+    const intervalSelect = document.getElementById('interval');
+    const autoscrollCheckbox = document.getElementById('autoscroll');
+    const darkmodeCheckbox = document.getElementById('darkmode');
+    const keywordInput = document.getElementById('keyword');
+
+    let offset = 0;
+    let timer = null;
+    const maxLines = 1000;
+
+    function fetchLog() {
+      fetch(`/fetchLog`).then(r => r.text()).then(text => {
+
+        const newText = text
+
+        if (newText) {
+          let existing = logDiv.textContent.split("\n");
+          let added = newText.split("\n");
+          const merged = existing.concat(added);
+          if (merged.length > maxLines) merged.splice(0, merged.length - maxLines);
+          logDiv.textContent = merged.join("\n");
+
+          highlightLog();
+
+          if (autoscrollCheckbox.checked) {
+            logDiv.scrollTop = logDiv.scrollHeight;
+          }
+        }
+      });
+    }
+
+    function updateInterval() {
+      if (timer) clearInterval(timer);
+      const ms = parseInt(intervalSelect.value);
+      if (ms > 0) timer = setInterval(fetchLog, ms);
+    }
+
+    function clearLog() {
+      fetch('/clear-log').then(() => {
+        logDiv.textContent = '';
+        offset = 0;
+      });
+    }
+
+    function highlightLog() {
+      const keyword = keywordInput.value.trim().toLowerCase();
+      const rawLines = logDiv.textContent.split("\n");
+      logDiv.innerHTML = rawLines.map(line => {
+        if (keyword && line.toLowerCase().includes(keyword)) {
+          return `<span class="highlight">${line}</span>`;
+        } else {
+          return line;
+        }
+      }).join("\n");
+    }
+
+    function downloadLog() {
+      const text = logDiv.textContent;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'device-log.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    darkmodeCheckbox.addEventListener('change', () => {
+      document.body.classList.toggle('light-mode', !darkmodeCheckbox.checked);
+    });
+
+    intervalSelect.addEventListener('change', updateInterval);
+    updateInterval();  // Start
+  </script>
+</body>
+</html>
