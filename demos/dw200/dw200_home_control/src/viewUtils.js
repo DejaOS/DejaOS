@@ -1,25 +1,28 @@
 import * as os from "os"
 import dxui from '../dxmodules/dxUi.js'
 
+const fontPath = "/app/code/resource/font/PangMenZhengDaoBiaoTiTi-1.ttf"
 const viewUtils = {}
 
-viewUtils.font20 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 20, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font24 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 24, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font28 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 28, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font24Bold = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 24, dxui.Utils.FONT_STYLE.BOLD)
-viewUtils.font32 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 32, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font36 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 36, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font40 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 40, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font48 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 48, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font58 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 58, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font88 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 88, dxui.Utils.FONT_STYLE.NORMAL)
-// 清除样式
+viewUtils.font20 = dxui.Font.build(fontPath, 20, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font24 = dxui.Font.build(fontPath, 24, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font28 = dxui.Font.build(fontPath, 28, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font24Bold = dxui.Font.build(fontPath, 24, dxui.Utils.FONT_STYLE.BOLD)
+viewUtils.font32 = dxui.Font.build(fontPath, 32, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font36 = dxui.Font.build(fontPath, 36, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font40 = dxui.Font.build(fontPath, 40, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font48 = dxui.Font.build(fontPath, 48, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font58 = dxui.Font.build(fontPath, 58, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font88 = dxui.Font.build(fontPath, 88, dxui.Utils.FONT_STYLE.NORMAL)
+
+// Reset all styling properties to default values
 viewUtils._clearStyle = function (obj) {
     obj.radius(0)
     obj.borderWidth(0)
     obj.padAll(0)
 }
-// 通用上边栏
+
+// Create a common top navigation bar
 viewUtils.top = function (parent) {
     parent.update()
     let top = dxui.View.build(parent.id + 'top', parent)
@@ -29,16 +32,18 @@ viewUtils.top = function (parent) {
     top.update()
     return top
 }
-// 通用菜单
+
+// Create a common menu with flex layout
 viewUtils.menu = function (parent) {
     let menu = this.panel(parent)
-    // flex布局，均分纵轴，居中显示
+    // Use flexbox layout: vertical direction, evenly distributed, centered
     menu.flexFlow(dxui.Utils.FLEX_FLOW.COLUMN)
     menu.flexAlign(dxui.Utils.FLEX_ALIGN.SPACE_EVENLY, dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.CENTER)
     menu.update()
     return menu
 }
-// 面包屑返回上一级
+
+// Navigate back to previous level in breadcrumb navigation
 viewUtils.crumbsOut = function (ui) {
     if (!ui.crumbs) {
         return
@@ -51,7 +56,8 @@ viewUtils.crumbsOut = function (ui) {
         return last.title
     }
 }
-// 面包屑进入下一级
+
+// Navigate to next level in breadcrumb navigation
 viewUtils.crumbsEnter = function (ui, title, panel) {
     if (!ui.crumbs) {
         ui.crumbs = []
@@ -62,7 +68,8 @@ viewUtils.crumbsEnter = function (ui, title, panel) {
     panel.show()
     ui.crumbs.push({ title: title, panel: panel })
 }
-// 通用面板
+
+// Create a common panel with shadow and rounded corners
 viewUtils.panel = function (parent, id) {
     parent.update()
     let panel = dxui.View.build(parent.id + 'panel' + (id ? id : ''), parent)
@@ -71,10 +78,11 @@ viewUtils.panel = function (parent, id) {
     panel.radius(20)
     panel.align(dxui.Utils.ALIGN.CENTER, 0, 0)
     viewUtils.shadowStyle(panel)
-    panel.update() 
+    panel.update()
     return panel
 }
-// 弹出通知
+
+// Show popup notification with customizable styling and auto-hide
 viewUtils.popNote = function (msg, bgColor, textColor) {
     let clearAnime = () => {
         if (viewUtils.popTimer) {
@@ -106,12 +114,12 @@ viewUtils.popNote = function (msg, bgColor, textColor) {
     pop.borderWidth(0)
     pop.align(dxui.Utils.ALIGN.TOP_MID, 0, 0)
     pop.moveForeground()
-    pop.bgColor(utils.isEmpty(bgColor) ? 0x23AAF2 : bgColor)
+    pop.bgColor((bgColor === undefined || bgColor === null) ? 0x23AAF2 : bgColor)
     pop.bgOpa(0)
     let popMsg = dxui.Label.build('popMsg', pop)
     viewUtils.popMsg = popMsg
     popMsg.textFont(viewUtils.font24)
-    popMsg.textColor(utils.isEmpty(textColor) ? 0xffffff : textColor)
+    popMsg.textColor((textColor === undefined || textColor === null) ? 0xffffff : textColor)
     popMsg.text(msg)
     popMsg.align(dxui.Utils.ALIGN.CENTER, 0, 0)
     viewUtils.popAnime = dxui.Utils.anime(pop, 0, 100, (obj, v) => {
@@ -134,11 +142,13 @@ viewUtils.popNote = function (msg, bgColor, textColor) {
         }, 2000)
     }, 300)
 }
-// 弹出通知清除
+
+// Clear any existing popup notification
 viewUtils.clearPopNote = function () {
     viewUtils.popNote()
 }
-// 添加按钮
+
+// Create a styled button with text and customizable colors
 viewUtils.addButton = function (parent, text, bgColor, textColor) {
     parent.update()
     let box = dxui.View.build(parent.id + 'box' + text, parent)
@@ -150,17 +160,18 @@ viewUtils.addButton = function (parent, text, bgColor, textColor) {
     box.update()
     let btn = dxui.Button.build(box.id + 'btn', box)
     btn.setSize(box.contentWidth(), box.contentHeight() - 10)
-    btn.bgColor(utils.isEmpty(bgColor) ? 0x23AAF2 : bgColor)
+    btn.bgColor((bgColor === undefined || bgColor === null) ? 0x23AAF2 : bgColor)
     btn.align(dxui.Utils.ALIGN.CENTER, 0, 0)
     btn.radius(25)
     let label = dxui.Label.build(btn.id + 'label', btn)
     label.textFont(viewUtils.font24)
     label.text(text)
-    label.textColor(utils.isEmpty(textColor) ? 0xffffff : textColor)
+    label.textColor((textColor === undefined || textColor === null) ? 0xffffff : textColor)
     label.align(dxui.Utils.ALIGN.CENTER, 0, 0)
     return btn
 }
-// 添加开关
+
+// Create a toggle switch with label
 viewUtils.addSwitch = function (parent, key, value) {
     parent.update()
     let box = dxui.View.build(parent.id + 'box' + key, parent)
@@ -179,7 +190,8 @@ viewUtils.addSwitch = function (parent, key, value) {
     _switch.align(dxui.Utils.ALIGN.RIGHT_MID, 0, 0)
     return _switch
 }
-// 添加输入框
+
+// Create an input field with label, keyboard support, and optional password mode
 viewUtils.addInput = function (root, parent, key, value, isPlaceholder, isHide) {
     parent.update()
     let box = dxui.View.build(parent.id + 'box' + key, parent)
@@ -220,7 +232,7 @@ viewUtils.addInput = function (root, parent, key, value, isPlaceholder, isHide) 
     input.align(dxui.Utils.ALIGN.RIGHT_MID, -25, 0)
     input.on(dxui.Utils.EVENT.FOCUSED, () => {
         box1.setBorderColor(0x23AAF2)
-        // 向右对齐没法滚动文字，所以编辑的时候先向左对齐
+        // Switch to left alignment during editing for text scrolling capability
         input.setAlign(dxui.Utils.TEXT_ALIGN.LEFT)
     })
     input.on(dxui.Utils.EVENT.DEFOCUSED, () => {
@@ -281,7 +293,8 @@ viewUtils.addInput = function (root, parent, key, value, isPlaceholder, isHide) 
     }
     return { input: input, box1: box1 }
 }
-// 添加配置项
+
+// Create a configuration item with key-value display and arrow indicator
 viewUtils.addConfig = function (parent, key, value, isSelect) {
     parent.update()
     let box = dxui.View.build(parent.id + 'box' + key, parent)
@@ -314,14 +327,18 @@ viewUtils.addConfig = function (parent, key, value, isSelect) {
     box.addStyle(st1, dxui.Utils.ENUM.LV_STATE_PRESSED)
     return box
 }
-// 默认阴影
+
+// Apply default shadow styling to an object
 viewUtils.shadowStyle = function (obj) {
     obj.shadow(15, 3, 5, 2, 0x000000, 50)
 }
+
+// Remove shadow styling from an object
 viewUtils.clearShadowStyle = function (obj) {
     obj.shadow(0, 0, 0, 0, 0x000000, 0)
 }
-// 通用菜单项样式
+
+// Apply menu item button styling with gradient background and icon
 viewUtils.menuItemBtnStyle = function (obj, icon, text, font, color1, color2, w, h, gradW, offsetText) {
     obj.padAll(0)
     obj.bgColor(color1)

@@ -5,23 +5,24 @@ const id = 'alsaplay1'
 dxAlsaplay.init(id)
 
 let ret = dxAlsaplay.setVolume(4, id)
-
-export function playAudio (index) {
+const audioPath = "/app/code/resource/media/"
+// Play audio feedback based on scene type
+export function playAudio(index) {
   switch (index) {
     case 1:
-      dxAlsaplay.play("/app/code/resource/medio/1722570475293.wav", id) // 已切换至睡眠模式
+      dxAlsaplay.play(audioPath + "1722570475293.wav", id) // Sleep mode activated
       break;
     case 2:
-      dxAlsaplay.play("/app/code/resource/medio/1722575853508.wav", id) // 窗帘已打开
+      dxAlsaplay.play(audioPath + "1722575853508.wav", id) // Curtains opened
       break;
     case 3:
-      dxAlsaplay.play("/app/code/resource/medio/1722575932378.wav", id) // 窗帘已关闭
+      dxAlsaplay.play(audioPath + "1722575932378.wav", id) // Curtains closed
       break;
     case 4:
-      dxAlsaplay.play("/app/code/resource/medio/1722576470245.wav", id) // 游戏模式已开启
+      dxAlsaplay.play(audioPath + "1722576470245.wav", id) // Gaming mode activated
       break;
     case 5:
-      dxAlsaplay.play("/app/code/resource/medio/1722576084201.wav", id) // 设备已开启，欢迎回家
+      dxAlsaplay.play(audioPath + "1722576084201.wav", id) // Welcome home
       break;
   }
 }

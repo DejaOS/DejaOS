@@ -9,8 +9,9 @@ const pageView = {}
 const pageID = 'page2'
 let theView;
 let timer;
+let clockTimer;
 
-function getTime () {
+function getTime() {
   const weekArr = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
   const now = new Date();
   const weekDay = now.getDay()
@@ -41,10 +42,10 @@ pageView.init = function () {
   img.source("/app/code/resource/image/bg1.png")
   img.setPos(0, 0)
 
-  // 创建文本控件
-  let label1 = ui.Label.build(pageID + 'label1', theView)
-  let label2 = ui.Label.build(pageID + 'label2', theView)
-  // 设置文本内容
+  // Time display labels
+  let label1 = ui.Label.build(pageID + 'label1', theView) // Time (HH:MM)
+  let label2 = ui.Label.build(pageID + 'label2', theView) // Date and weekday
+
   label1.setPos(100, 30)
   label1.setSize(280, 100)
   label1.textColor(0xffffff)
@@ -54,16 +55,26 @@ pageView.init = function () {
   label2.textColor(0xffffff)
   label2.textAlign(2)
 
-  // 设置文本字体
   label1.textFont(viewUtils.font88)
   label2.textFont(viewUtils.font28)
 
-
-  std.setInterval(() => {
+  // Function to update time display
+  function updateTime() {
     let theTime = getTime()
     label1.text(theTime.time)
     label2.text(theTime.date + " " + theTime.week)
-  }, 1000)
+  }
+
+  // Clear any existing clock timer to prevent memory leaks
+  if (clockTimer) {
+    std.clearInterval(clockTimer)
+  }
+
+  // Display time immediately
+  updateTime()
+
+  // Update clock every second
+  clockTimer = std.setInterval(updateTime, 1000)
 
   let view1 = ui.View.build(pageID + 'view1', theView)
   view1.setPos(0, 0)
@@ -76,27 +87,36 @@ pageView.init = function () {
   view2.bgOpa(0)
   view2.borderWidth(0)
 
-  
+
   view1.on(ui.Utils.EVENT.CLICK, () => {
     std.clearTimeout(timer)
-
+    if (clockTimer) {
+      std.clearInterval(clockTimer)
+      clockTimer = null
+    }
     page3.load()
   })
   view2.on(ui.Utils.EVENT.CLICK, () => {
     std.clearTimeout(timer)
-
+    if (clockTimer) {
+      std.clearInterval(clockTimer)
+      clockTimer = null
+    }
     page4.load()
   })
 }
 
 pageView.load = function () {
-  // 加载屏幕
   ui.loadMain(theView)
 
+  // Auto-transition back to weather page after 5 seconds
   timer = std.setTimeout(() => {
-
+    // Clean up clock timer when leaving page
+    if (clockTimer) {
+      std.clearInterval(clockTimer)
+      clockTimer = null
+    }
     page1.load()
-
   }, 5000)
 }
 

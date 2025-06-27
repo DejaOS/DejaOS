@@ -89,20 +89,9 @@ logcat("User login", { userId: 123, name: "John" }, "success");
 3. **Log Production**: Main thread continuously generates sample logs
 4. **Queue Operations**: Logs pushed to shared queue (thread-safe)
 5. **HTTP Serving**: Worker thread serves logs via web API
-6. **Browser Access**: Real-time log viewing at `http://192.168.50.212:8080`
+6. **Browser Access**: Real-time log viewing at `http://192.168.50.212:8080`,192.168.50.212 is the device IP
 
-## Web Interface Features
 
-**Real-time Controls:**
+## Device Compatibility
 
-- Auto-refresh intervals (1s/5s/stop)
-- Manual refresh button
-- Log download functionality
-- Search with keyword highlighting
-
-**Display Options:**
-
-- Dark/light theme toggle
-- Auto-scroll to latest logs
-- Maximum 1000 lines display limit
-- Monospace font for alignment
+This demo currently runs on DW200_V20 devices. To run on other devices, simply update the corresponding modules as needed.

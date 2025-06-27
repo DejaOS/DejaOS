@@ -17,33 +17,31 @@ pageView.init = function () {
   theView.setPos(0, 0)
   theView.setSize(480, 320)
 
-  // 创建样式集合
+  // Button styling for scene controls
   let buttonStyle = ui.Style.build()
-  // 向集合添加属性
   buttonStyle.radius(10)
   buttonStyle.bgOpa(100)
   buttonStyle.bgColor(0x333333)
   buttonStyle.textColor(0xffffff)
   buttonStyle.borderWidth(0)
 
-  // 创建样式集合
   let labelStyle = ui.Style.build()
   labelStyle.borderWidth(0)
 
-  // 创建按钮控件
-  let button1 = ui.Button.build(pageID + 'button1', theView)
+  // Scene control buttons in 2x2 grid layout
+  let button1 = ui.Button.build(pageID + 'button1', theView) // Sleep mode
   button1.setSize(200, 100)
   button1.setPos(30, 50)
-  // 创建按钮控件
-  let button2 = ui.Button.build(pageID + 'button2', theView)
+
+  let button2 = ui.Button.build(pageID + 'button2', theView) // Curtain control
   button2.setSize(200, 100)
   button2.setPos(250, 50)
-  // 创建按钮控件
-  let button3 = ui.Button.build(pageID + 'button3', theView)
+
+  let button3 = ui.Button.build(pageID + 'button3', theView) // Gaming mode
   button3.setSize(200, 100)
   button3.setPos(30, 170)
-  // 创建按钮控件
-  let button4 = ui.Button.build(pageID + 'button4', theView)
+
+  let button4 = ui.Button.build(pageID + 'button4', theView) // Welcome home
   button4.setSize(200, 100)
   button4.setPos(250, 170)
 
@@ -53,31 +51,28 @@ pageView.init = function () {
   viewBtn.bgColor(0x666666)
   viewBtn.borderWidth(0)
 
-  // 将样式绑定到按钮上
   button1.addStyle(buttonStyle)
   button2.addStyle(buttonStyle)
   button3.addStyle(buttonStyle)
   button4.addStyle(buttonStyle)
 
-  // 创建文本控件
+  // Button labels with icon spacing
   let label1 = ui.Label.build(pageID + 'button1label', button1)
-  // 设置文本内容
   label1.text("晚安")
   label1.setPos(55, 25)
+
   let label2 = ui.Label.build(pageID + 'button2label', button2)
-  // 设置文本内容
   label2.text("窗帘")
   label2.setPos(55, 25)
+
   let label3 = ui.Label.build(pageID + 'button3label', button3)
-  // 设置文本内容
   label3.text("游戏模式")
   label3.setPos(55, 25)
+
   let label4 = ui.Label.build(pageID + 'button4label', button4)
-  // 设置文本内容
   label4.text("我回来了")
   label4.setPos(55, 25)
 
-  // // 设置文本字体
   label1.textFont(viewUtils.font24Bold)
   label2.textFont(viewUtils.font24Bold)
   label3.textFont(viewUtils.font24Bold)
@@ -110,15 +105,14 @@ pageView.init = function () {
   plateView.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
   let plateLabel = ui.Label.build(pageID + 'plateLabel', plateView)
-  // 设置文本内容
   plateLabel.text("晚安")
   plateLabel.textColor(0xffffff)
   plateLabel.textFont(viewUtils.font28)
-
   plateLabel.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
   plate.hide()
 
+  // Scene button event handlers with feedback
   button1.on(ui.Utils.EVENT.CLICK, () => {
     plate.show()
     plateView.bgColor(0x000000)
@@ -129,18 +123,20 @@ pageView.init = function () {
       plate.hide()
     }, 2000)
   })
+
+  // Curtain control with toggle state
   let clState = false
   button2.on(ui.Utils.EVENT.CLICK, () => {
     clState = !clState
-    let ys = clState ? 0xFFFFCC : 0x666699
+    let ys = clState ? 0xFFFFCC : 0x666699  // Light yellow for open, dark blue for closed
     plate.show()
     plateView.bgColor(ys)
     plateLabel.textColor(0x999999)
     plateLabel.text(clState ? '窗帘已打开' : '窗帘已关闭')
     if (clState) {
-      playAudio(2)
+      playAudio(2)  // Open sound
     } else {
-      playAudio(3)
+      playAudio(3)  // Close sound
     }
     std.setTimeout(() => {
       plate.hide()
@@ -171,7 +167,6 @@ pageView.init = function () {
   })
 }
 pageView.load = function () {
-  // 加载屏幕
   ui.loadMain(theView)
 }
 

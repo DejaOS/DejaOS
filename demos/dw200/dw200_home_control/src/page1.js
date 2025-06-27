@@ -22,22 +22,26 @@ pageView.init = function () {
   img.source("/app/code/resource/image/bg2.png")
   img.setPos(0, 0)
 
-  // 创建文本控件
+  // Weather information display
   let label1 = ui.Label.build(pageID + 'label1', theView)
   let label2 = ui.Label.build(pageID + 'label2', theView)
   let label3 = ui.Label.build(pageID + 'label3', theView)
-  // 设置文本内容
+
+  // Temperature display
   label1.text("26°")
   label1.setPos(270, 60)
   label1.textColor(0xffffff)
+
+  // Humidity and air quality info
   label2.text("湿度 40% \n空气优 10")
   label2.setPos(230, 180)
   label2.textColor(0xdddddd)
+
+  // Location display
   label3.text("北京 昌平区")
   label3.setPos(200, 40)
   label3.textColor(0xdddddd)
 
-  // 设置文本字体
   label1.textFont(viewUtils.font88)
   label2.textFont(viewUtils.font28)
   label3.textFont(viewUtils.font24)
@@ -53,27 +57,23 @@ pageView.init = function () {
   view2.bgOpa(0)
   view2.borderWidth(0)
 
-  
+  // Split screen navigation: left half goes to scene control, right half to device control
   view1.on(ui.Utils.EVENT.CLICK, () => {
     std.clearTimeout(timer)
-
-    page3.load()
+    page3.load() // Scene control page
   })
   view2.on(ui.Utils.EVENT.CLICK, () => {
     std.clearTimeout(timer)
-
-    page4.load()
+    page4.load() // Device control page
   })
 }
 
 pageView.load = function () {
-  // 加载屏幕
   ui.loadMain(theView)
 
+  // Auto-transition to clock page after 5 seconds
   timer = std.setTimeout(() => {
-
     page2.load()
-
   }, 5000)
 }
 
