@@ -3,8 +3,8 @@ import bus from "../../dxmodules/dxEventBus.js"
 const cardService = {}
 
 /**
- * 处理刷卡动作
- * @param {object} data 卡片信息
+ * Handle card swipe action
+ * @param {object} data Card information
  */
 cardService.nfc = function (data) {
     logger.info("Card : " + JSON.stringify(data))

@@ -2,7 +2,7 @@ import logger from "../../dxmodules/dxLogger.js"
 const netService = {}
 
 /**
- * 网络状态变化
+ * Network status change
  * @param {object} data 
  */
 netService.netStatusChanged = function (data) {

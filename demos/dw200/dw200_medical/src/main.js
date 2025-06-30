@@ -2,16 +2,16 @@ import ui from "../dxmodules/dxUi.js";
 import std from "../dxmodules/dxStd.js";
 import main from './page.js'
 
-// ui上下文
+// UI context
 let context = {}
 
-// ui初始化
+// UI initialization
 ui.init({ orientation: 1 }, context);
 
 main.init()
 main.load()
 
-// 刷新ui
+// Refresh UI
 let timer = std.setInterval(() => {
     if (ui.handler() < 0) {
         std.clearInterval(timer)

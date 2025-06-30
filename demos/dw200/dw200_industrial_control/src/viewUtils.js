@@ -2,25 +2,25 @@ import * as os from "os"
 import dxui from '../dxmodules/dxUi.js'
 
 const viewUtils = {}
-
-viewUtils.font16 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 16, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font20 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 20, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font24 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 24, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font28 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 28, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font28Bold = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 28, dxui.Utils.FONT_STYLE.BOLD)
-viewUtils.font32 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 32, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font36 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 36, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font40 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 40, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font48 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 48, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font58 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 58, dxui.Utils.FONT_STYLE.NORMAL)
-viewUtils.font88 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 88, dxui.Utils.FONT_STYLE.NORMAL)
-// 清除样式
+const fontPath = '/app/code/resource/font/PangMenZhengDaoBiaoTiTi-1.ttf'
+viewUtils.font16 = dxui.Font.build(fontPath, 16, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font20 = dxui.Font.build(fontPath, 20, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font24 = dxui.Font.build(fontPath, 24, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font28 = dxui.Font.build(fontPath, 28, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font28Bold = dxui.Font.build(fontPath, 28, dxui.Utils.FONT_STYLE.BOLD)
+viewUtils.font32 = dxui.Font.build(fontPath, 32, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font36 = dxui.Font.build(fontPath, 36, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font40 = dxui.Font.build(fontPath, 40, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font48 = dxui.Font.build(fontPath, 48, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font58 = dxui.Font.build(fontPath, 58, dxui.Utils.FONT_STYLE.NORMAL)
+viewUtils.font88 = dxui.Font.build(fontPath, 88, dxui.Utils.FONT_STYLE.NORMAL)
+// Clear styles
 viewUtils._clearStyle = function (obj) {
     obj.radius(0)
     obj.borderWidth(0)
     obj.padAll(0)
 }
-// 通用上边栏
+// Common top bar
 viewUtils.top = function (parent) {
     parent.update()
     let top = dxui.View.build(parent.id + 'top', parent)
@@ -30,16 +30,16 @@ viewUtils.top = function (parent) {
     top.update()
     return top
 }
-// 通用菜单
+// Common menu
 viewUtils.menu = function (parent) {
     let menu = this.panel(parent)
-    // flex布局，均分纵轴，居中显示
+    // Flex layout, evenly distributed vertically, centered display
     menu.flexFlow(dxui.Utils.FLEX_FLOW.COLUMN)
     menu.flexAlign(dxui.Utils.FLEX_ALIGN.SPACE_EVENLY, dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.CENTER)
     menu.update()
     return menu
 }
-// 面包屑返回上一级
+// Breadcrumb go back to previous level
 viewUtils.crumbsOut = function (ui) {
     if (!ui.crumbs) {
         return
@@ -52,7 +52,7 @@ viewUtils.crumbsOut = function (ui) {
         return last.title
     }
 }
-// 面包屑进入下一级
+// Breadcrumb enter next level
 viewUtils.crumbsEnter = function (ui, title, panel) {
     if (!ui.crumbs) {
         ui.crumbs = []
@@ -63,7 +63,7 @@ viewUtils.crumbsEnter = function (ui, title, panel) {
     panel.show()
     ui.crumbs.push({ title: title, panel: panel })
 }
-// 通用面板
+// Common panel
 viewUtils.panel = function (parent, id) {
     parent.update()
     let panel = dxui.View.build(parent.id + 'panel' + (id ? id : ''), parent)
@@ -72,10 +72,10 @@ viewUtils.panel = function (parent, id) {
     panel.radius(20)
     panel.align(dxui.Utils.ALIGN.CENTER, 0, 0)
     viewUtils.shadowStyle(panel)
-    panel.update() 
+    panel.update()
     return panel
 }
-// 弹出通知
+// Pop-up notification
 viewUtils.popNote = function (msg, bgColor, textColor) {
     let clearAnime = () => {
         if (viewUtils.popTimer) {
@@ -135,11 +135,11 @@ viewUtils.popNote = function (msg, bgColor, textColor) {
         }, 2000)
     }, 300)
 }
-// 弹出通知清除
+// Clear pop-up notification
 viewUtils.clearPopNote = function () {
     viewUtils.popNote()
 }
-// 添加按钮
+// Add button
 viewUtils.addButton = function (parent, text, bgColor, textColor) {
     parent.update()
     let box = dxui.View.build(parent.id + 'box' + text, parent)
@@ -161,7 +161,7 @@ viewUtils.addButton = function (parent, text, bgColor, textColor) {
     label.align(dxui.Utils.ALIGN.CENTER, 0, 0)
     return btn
 }
-// 添加开关
+// Add switch
 viewUtils.addSwitch = function (parent, key, value) {
     parent.update()
     let box = dxui.View.build(parent.id + 'box' + key, parent)
@@ -180,7 +180,7 @@ viewUtils.addSwitch = function (parent, key, value) {
     _switch.align(dxui.Utils.ALIGN.RIGHT_MID, 0, 0)
     return _switch
 }
-// 添加输入框
+// Add input box
 viewUtils.addInput = function (root, parent, key, value, isPlaceholder, isHide) {
     parent.update()
     let box = dxui.View.build(parent.id + 'box' + key, parent)
@@ -221,7 +221,7 @@ viewUtils.addInput = function (root, parent, key, value, isPlaceholder, isHide) 
     input.align(dxui.Utils.ALIGN.RIGHT_MID, -25, 0)
     input.on(dxui.Utils.EVENT.FOCUSED, () => {
         box1.setBorderColor(0x23AAF2)
-        // 向右对齐没法滚动文字，所以编辑的时候先向左对齐
+        // Right-aligned text cannot scroll, so align left when editing
         input.setAlign(dxui.Utils.TEXT_ALIGN.LEFT)
     })
     input.on(dxui.Utils.EVENT.DEFOCUSED, () => {
@@ -282,7 +282,7 @@ viewUtils.addInput = function (root, parent, key, value, isPlaceholder, isHide) 
     }
     return { input: input, box1: box1 }
 }
-// 添加配置项
+// Add configuration item
 viewUtils.addConfig = function (parent, key, value, isSelect) {
     parent.update()
     let box = dxui.View.build(parent.id + 'box' + key, parent)
@@ -315,14 +315,14 @@ viewUtils.addConfig = function (parent, key, value, isSelect) {
     box.addStyle(st1, dxui.Utils.ENUM.LV_STATE_PRESSED)
     return box
 }
-// 默认阴影
+// Default shadow
 viewUtils.shadowStyle = function (obj) {
     obj.shadow(15, 3, 5, 2, 0x000000, 50)
 }
 viewUtils.clearShadowStyle = function (obj) {
     obj.shadow(0, 0, 0, 0, 0x000000, 0)
 }
-// 通用菜单项样式
+// Common menu item style
 viewUtils.menuItemBtnStyle = function (obj, icon, text, font, color1, color2, w, h, gradW, offsetText) {
     obj.padAll(0)
     obj.bgColor(color1)

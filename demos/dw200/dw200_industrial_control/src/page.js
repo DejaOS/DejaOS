@@ -16,7 +16,7 @@ pageView.init = function () {
   theView.setPos(0, 0)
   theView.setSize(480, 320)
 
-  // 页面头部
+  // Page header
   let theTop = ui.View.build('viewTop', theView)
   theTop.setSize(480, 60)
   theTop.setPos(0, 0)
@@ -25,27 +25,27 @@ pageView.init = function () {
   theTop.padAll(0)
   theTop.radius(0)
 
-  // 创建文本控件
+  // Create text control
   let label1 = ui.Label.build('topTitle', theTop);
-  // 设置文本内容
+  // Set text content
   label1.text("智能烘干控制系统");
   label1.textColor(0xFFFFFF)
-  // 元素基于父元素上下左右居中
+  // Center element relative to parent element
   label1.align(ui.Utils.ALIGN.CENTER, -40, 0);
 
   let label2 = ui.Label.build('topTime', theTop)
-  // 设置文本内容
+  // Set text content
   label2.text("2021-11-25\n10:09:49")
   label2.textColor(0xFFFFFF)
   label2.textAlign(2)
-  // 元素基于父元素上下左右居中
+  // Center element relative to parent element
   label2.align(ui.Utils.ALIGN.CENTER, 180, 0);
 
-  // // 设置文本字体
+  // // Set text font
   label1.textFont(viewUtils.font28Bold)
   label2.textFont(viewUtils.font16)
 
-  // 主体内容
+  // Main content
   let theMain = ui.View.build('viewMain', theView)
   theMain.setSize(480, 260)
   theMain.setPos(0, 60)
@@ -55,7 +55,7 @@ pageView.init = function () {
   theMain.radius(0)
 
   let label3 = ui.Label.build('mainLabel1', theMain)
-  // 设置文本内容
+  // Set text content
   label3.text("当前状态:设备正常")
   label3.textColor(0x6699FF)
   label3.textAlign(2)
@@ -63,7 +63,7 @@ pageView.init = function () {
   label3.setPos(0, 0)
   label3.textFont(viewUtils.font20)
 
-  // 创建样式集合
+  // Create style collection
   let iconStyle = ui.Style.build()
   iconStyle.bgColor(0x009933)
   iconStyle.padAll(0)
@@ -76,7 +76,7 @@ pageView.init = function () {
   fengjiIcon.addStyle(iconStyle)
 
   let type1 = ui.Label.build('mainType1', theMain)
-  // 设置文本内容
+  // Set text content
   type1.text("循环风机")
   type1.setPos(65, 40)
   type1.textFont(viewUtils.font16)
@@ -87,7 +87,7 @@ pageView.init = function () {
   jiareIcon.addStyle(iconStyle)
 
   let type2 = ui.Label.build('mainType2', theMain)
-  // 设置文本内容
+  // Set text content
   type2.text("加热输出")
   type2.setPos(165, 40)
   type2.textFont(viewUtils.font16)
@@ -98,7 +98,7 @@ pageView.init = function () {
   paishiIcon.addStyle(iconStyle)
 
   let type3 = ui.Label.build('mainType3', theMain)
-  // 设置文本内容
+  // Set text content
   type3.text("除湿风机")
   type3.setPos(265, 40)
   type3.textFont(viewUtils.font16)
@@ -127,121 +127,121 @@ pageView.init = function () {
 
 
   let table1Label1 = ui.Label.build('table1Label1', theTable1)
-  // 设置文本内容
+  // Set text content
   table1Label1.text("200.0")
   table1Label1.setPos(30, 5)
   table1Label1.textFont(viewUtils.font32)
   table1Label1.textColor(0xff0000)
   let table1Label2 = ui.Label.build('table1Label2', theTable1)
-  // 设置文本内容
+  // 
   table1Label2.text("℃")
   table1Label2.setPos(130, 20)
   table1Label2.textFont(viewUtils.font16)
   table1Label2.textColor(0xff0000)
   let table1Label3 = ui.Label.build('table1Label3', theTable1)
-  // 设置文本内容
+  // 
   table1Label3.text("测量温度")
   table1Label3.setPos(60, 40)
   table1Label3.textFont(viewUtils.font16)
   let table1Label4 = ui.Label.build('table1Label4', theTable1)
-  // 设置文本内容
+  // 
   table1Label4.text(wendu + '')
   table1Label4.setPos(200, 10)
   table1Label4.textFont(viewUtils.font32)
   let table1Label5 = ui.Label.build('table1Label5', theTable1)
-  // 设置文本内容
+  // 
   table1Label5.text("℃")
   table1Label5.setPos(260, 20)
   table1Label5.textFont(viewUtils.font20)
   let table1Label6 = ui.Label.build('table1Label6', theTable1)
-  // 设置文本内容
+  // 
   table1Label6.text("设定温度")
   table1Label6.setPos(210, 55)
   table1Label6.textFont(viewUtils.font16)
 
   let table2Label1 = ui.Label.build('table2Label1', theTable2)
-  // 设置文本内容
+  // 
   table2Label1.text("2")
   table2Label1.setPos(30, 5)
   table2Label1.textFont(viewUtils.font32)
 
   let table2Label2 = ui.Label.build('table2Label2', theTable2)
-  // 设置文本内容
+  // 
   table2Label2.text("Min")
   table2Label2.setPos(70, 20)
   table2Label2.textFont(viewUtils.font20)
 
   let table2Label3 = ui.Label.build('table2Label3', theTable2)
-  // 设置文本内容
+  // 
   table2Label3.text("12")
   table2Label3.setPos(120, 5)
   table2Label3.textFont(viewUtils.font32)
 
   let table2Label4 = ui.Label.build('table2Label4', theTable2)
-  // 设置文本内容
+  // 
   table2Label4.text("S")
   table2Label4.setPos(160, 20)
   table2Label4.textFont(viewUtils.font20)
 
 
   let table2Label5 = ui.Label.build('table2Label5', theTable2)
-  // 设置文本内容
+  // 
   table2Label5.text(shijian + '')
   table2Label5.setPos(230, 5)
   table2Label5.textFont(viewUtils.font32)
 
   let table2Label6 = ui.Label.build('table2Label6', theTable2)
-  // 设置文本内容
+  // 
   table2Label6.text("Min")
   table2Label6.setPos(270, 20)
   table2Label6.textFont(viewUtils.font20)
 
   let table2Label7 = ui.Label.build('table2Label7', theTable2)
-  // 设置文本内容
+  // 
   table2Label7.text("已用时间")
   table2Label7.setPos(70, 40)
   table2Label7.textFont(viewUtils.font16)
 
   let table2Label8 = ui.Label.build('table2Label8', theTable2)
-  // 设置文本内容
+  // 
   table2Label8.text("保温时间")
   table2Label8.setPos(240, 40)
   table2Label8.textFont(viewUtils.font16)
 
-  // 创建样式集合
+  // Create style collection
   let buttonStyle = ui.Style.build()
-  // 向集合添加属性
+  // Add properties to collection
   buttonStyle.radius(10)
   buttonStyle.bgOpa(100)
   buttonStyle.bgColor(0xdddddd)
   buttonStyle.textColor(0x000000)
   buttonStyle.borderWidth(0)
 
-  // 创建按钮控件
+  // Create button control
   let button1 = ui.Button.build('button1', theMain)
   button1.setSize(85, 40)
   button1.setPos(383, 10)
   button1.bgColor(0x009966)
 
   let button1Label = ui.Label.build('button1Label', button1)
-  // 设置文本内容
+  // Set text content
   button1Label.text("启动")
   button1Label.textFont(viewUtils.font16)
-  // 元素基于父元素上下左右居中
+  // Center element relative to parent element
   button1Label.align(ui.Utils.ALIGN.CENTER, 0, 0)
   button1Label.textColor(0xffffff)
 
-  // 创建按钮控件
+  // Create button control
   let button2 = ui.Button.build('button2', theMain)
   button2.setSize(85, 40)
   button2.setPos(383, 60)
   button2.bgColor(0xCC0033)
 
   let button2Label = ui.Label.build('button2Label', button2)
-  // 设置文本内容
+  // Set text content
   button2Label.text("停止")
   button2Label.textFont(viewUtils.font16)
-  // 元素基于父元素上下左右居中
+  // Center element relative to parent element
   button2Label.align(ui.Utils.ALIGN.CENTER, 0, 0)
   button2Label.textColor(0xffffff)
 
@@ -251,7 +251,7 @@ pageView.init = function () {
   button3.setPos(383, 110)
 
   let button3Label = ui.Label.build('button3Label', button3)
-  // 设置文本内容
+  // 
   button3Label.text("功能设置")
   button3Label.textFont(viewUtils.font16)
   // 元素基于父元素上下左右居中
@@ -263,7 +263,7 @@ pageView.init = function () {
   button4.setPos(383, 160)
 
   let button4Label = ui.Label.build('button4Label', button4)
-  // 设置文本内容
+  // 
   button4Label.text("温度曲线")
   button4Label.textFont(viewUtils.font16)
   // 元素基于父元素上下左右居中
@@ -275,13 +275,13 @@ pageView.init = function () {
   button5.setPos(383, 210)
 
   let button5Label = ui.Label.build('button5Label', button5)
-  // 设置文本内容
+  // 
   button5Label.text("报警画面")
   button5Label.textFont(viewUtils.font16)
   // 元素基于父元素上下左右居中
   button5Label.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
-  // 将样式绑定到按钮上
+  // Bind style to buttons
   button1.addStyle(buttonStyle)
   button2.addStyle(buttonStyle)
   button3.addStyle(buttonStyle)
@@ -289,7 +289,7 @@ pageView.init = function () {
   button5.addStyle(buttonStyle)
 
 
-  // 创建按钮控件
+  // Create button control
   let viewBtn1 = ui.View.build('viewBtn1', theMain)
   viewBtn1.setSize(85, 40)
   viewBtn1.setPos(383, 10)
@@ -297,14 +297,14 @@ pageView.init = function () {
   viewBtn1.radius(10)
 
   let viewBtn11Label = ui.Label.build('viewBtn11Label', viewBtn1)
-  // 设置文本内容
+  // Set text content
   viewBtn11Label.text("启动")
   viewBtn11Label.textFont(viewUtils.font16)
-  // 元素基于父元素上下左右居中
+  // Center element relative to parent element
   viewBtn11Label.align(ui.Utils.ALIGN.CENTER, 0, 0)
   viewBtn11Label.textColor(0xffffff)
 
-  // 创建按钮控件
+  // Create button control
   let viewBtn2 = ui.View.build('viewBtn2', theMain)
   viewBtn2.setSize(85, 40)
   viewBtn2.setPos(383, 60)
@@ -312,14 +312,14 @@ pageView.init = function () {
   viewBtn2.radius(10)
 
   let viewBtn2Label = ui.Label.build('viewBtn2Label', viewBtn2)
-  // 设置文本内容
+  // Set text content
   viewBtn2Label.text("停止")
   viewBtn2Label.textFont(viewUtils.font16)
-  // 元素基于父元素上下左右居中
+  // Center element relative to parent element
   viewBtn2Label.align(ui.Utils.ALIGN.CENTER, 0, 0)
   viewBtn2Label.textColor(0xffffff)
 
-  function doOpen () {
+  function doOpen() {
     label3.text("当前状态:设备正常")
     label3.textColor(0x6699FF)
     fengjiIcon.bgColor(0x009933)
@@ -334,7 +334,7 @@ pageView.init = function () {
     button2.show()
     viewBtn1.show()
   }
-  function doClose () {
+  function doClose() {
     label3.text("设备已经关闭")
     label3.textColor(0xFF0000)
     fengjiIcon.bgColor(0xdddddd)
@@ -368,7 +368,7 @@ pageView.init = function () {
 
 
   let plateLabel1 = ui.Label.build('plateLabel1', plateView)
-  // 设置文本内容
+  // 
   plateLabel1.text("设置")
   plateLabel1.textFont(viewUtils.font36)
   plateLabel1.setSize(380, 30)
@@ -376,7 +376,7 @@ pageView.init = function () {
   plateLabel1.textAlign(2)
 
   let plateLabel2 = ui.Label.build('plateLabel2', plateView)
-  // 设置文本内容
+  // 
   plateLabel2.text("温度")
   plateLabel2.textFont(viewUtils.font24)
   plateLabel2.setSize(190, 30)
@@ -385,7 +385,7 @@ pageView.init = function () {
 
 
   let plateLabel4 = ui.Label.build('plateLabel4', plateView)
-  // 设置文本内容
+  // 
   plateLabel4.text(wendu + "")
   plateLabel4.textFont(viewUtils.font58)
   plateLabel4.textColor(0xCC0033)
@@ -394,7 +394,7 @@ pageView.init = function () {
   plateLabel4.textAlign(2)
 
   let plateLabel3 = ui.Label.build('plateLabel3', plateView)
-  // 设置文本内容
+  // 
   plateLabel3.text("时间")
   plateLabel3.textFont(viewUtils.font24)
   plateLabel3.setSize(190, 30)
@@ -402,7 +402,7 @@ pageView.init = function () {
   plateLabel3.textAlign(2)
 
   let plateLabel5 = ui.Label.build('plateLabel5', plateView)
-  // 设置文本内容
+  // 
   plateLabel5.text(shijian + "")
   plateLabel5.textFont(viewUtils.font58)
   plateLabel5.textColor(0x009966)
@@ -416,7 +416,7 @@ pageView.init = function () {
   plateBtn1.radius(100)
   plateBtn1.setPos(70, 190)
   plateBtn1.bgColor(0xFF0000)
-  
+
   let wendujian = ui.Image.build('wendujian', plateBtn1)
   wendujian.source("/app/code/resource/image/jian.png")
   // 元素基于父元素上下左右居中

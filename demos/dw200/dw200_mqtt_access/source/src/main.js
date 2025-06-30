@@ -14,7 +14,6 @@ import bus from '../dxmodules/dxEventBus.js'
 
 std.setInterval(() => {
     try {
-        common.logMem(log)
         mainview.loop()
         driver.watchdog.loop()
     } catch (err) {

@@ -4,11 +4,13 @@ import dxCommon from "../../dxmodules/dxCommon.js"
 const codeService = {}
 
 /**
- * 处理扫码动作
- * @param {object} data 扫码文本
+ * Handle scanning action
+ * @param {object} data Scan text
  */
 codeService.code = function (data) {
-    let dataHex = Array.from(new Uint8Array(data))
+    logger.info("Code : ", data)
+    let dataHex = Array.from(new Uint8Array(data.data))
+    
     let qrCode = dxCommon.utf8HexToStr(dxCommon.arrToHex(dataHex))
     logger.info("Code : " + JSON.stringify(qrCode))
     bus.fire('code', qrCode)

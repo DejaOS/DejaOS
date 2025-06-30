@@ -1,7 +1,3 @@
-<p align="right">
-    <b>English</b>| <a href="./README_CN.md">中文</a>
-</p>
-
 # DejaOS Device Upgrade Demo Project
 
 This is a device remote upgrade demo project based on MQTT protocol, including both client (device side) and server (server side) components. The project demonstrates how to implement remote device monitoring and OTA upgrade functionality through MQTT messaging.
@@ -134,6 +130,8 @@ dw200_mqtt_upgrade/
 │   ├── index.html            # Web monitoring interface
 │   ├── package.json          # Node.js project configuration
 │   └── upgrade.dpk           # Upgrade package file
-├── README_CN.md              # Project documentation (Chinese)
-└── README.md                 # Project documentation (English)
+└── README.md                 # Project documentation 
 ```
+## Device Compatibility
+
+This demo currently runs on DW200_V20 devices. To run on other devices, simply update the corresponding modules as needed.
