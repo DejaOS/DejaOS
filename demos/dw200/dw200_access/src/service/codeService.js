@@ -18,43 +18,54 @@ let sqliteFuncs = sqliteService.getFunction()
 const codeService = {}
 
 codeService.receiveMsg = function (data) {
-    log.info('[codeService] receiveMsg :' + JSON.stringify(data))
-    let str = common.utf8HexToStr(common.arrayBufferToHexString(data))
+    log.info('[codeService] receiveMsg :' + JSON.stringify(data.data))
+    let str = common.utf8HexToStr(common.arrayBufferToHexString(data.data))
     this.code(str)
 }
-
+// 比较两个字符串的前N个字符是否相等
+function comparePrefix(str1, str2, N) {
+    let substring1 = str1.substring(0, N);
+    let substring2 = str2.substring(0, N);
+    return substring1 === substring2;
+}
 codeService.code = function (data) {
     log.info('[codeService] code :' + data)
     data = qrRule.formatCode(data, sqliteFuncs)
-    if (data.type == 'config' || (data.type == '100' && comparePrefix(data.code, "__VGS__0", "__VGS__0".length))) {
+    if (data.type == 'config') {
         // 配置码
-        configCode(data.code)
-    } else if (data.type == 'eid') {
-        //云证激活
-        driver.pwm.warning()
-        let activeResute = driver.eid.active(config.get("sysInfo.sn"), config.get("sysInfo.appVersion"), config.get("sysInfo.mac"), data.code);
-        log.info("activeResute:" + activeResute)
-        if (activeResute === 0) {
-            log.info("云证激活成功")
-            driver.screen.warning({msg: '云证激活成功'})
-            driver.audio.doPlay("yz_s")
+        configCode(data.code, "old")
+    } else if(data.type == 100) {
+        if(comparePrefix(data.code, "__VGS__0", "__VGS__0".length)) {
+            configCode(data.code,"new")
+        } else if(comparePrefix(data.code, "___VBAR_ID_ACTIVE_V", "___VBAR_ID_ACTIVE_V".length)) {
+            //云证激活
+            driver.pwm.warning()
+            let activeResute = driver.eid.active(config.get("sysInfo.sn"), config.get("sysInfo.appVersion"), config.get("sysInfo.mac"), data.code);
+            log.info("[codeService] code: activeResute " + activeResute)
+            if (activeResute === 0) {
+                log.info("[codeService] code: 云证激活成功")
+                driver.pwm.success()
+            } else {
+                log.info("[codeService] code: 云证激活失败")
+                driver.pwm.fail()
+            }
         } else {
-            log.info("云证激活失败")
-            driver.screen.warning({msg: '云证激活失败'})
-            driver.audio.doPlay("yz_f")
+            // 通行码
+            log.info("[codeService] code: 解析通行码 ", JSON.stringify(data))
+            accessService.access(data)
         }
     } else {
         // 通行码
-        log.info("解析通行码：", JSON.stringify(data))
+        log.info("[codeService] code: 解析通行码 ", JSON.stringify(data))
         accessService.access(data)
     }
 }
 
 // 配置码处理
-function configCode(code) {
-    if (!checkConfigCode(code)) {
+function configCode(code,type) {
+    if (!checkConfigCode(code,type)) {
         driver.pwm.fail()
-        log.error("配置码校验失败")
+        log.error("[codeService] configCode: 配置码校验失败")
         return
     }
     let json = utils.parseString(code)
@@ -65,7 +76,7 @@ function configCode(code) {
             log.error(error)
         }
     }
-    log.info("解析配置码：", JSON.stringify(json))
+    log.info("[codeService] configCode: 解析配置码 ", JSON.stringify(json))
     //切换模式
     if (!utils.isEmpty(json.w_model)) {
         try {
@@ -74,7 +85,7 @@ function configCode(code) {
             common.asyncReboot(1)
         } catch (error) {
             log.error(error, error.stack)
-            log.info('切换失败不做任何处理');
+            log.info('[codeService] configCode: 切换失败不做任何处理');
             driver.pwm.fail()
         }
         return
@@ -95,7 +106,7 @@ function configCode(code) {
         driver.pwm.warning()
         try {
             codeService.updateBegin()
-            ota.update(json.update_addr, json.update_md5)
+            ota.updateHttp(json.update_addr, json.update_md5, 300)
             codeService.updateEnd()
             driver.pwm.success()
             common.asyncReboot(1)
@@ -154,7 +165,7 @@ function configCode(code) {
                 source=${temp}/vgapp/wav/*
                 target=/app/code/resource/wav/
                 cp "\\$source" "\\$target"
-                rm -rf ${ota.OTA_ROOT}
+                 rm -rf ${ota.OTA_ROOT}
                 `)
             codeService.updateEnd()
             driver.pwm.success()
@@ -170,23 +181,35 @@ function configCode(code) {
     // 设备配置相关
     let configData = {}
     for (let key in json) {
-        let transKey = key.indexOf(".") >= 0 ? key : configConst.getValueByKey(key)
+        let transKey
+        if (type == "new") {
+            transKey = key.indexOf(".") >= 0 ? key.split(".")[0] + "Info." + key.split(".")[1] : configConst.getValueByKey(key)
+        } else {
+            transKey = configConst.getValueByKey(key)
+        }
+        if (transKey == undefined) {
+            continue
+        }
+        let keys = transKey.split(".")
         if (transKey == 'netInfo.dhcp') {
             json[key] = json[key] == 1 ? 0 : 1
         }
-        if (transKey) {
-            let keys = transKey.split(".")
-            if (utils.isEmpty(configData[keys[0]])) {
-                configData[keys[0]] = {}
-            }
-            configData[keys[0]][keys[1]] = json[key]
+        if (transKey == 'sysInfo.time') {
+            driver.system.setTime(json[key])
+            //同步给控制主机
+            driver.pwm.success()
+            return
         }
+        if (utils.isEmpty(configData[keys[0]])) {
+            configData[keys[0]] = {}
+        }
+        configData[keys[0]][keys[1]] = json[key]
     }
     let res = false
     if (Object.keys(configData).length > 0) {
         res = configService.configVerifyAndSave(configData)
     }
-    log.info("配置完成res：" + res)
+
     if (typeof res != 'boolean') {
         log.error(res)
         driver.pwm.fail()
@@ -194,13 +217,13 @@ function configCode(code) {
     }
     if (res) {
         driver.pwm.success()
-        log.info("配置成功")
+        log.info("[codeService] configCode: 配置成功")
     } else {
         driver.pwm.fail()
-        log.error("配置失败")
+        log.error("[codeService] configCode: 配置失败")
     }
     if (json.reboot === 1) {
-        driver.screen.warning({ msg: config.get("sysInfo.language") == "EN" ? "Rebooting" : "重启中", beep: false })
+        driver.screen.warning({ msg: config.get("sysInfo.language") == 1 ? "Rebooting" : "重启中", beep: false })
         common.asyncReboot(1)
     }
 }
@@ -235,26 +258,33 @@ function resourceDownload(url, md5, path, cb) {
 }
 
 //校验配置码
-function checkConfigCode(code) {
+function checkConfigCode(code,type) {
     let password = config.get('sysInfo.com_passwd') || '1234567887654321'
-    let lastIndex = code.lastIndexOf("--");
-    if (lastIndex < 0) {
-        lastIndex = code.lastIndexOf("__");
+    let firstPart
+    let secondPart
+    if(type == "new") {
+        let lastIndex = code.lastIndexOf("__");
+        firstPart = code.substring(0, lastIndex);
+        secondPart = code.substring(lastIndex + 2);
+    } else {
+        let lastIndex = code.lastIndexOf("--");
+        firstPart = code.substring(0, lastIndex);
+        secondPart = code.substring(lastIndex + 2);
     }
-    let firstPart = code.substring(0, lastIndex);
-    let secondPart = code.substring(lastIndex + 2);
     let res
     try {
         res = base64.fromHexString(common.arrayBufferToHexString(common.hmac(firstPart, password)))
     } catch (error) {
-        log.error(error, error.stack)
+        log.error(error)
         return false
     }
+
     return res == secondPart;
 }
 
+
 codeService.updateBegin = function () {
-    if (config.get("sysInfo.language") == "EN") {
+    if (config.get("sysInfo.language") == 1) {
         driver.screen.warning({ msg: "Start Upgrading", beep: false })
     } else {
         driver.screen.warning({ msg: "开始升级", beep: false })
@@ -262,7 +292,7 @@ codeService.updateBegin = function () {
 }
 
 codeService.updateEnd = function () {
-    if (config.get("sysInfo.language") == "EN") {
+    if (config.get("sysInfo.language") == 1) {
         driver.screen.warning({ msg: "Upgrade Successfully", beep: false })
     } else {
         driver.screen.warning({ msg: "升级成功", beep: false })
@@ -284,18 +314,11 @@ codeService.updateFailed = function (errorMsg) {
     if (!errorMsg || errorMsg.includes("Download failed, please check the url")) {
         errorMsg = 'Upgrade package download failed'
     }
-    if (config.get("sysInfo.language") == "EN") {
+    if (config.get("sysInfo.language") == 1) {
         driver.screen.warning({ msg: "Upgrade Failed: " + (errorMsg ? errorMsg : "Upgrade package download failed"), beep: false })
     } else {
         driver.screen.warning({ msg: "升级失败: " + (codeService.errorMsgMap[errorMsg] ? codeService.errorMsgMap[errorMsg] : "下载失败，请检查网址"), beep: false })
     }
-}
-
-// 比较两个字符串的前N个字符是否相等
-function comparePrefix(str1, str2, N) {
-    let substring1 = str1.substring(0, N);
-    let substring2 = str2.substring(0, N);
-    return substring1 === substring2;
 }
 
 export default codeService

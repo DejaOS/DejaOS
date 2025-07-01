@@ -9,8 +9,8 @@ import driver from './driver.js'
 import bus from '../dxmodules/dxEventBus.js'
 import utils from './common/utils/utils.js'
 import codeService from './service/codeService.js'
-const screen = {}
 
+const screen = {}
 screen.init = function () {
     let dir = config.get('uiInfo.rotation')
     if (![0, 1, 2, 3].includes(dir)) {
@@ -27,7 +27,7 @@ screen.init = function () {
     subscribe()
 }
 
-function subscribe() {
+function subscribe () {
     bus.on('netStatusChange', screen.netStatusChange)
     bus.on('mqttConnectedChange', screen.mqttConnectedChange)
     bus.on('displayResults', screen.displayResults)
@@ -35,24 +35,41 @@ function subscribe() {
     bus.on('showMsg', screen.showMsg)
     bus.on('showPic', screen.showPic)
     bus.on('warning', screen.warning)
-    bus.on('fail', screen.fail)
-    bus.on('success', screen.success)
+    bus.on('timeFormat', screen.timeFormat)
+    bus.on('customPopWin', (data) => {
+        let { msg, time } = data
+        screen.customPopWin(msg, time)
+    })
 }
 
 // 网络连接状态监听
 screen.netStatusChange = function (data) {
     if (data.connected) {
-        let ip = dxNet.getModeByCard(dxNet.TYPE.ETHERNET).param.ip
+        let ip = dxNet.getModeByCard(config.get("netInfo.type")).param.ip
         mainView.bottom_ip.text("IP:" + ip)
         if (config.get("uiInfo.ip_show")) {
             mainView.bottom_ip.show()
+        } else {
+            mainView.bottom_ip.text(" ")
         }
+        mainView.top_wifi_disable.hide()
         mainView.top_net_disable.hide()
-        mainView.top_net_enable.show()
+        if (config.get("netInfo.type") == 2) {
+            mainView.top_wifi_enable.show()
+        } else {
+            mainView.top_net_enable.show()
+        }
     } else {
         mainView.bottom_ip.text(" ")
-        mainView.top_net_disable.show()
-        mainView.top_net_enable.hide()
+        if (config.get("netInfo.type") == 2) {
+            mainView.top_wifi_enable.hide()
+            mainView.top_wifi_disable.show()
+        } else {
+            mainView.top_net_enable.hide()
+            mainView.top_net_disable.show()
+
+        }
+
     }
     mainView.bottom_ip.longMode(dxui.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
 }
@@ -86,11 +103,12 @@ screen.getUIConfig = function () {
         statusBar: configAll["uiInfo.statusBar"],
         language: configAll["sysInfo.language"],
         show_unlocking: configAll["uiInfo.show_unlocking"],
-        // buttonText: configAll["uiInfo.buttonText"],
+        buttonText: configAll["uiInfo.buttonText"],
         version: configAll["sysInfo.appVersion"],
         version_show: configAll["sysInfo.version_show"],
-        show_date: configAll['uiInfo.show_date'],
-        show_devname: configAll['uiInfo.show_devname'],
+        netInfo_type: configAll["netInfo.type"],
+        dateFormat: configAll["sysInfo.dateFormat"],
+        timeFormat: configAll["sysInfo.timeFormat"],
     }
 }
 
@@ -209,15 +227,18 @@ screen.customPopWin = function (msg, time) {
     popWin.center_bottom_view.bgColor(0)
 
     let label_width = 0
-    for (let i = 0; i < msg.length; i++) {
-        let dsc = popWin.font32.obj.lvFontGetGlyphDsc(msg.charCodeAt(i), msg.charCodeAt(i + 1))
-        label_width += dsc.adv_w
+    if (msg) {
+        for (let i = 0; i < msg.length; i++) {
+            let dsc = popWin.font32.obj.lvFontGetGlyphDsc(msg.charCodeAt(i), msg.charCodeAt(i + 1))
+            label_width += dsc.adv_w
+        }
     }
     let time1 = (label_width - popWin.center_label.width()) * 30
 
     popTimer = std.setTimeout(() => {
         popWin.center_background.hide()
         popWin.center_img.show()
+        popWin.center_label.text("这是一个弹窗--这是一个弹窗--这是一个弹窗--")
     }, time ? time : (time1 > 2000 ? time1 : 2000))
 }
 
@@ -278,8 +299,8 @@ screen.displayResults = function (param) {
         return
     }
     let res = "失败"
-    // 除非language为EN,否则默认中文
-    let isEn = config.get("sysInfo.language") == "EN"
+    // 除非language为1,否则默认中文
+    let isEn = config.get("sysInfo.language") == 1
     if (isEn) {
         res = param.flag ? "success!" : "fail!"
     } else {
@@ -350,6 +371,34 @@ screen.reload = function () {
 
 screen.loop = function () {
     dxui.handler()
+}
+
+
+screen.timeFormat = function () {
+    let formatDate = utils.getDateTime()
+    let time = screen.getUIConfig().timeFormat == 1 ? `${formatDate.hours}:${formatDate.minutes}` : utils.convertTo12HourFormat(formatDate.hours, formatDate.minutes)
+    let date = screen.getUIConfig().dateFormat == 1 ? `${formatDate.year}/${formatDate.month}/${formatDate.day}` : `${formatDate.day}/${formatDate.month}/${formatDate.year}`
+    mainView.screen_label_time.text(time)
+    mainView.screen_label_data.text(date)
+}
+
+let screenTimer = null
+screen.showVersion = function () {
+    if (screenTimer) {
+        return
+    }
+    let uiConfig = screen.getUIConfig()
+    screenTimer = std.setInterval(() => {
+        let count = dxui.Utils.GG.NativeDisp.lvDispGetInactiveTime()
+        if (count > 15 * 1000) {
+            mainView.version.hide()
+            std.clearInterval(screenTimer)
+            screenTimer = null
+        } else {
+            mainView.version.show()
+            mainView.version.text(uiConfig.version)
+        }
+    }, 1000)
 }
 
 export default screen

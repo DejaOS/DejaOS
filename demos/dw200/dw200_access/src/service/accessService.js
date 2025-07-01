@@ -11,14 +11,6 @@ const accessService = {}
 
 // 通行认证逻辑
 accessService.access = function (data) {
-    // 设备禁用不做任何通行
-    log.info('[accessService] access :' + JSON.stringify(data))
-    if (config.get('sysInfo.status') == 2) {
-        log.info('设备禁用不做任何通行')
-        driver.screen.accessFail("disable")
-        driver.audio.doPlay(config.get("sysInfo.language") == "EN" ? "f_eng" : "f")
-        return
-    }
     // 认证结果
     let res = false
     // 是否上报通行记录
@@ -34,7 +26,7 @@ accessService.access = function (data) {
         time: Math.floor(Date.parse(new Date()) / 1000),
         result: 0,
         extra: { "srcData": code },
-        error: ""
+        error: "无权限"
     }
     if (type == 900) {
         // 远程开门
@@ -45,6 +37,13 @@ accessService.access = function (data) {
         res = true
         // 不上报通行记录
         isReport = false
+    } else if (type == 103 && code.length > 16) {
+        // 解码失败
+        res = false
+        record.error = '解码失败'
+    }else if(type == 600 && code == null) {
+        // type == 600 && 海外蓝牙
+        res = true
     } else {
         //查询是否有这个凭证值的权限
         res = sqliteFuncs.permissionVerifyByCodeAndType(code, type)
@@ -57,10 +56,12 @@ accessService.access = function (data) {
     }
     if (res) {
         record.result = 1
+        record.error = ""
     } else if (config.get("doorInfo.onlinecheck") === 1) {
         // 在线验证 直接上报内容 按照回复结果反馈
+        let map = dxMap.get("VERIFY")
         let serialNo = utils.genRandomStr(10)
-
+        map.put(serialNo, { time: new Date().getTime() })
         driver.mqtt.send({
             topic: "access_device/v1/event/access_online", payload: JSON.stringify(mqttService.mqttReply(serialNo, record, undefined))
         })
@@ -69,11 +70,12 @@ accessService.access = function (data) {
         let payload = driver.mqtt.getOnlinecheck()
         if (payload && payload.serialNo == serialNo && payload.code == '000000') {
             res = true
+        } else {
+            map.del(serialNo)
         }
         isReport = false
     }
     // ui弹窗，蜂鸣且语音播报成功或失败
-    log.info(data)
     if (res) {
         driver.audio.success()
         driver.screen.accessSuccess(type)
@@ -81,14 +83,28 @@ accessService.access = function (data) {
         driver.gpio.open()
         // 蓝牙回复
         if (type == 600) {
-            driver.uartBle.accessSuccess(data.index)
+            if(code == null){
+                driver.uartBle.accessControl(data.index)
+            }else{
+                driver.uartBle.accessSuccess(data.index)
+            }
         }
     } else {
-        driver.audio.fail()
-        driver.screen.accessFail(type)
-        // 蓝牙回复
-        if (type == 600) {
-            driver.uartBle.accessFail(data.index)
+        if (config.get("doorInfo.openMode") == 3) {
+            driver.audio.success()
+            driver.screen.accessSuccess()
+            driver.gpio.open()
+        } else {
+            driver.audio.fail()
+            driver.screen.accessFail(type)
+            // 蓝牙回复
+            if (type == 600) {
+                if(code == null){
+                    driver.uartBle.accessControl(data.index)
+                }else{
+                    driver.uartBle.accessFail(data.index)
+                }
+            }
         }
     }
     if (isReport) {
@@ -104,17 +120,21 @@ function accessReport(record) {
     let configNum = config.get("doorInfo.offlineAccessNum");
     configNum = utils.isEmpty(configNum) ? 2000 : configNum;
     if (configNum > 0) {
-        if (parseInt(count[1]) >= configNum) {
+        if (parseInt(count[0]["COUNT(*)"]) >= configNum) {
             // 达到最大存储数量
             // 删除最远的那条
             sqliteFuncs.passRecordDelLast()
         }
+        // if (record.result === 0) {
+        //     record.error = '无权限'
+        // }
         let data = JSON.parse(JSON.stringify(record))
         data.extra = JSON.stringify(data.extra)
         sqliteFuncs.passRecordInsert(data)
     }
     let map = dxMap.get("REPORT")
     let serialNo = utils.genRandomStr(10)
+    map.del(serialNo)
     map.put(serialNo, { time: new Date().getTime(), list: [record.time] })
     driver.mqtt.send({
         topic: "access_device/v1/event/access", payload: JSON.stringify(mqttService.mqttReply(serialNo, [record], mqttService.CODE.S_000))

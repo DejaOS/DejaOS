@@ -3,7 +3,7 @@ import dxMap from '../../dxmodules/dxMap.js'
 import common from '../../dxmodules/dxCommon.js'
 import driver from '../driver.js'
 import bus from '../../dxmodules/dxEventBus.js'
-import accessService from '../service/accessService.js'
+import accessService from './accessService.js'
 
 const uartBleService = {}
 
@@ -31,6 +31,8 @@ map.put("auth", [
     },
 ])
 
+let packageNumMap = dxMap.get("ble_packageNum")
+
 uartBleService.receiveMsg = function (data) {
     log.info('[uartBleService] receiveMsg :' + JSON.stringify(data))
     this["cmd" + data.cmd](data)
@@ -43,10 +45,27 @@ uartBleService.receiveMsg = function (data) {
  */
 uartBleService.cmd60 = function (pack) {
     log.info('[uartBleService] cmd60 :' + JSON.stringify(pack))
+    if (CMDIsBleUpdate(pack)) {
+        let data = common.hexToArr(pack.data)
+        let step = parseInt(data[3], 16)
+        if(packageNumMap.get("ble_packageNum")) {
+            packageNumMap.put("ble_packageNum", packageNumMap.get("ble_packageNum") + 1)
+        } else {
+            packageNumMap.put("ble_packageNum", 1)
+        }
+        if(step == 3) {
+            driver.sync.response(`uartBle.upgradeCmd${step}_${packageNumMap.get("ble_packageNum")}`, data)
+        } else {
+            driver.sync.response(`uartBle.upgradeCmd${step}`, data)
+            packageNumMap.del("ble_packageNum")
+        }
+        return
+
+    }
     let res = {}
     let data = pack.data.match(/.{2}/g)
     if (data.slice(-1)[0] != 'fe') {
-        log.info("other ble info data")
+        log.info("[uartBleService] cmd60: other ble info data")
         return
     }
     data = data.slice(3, -1)
@@ -55,7 +74,7 @@ uartBleService.cmd60 = function (pack) {
     let v = data.slice(2)
     if (t == '02') {
         if (v.length !== parseInt(l, 16)) {
-            log.error("ble info data err")
+            log.error("[uartBleService] cmd60: ble info data err")
             return
         }
         t = v[0]
@@ -64,12 +83,12 @@ uartBleService.cmd60 = function (pack) {
         if (l !== "00") {
             let v1 = v.slice(2, 2 + parseInt(l, 16))
             if (t !== '01') {
-                log.error("ble info data err")
+                log.error("[uartBleService] cmd60: ble info data err")
                 return
             }
             bleName = common.hexToString(v1.join(''))
         }
-        log.info("bleInfo.name:" + bleName)
+        log.info("[uartBleService] cmd60: bleInfo.name:" + bleName)
         if (bleName) {
             res.name = bleName
         }
@@ -80,11 +99,11 @@ uartBleService.cmd60 = function (pack) {
         l = v[1]
         let v2 = v.slice(2)
         if (t !== '02') {
-            log.error("ble info data err")
+            log.error("[uartBleService] cmd60: ble info data err")
             return
         }
         let bleMac = v2.join('')
-        log.info("bleInfo.mac:" + bleMac)
+        log.info("[uartBleService] cmd60: bleInfo.mac:" + bleMac)
         if (bleMac) {
             res.mac = bleMac
         }
@@ -94,7 +113,7 @@ uartBleService.cmd60 = function (pack) {
         // 修改回复
         driver.uartBle.setConfigReply(true)
     } else {
-        log.error("ble info data err")
+        log.error("[uartBleService] cmd60: ble info data err")
         return
     }
 }
@@ -108,7 +127,7 @@ uartBleService.cmd07 = function (pack) {
     let data = pack.data.match(/.{2}/g).map(v => parseInt(v, 16))
     let index = data[pack.length - 1]
     // 记录连接标识
-    log.info("index:" + index);
+    log.info("[uartBleService] cmd07: index " + index);
     let curr = 0
     let auth = map.get("auth")
     for (let i = 0; i < 3; i++) {
@@ -118,15 +137,15 @@ uartBleService.cmd07 = function (pack) {
         }
     }
     if (pack.length == 1 || data[0] == 0x10) {
-        log.info("random 16 byte");
+        log.info("[uartBleService] cmd07: random 16 byte");
         auth[curr].random = getUrandom(16)
         auth[curr].randomLen = 16
     } else if (pack.length == 2 && data[0] == 0x20) {
-        log.info("random 32 byte");
+        log.info("[uartBleService] cmd07: random 32 byte");
         auth[curr].random = getUrandom(32)
         auth[curr].randomLen = 32
     } else {
-        log.info("invalid pack");
+        log.info("[uartBleService] cmd07: invalid pack");
         return
     }
     auth[curr].index = index
@@ -146,7 +165,7 @@ uartBleService.cmd08 = function (pack) {
     log.info('[uartBleService] cmd08 :' + JSON.stringify(pack))
     let data = pack.data.match(/.{2}/g).map(v => parseInt(v, 16))
     let index = data[pack.length - 1]
-    log.info("index:" + index);
+    log.info("[uartBleService] cmd08: index " + index);
     let curr = -1
     let result = "90"
     let auth = map.get("auth")
@@ -158,7 +177,7 @@ uartBleService.cmd08 = function (pack) {
         }
     }
     if (curr === -1) {
-        log.info("extern auth failed");
+        log.info("[uartBleService] cmd08: extern auth failed");
         result = "90"
     } else {
         // aes解密
@@ -167,10 +186,10 @@ uartBleService.cmd08 = function (pack) {
         let plain = common.aes128EcbDecrypt(cipher, key)
         if (plain.map((byte) => byte.toString(16).padStart(2, '0'))
             .join('') !== auth[curr].random) {
-            log.info("extern auth failed");
-            log.info("aes key: " + key);
-            log.info("aes in: " + cipher);
-            log.info("aes out: " + plain);
+            log.info("[uartBleService] cmd08: extern auth failed");
+            log.info("[uartBleService] cmd08: aes key: " + key);
+            log.info("[uartBleService] cmd08: aes in: " + cipher);
+            log.info("[uartBleService] cmd08: aes out: " + plain);
             result = "90"
         } else {
             auth[curr].index = 0xff;
@@ -192,14 +211,17 @@ uartBleService.cmd0f = function (pack) {
     let data = pack.data.match(/.{2}/g).map(v => parseInt(v, 16))
     let index = data[pack.length - 1]
     let packCrc
-    log.info("index:" + index);
-    if (pack.length < 4) {
-        packCrc = { "head": "55aa", "cmd": "0f", "result": "0e", "dlen": 1, "data": index }
+    log.info("[uartBleService] cmd0f: index " + index);
+
+    if(data[0] == 0x00 && data[1] == 0x00 && data[2] == 0x30 && data[3] == 0x06 && data[4] == 0x03 && data[5] == 0x00 && data[6] == 0x01 && data[7] == 0x01 && data[8] == 0x01){
+        // 蓝牙设备远程开门
+        accessService.access({ type: 600, code: null, index: index })
+        return
     } else {
         let userId = data.slice(5, -1).map((byte) => byte.toString(16).padStart(2, '0')).join('')
         userId = common.hexToString(userId)
         // 用户id
-        log.info("用户id: ", userId)
+        log.info("[uartBleService] cmd0f: 用户id ", userId)
         accessService.access({ type: 600, code: userId, index: index })
         return
     }
@@ -225,10 +247,10 @@ uartBleService.setBleConfig = function (param) {
 
     let name = param.name
     if (name !== undefined) {
-        if (name && /^[0-9|a-f|A-F]+$/.test(name) && name.length <= 10) {
+        if (name && /^[0-9|a-z|A-Z]+$/.test(name) && name.length <= 10) {
             nameTlv = "10" + common.decimalToLittleEndianHex(name.length, 1) + common.stringToHex(name)
         } else {
-            log.error("蓝牙名称不能为中文且长度不能超过10个字符");
+            log.error("[uartBleService] setBleConfig: 蓝牙名称不能为中文且长度不能超过10个字符");
             return
         }
     }
@@ -250,7 +272,7 @@ uartBleService.setBleConfig = function (param) {
         if (mac && /^[0-9|a-f|A-F]{12}$/.test(mac) && bleMacIsValid(mac.match(/.{2}/g))) {
             macTlv = "11" + "06" + mac
         } else {
-            log.error("蓝牙mac地址格式错误");
+            log.error("[uartBleService] setBleConfig: 蓝牙mac地址格式错误");
             return
         }
     }
@@ -263,6 +285,20 @@ uartBleService.setBleConfig = function (param) {
 
 function getUrandom(len) {
     return common.systemWithRes(`dd if=/dev/urandom bs=1 count="${len}" 2>/dev/null | xxd -p`, 100).split(/\s/g)[0]
+}
+
+/**
+ * 过滤蓝牙升级的指令
+ */
+function CMDIsBleUpdate (pack) {
+    let data = common.hexToArr(pack.data)
+    if (data.length < 5) {
+        return false
+    } else if (data[0] == 0x03 && data[1] == 0x01 && data[2] == 0x80 && (data[3] == 0x01 || data[3] == 0x02 || data[3] == 0x03 || data[3] == 0x04 || data[3] == 0x05)) {
+        return true
+    } else {
+        return false
+    }
 }
 
 export default uartBleService

@@ -35,11 +35,13 @@ mainView.init = function () {
         mainView.timer = std.setInterval(() => {
             let formatDate = utils.getDateTime()
             if (mainView.lastMinutes != formatDate.minutes) {
-                screen_label_time.text(formatDate.hours + ":" + formatDate.minutes)
+                let time = screen.getUIConfig().timeFormat == 1 ? `${formatDate.hours}:${formatDate.minutes}` : utils.convertTo12HourFormat(formatDate.hours,formatDate.minutes)
+                screen_label_time.text(time)
                 mainView.lastMinutes = formatDate.minutes
             }
             if (mainView.lastDay != formatDate.day) {
-                screen_label_data.text(`${formatDate.dayTextEn} ${formatDate.month}-${formatDate.day}`)
+                let date = screen.getUIConfig().dateFormat == 1 ? `${formatDate.year}/${formatDate.month}/${formatDate.day}` : `${formatDate.day}/${formatDate.month}/${formatDate.year}`
+                screen_label_data.text(date)
                 mainView.lastDay = formatDate.day
             }
             // 十分钟设置一次
@@ -50,6 +52,12 @@ mainView.init = function () {
                 mainView.lastSec = new Date().getTime()
             }
         }, 1000)
+        //现实网络默认未连接图标
+        if (uiConfig.netInfo_type == 2 && !driver.net.getStatus()) {
+            mainView.top_wifi_disable.show()
+        } else if (uiConfig.netInfo_type == 1 && !driver.net.getStatus()) {
+            mainView.top_net_disable.show()
+        }
         // 公司名称更新
         if (uiConfig.devname) {
             screen_label_company.text(uiConfig.devname)
@@ -77,10 +85,10 @@ mainView.init = function () {
             bottom_cont.hide()
         }
         // 按钮文字设置
-        // if (uiConfig.buttonText) {
-        //     screen_btn_unlocking_label.text(uiConfig.buttonText)
-        //     screen_btn_unlocking.width(uiConfig.buttonText.length * 30 + 50)
-        // }
+        if (uiConfig.buttonText) {
+            screen_btn_unlocking_label.text(uiConfig.buttonText)
+            screen_btn_unlocking.width(uiConfig.buttonText.length * 30 + 50)
+        }
         // 密码按钮显示/隐藏
         if (uiConfig.show_unlocking) {
             screen_btn_unlocking.show()
@@ -89,35 +97,20 @@ mainView.init = function () {
         }
         // 中英文切换，CN中文EN英文
         switch (uiConfig.language) {
-            case 'CN':
-                screen_btn_unlocking_label.text("密码")
-                // meeting_label.text("会议中")
+            case 0:
+                screen_btn_unlocking_label.text(uiConfig.buttonText)
+                access_icon.source('/app/code/resource/image/access_icon.png')
+                access_icon.update()
+                imageBox.setSize(access_icon.width() + 5, access_icon.height() + 5)
                 break;
-            case 'EN':
+            case 1:
                 screen_btn_unlocking_label.text("OPEN")
-                // meeting_label.text("Meeting")
+                access_icon.source('/app/code/resource/image/access_icon_en.png')
+                access_icon.update()
+                imageBox.setSize(access_icon.width() + 5, access_icon.height() + 5)
                 break;
             default:
                 break;
-        }
-        // 隐藏版本号
-        if (uiConfig.version_show) {
-            version.text(uiConfig.version)
-            version.show()
-        } else {
-            version.hide()
-        }
-        if (uiConfig.show_date) {
-            screen_label_time.show()
-            screen_label_data.show()
-        } else {
-            screen_label_time.hide()
-            screen_label_data.hide()
-        }
-        if (uiConfig.show_devname) {
-            screen_label_company.show()
-        } else {
-            screen_label_company.hide()
         }
     })
     screen_main.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_UNLOADED, () => {
@@ -126,10 +119,11 @@ mainView.init = function () {
     /**************************************************创建背景图片*****************************************************/
     let screen_img = dxui.Image.build('screen_img', screen_main)
     mainView.screen_img = screen_img
-    screen_img.source("/app/code/resource/image/bk_90.png")
+    screen_img.source("/app/code/resource/image/background_90.jpg")
     /**************************************************创建版本号*****************************************************/
-    let version = buildLabel('version', screen_main, 16, "dw200_access_v1.0.0")
+    let version = buildLabel('version', screen_main, 12, "dw200_v20_access_2.0.0")
     mainView.version = version
+    version.align(dxui.Utils.ALIGN.TOP_LEFT, 0, 30)
     version.hide()
     /**************************************************创建时间盒子*****************************************************/
     let date_box = dxui.View.build('date_box', screen_main)
@@ -142,9 +136,11 @@ mainView.init = function () {
     date_box.flexAlign(dxui.Utils.FLEX_ALIGN.START, dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.CENTER)
     date_box.obj.lvObjSetStylePadGap(-5, dxui.Utils.ENUM._LV_STYLE_STATE_CMP_SAME)
     /**************************************************创建时间Label*****************************************************/
-    let screen_label_time = buildLabel('screen_label_time', date_box, 60, "00:00")
+    let screen_label_time = buildLabel('screen_label_time', date_box, 45, "00:00")
+    mainView.screen_label_time = screen_label_time
     /**************************************************创建DateLabel*****************************************************/
     let screen_label_data = buildLabel('screen_label_data', date_box, 30, "Sun 00-00")
+    mainView.screen_label_data = screen_label_data
     /**************************************************创建公司名称Label*****************************************************/
     let screen_label_company = buildLabel('screen_label_company', date_box, 27, "欢迎使用")
     mainView.screen_label_company = screen_label_company
@@ -180,18 +176,47 @@ mainView.init = function () {
     top_cont.bgOpa(30)
     top_cont.bgColor(0x000000)
     top_cont.flexFlow(dxui.Utils.FLEX_FLOW.ROW)
-    top_cont.flexAlign(dxui.Utils.FLEX_ALIGN.END, dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.CENTER)
+    top_cont.flexAlign(dxui.Utils.FLEX_ALIGN.SPACE_BETWEEN, dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.CENTER)
+    let imageBox = dxui.View.build('imageBox', top_cont)
+    let access_icon = dxui.Image.build('access_icon', imageBox)
+    imageBox.borderWidth(0)
+    imageBox.bgOpa(0)
+    imageBox.scroll(false)
+    access_icon.source('/app/code/resource/image/access_icon.png')
+    access_icon.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+    imageBox.on(dxui.Utils.EVENT.CLICK, () => {
+        screen.showVersion()
+    })
+    /**************************************************创建上方右边容器*****************************************************/
+    let top_right = dxui.View.build('top_right', top_cont)
+    clearStyle(top_right)
+    top_right.setSize(180, 28)
+    top_right.bgOpa(0)
+    top_right.bgColor(0x000000)
+    top_right.flexFlow(dxui.Utils.FLEX_FLOW.ROW)
+    top_right.flexAlign(dxui.Utils.FLEX_ALIGN.END, dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.CENTER)
+    /**************************************************创建wifi网络状显示图片*****************************************************/
+    let top_wifi_enable = dxui.Image.build('top_wifi_enable', top_right)
+    mainView.top_wifi_enable = top_wifi_enable
+    top_wifi_enable.source('/app/code/resource/image/wifi_enable.png')
+    top_wifi_enable.hide()
+    /**************************************************创建wifi网络状态常显示图片*****************************************************/
+    let top_wifi_disable = dxui.Image.build('top_wifi_disable', top_right)
+    mainView.top_wifi_disable = top_wifi_disable
+    top_wifi_disable.source('/app/code/resource/image/wifi_disable.png')
+    top_wifi_disable.hide()
     /**************************************************创建网络状态常显示图片*****************************************************/
-    let top_net_disable = dxui.Image.build('top_net_disable', top_cont)
+    let top_net_disable = dxui.Image.build('top_net_disable', top_right)
     mainView.top_net_disable = top_net_disable
     top_net_disable.source('/app/code/resource/image/eth_disable.png')
+    top_net_disable.hide()
     /**************************************************创建网络状态常显示图片*****************************************************/
-    let top_net_enable = dxui.Image.build('top_net_enable', top_cont)
+    let top_net_enable = dxui.Image.build('top_net_enable', top_right)
     mainView.top_net_enable = top_net_enable
     top_net_enable.source('/app/code/resource/image/eth_enable.png')
     top_net_enable.hide()
     /**************************************************创建mqtt状态常显示图片*****************************************************/
-    let top_mqtt = dxui.Image.build('top_mqtt', top_cont)
+    let top_mqtt = dxui.Image.build('top_mqtt', top_right)
     mainView.top_mqtt = top_mqtt
     top_mqtt.source('/app/code/resource/image/mqtt_enable.png')
     top_mqtt.hide()

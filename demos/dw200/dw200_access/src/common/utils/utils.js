@@ -1,17 +1,24 @@
 import common from '../../../dxmodules/dxCommon.js'
 import std from '../../../dxmodules/dxStd.js'
+import config from '../../../dxmodules/dxConfig.js'
 import driver from '../../driver.js'
 const utils = {}
 
 // 生成指定长度的字母和数字组合的随机字符串
 utils.genRandomStr = function (length) {
-    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-
-    for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * charset.length);
-        result += charset.charAt(randomIndex);
+    let serialNo = config.get("sysInfo.serialNo") || 0
+    if (serialNo == 100) {
+        serialNo = 0
     }
+    let result = "serialNo" + serialNo
+    config.set("sysInfo.serialNo", serialNo + 1)
+    // const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    // let result = '';
+
+    // for (let i = 0; i < length; i++) {
+    //     const randomIndex = Math.floor(Math.random() * charset.length);
+    //     result += charset.charAt(randomIndex);
+    // }
 
     return result;
 }
@@ -20,6 +27,11 @@ utils.genRandomStr = function (length) {
 utils.getUrlFileSize = function (url) {
     let actualSize = common.systemWithRes(`wget --spider -S ${url} 2>&1 | grep 'Length' | awk '{print $2}'`, 100).match(/\d+/g)
     return actualSize ? parseInt(actualSize) : 0
+}
+
+//音量百分比转换
+utils.getVolume1 = function (volume1) {
+    return 60 * (volume1 / 100)
 }
 
 // 判断是否为""/null/undefined
@@ -108,6 +120,21 @@ utils.waitDownload = function (update_addr, downloadPath, timeout, update_md5, f
     }
 }
 
+utils.formatUnixTimestamp = function (timestamp) {
+    let padZero = (v) => {
+        // 双位补0
+        return v.toString(10).padStart(2, '0')
+    }
+    const date = new Date(timestamp * 1000);
+    const year = date.getFullYear().toString();
+    const month = padZero(date.getMonth() + 1);
+    const day = padZero(date.getDate());
+    const hours = padZero(date.getHours());
+    const minutes = padZero(date.getMinutes());
+    const seconds = padZero(date.getSeconds());
+    return `${month}${day}${hours}${minutes}${year}`;
+}
+
 const daysOfWeekEn = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const daysOfWeekCh = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 const monthsOfYearEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -131,6 +158,13 @@ utils.getDateTime = function () {
         dayTextCh: daysOfWeekCh[t.getDay()],//星期(中文)
         dayTextEn: daysOfWeekEn[t.getDay()],//星期(英文)
     }
+}
+
+utils.convertTo12HourFormat = function (hours, minutes) {
+    let ampm = hours >= 12 ? 'PM' : 'AM'
+    hours = hours % 12
+    hours = hours ? hours : 12 // 将0点转换为12点
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`
 }
 
 export default utils

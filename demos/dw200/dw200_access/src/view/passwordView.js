@@ -16,7 +16,7 @@ passwordView.init = function () {
             linePoints = linePointsVer
             password_btnm.setSize(320, 480)
             // 中英文切换，0中文1英文
-            if (uiConfig.language == "EN") {
+            if (uiConfig.language == 1) {
                 password_btnm.data([
                     "1", "2", "3", "\n",
                     "4", "5", "6", "\n",
@@ -35,7 +35,7 @@ passwordView.init = function () {
             // 横屏
             linePoints = linePointsHor
             password_btnm.setSize(480, 320)
-            if (uiConfig.language == "EN") {
+            if (uiConfig.language == 1) {
                 password_btnm.data([
                     "1", "2", "3", "0", "\n",
                     "4", "5", "6", "BACK", "\n",

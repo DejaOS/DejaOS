@@ -8,11 +8,11 @@
     "mqttInfo.password": "password",
     "mqttInfo.prefix": "",
     // ntp开关
-    "netInfo.ntp": 1,
+    "netInfo.ntp": 2,
     // ntp服务ip
     "netInfo.ntpAddr": "182.92.12.11",
     // 对时时间
-    "netInfo.ntpHour": 23,
+    "netInfo.ntpHour": 14,
     // 系统时区
     "netInfo.ntpLocaltime": 8,
     // 网络类型(1:以太网 2:wifi 4:4G)
@@ -24,6 +24,8 @@
     "netInfo.dns": "",
     "netInfo.subnetMask": "",
     "netInfo.netMac": "",
+    "netInfo.ssid": "admin",
+    "netInfo.psk": "password",
     // 0:默认mac 2:自定义mac
     "netInfo.fixed_macaddr_enable": 0,
     // ip/sn显示/隐藏
@@ -31,19 +33,15 @@
     "uiInfo.ip_show": 1,
     // 状态栏显示/隐藏
     "uiInfo.statusBar": 1,
-    // 日期显示隐藏 1开 0 关
-    "uiInfo.show_date": 1,
-    // 设备名称显示隐藏 1开 0 关
-    "uiInfo.show_devname": 1,
     // 密码按钮显示和隐藏
     "uiInfo.show_unlocking": 1,
-    // "uiInfo.buttonText": "密码",
+    "uiInfo.buttonText": "密码",
     // 修改系统字体
     "uiInfo.fontPath": "/app/code/resource/font/PangMenZhengDaoBiaoTiTi-1.ttf",
-    "uiInfo.rotation0BgImage": "/app/code/resource/image/bk.png",
-    "uiInfo.rotation1BgImage": "/app/code/resource/image/bk_90.png",
-    "uiInfo.rotation2BgImage": "/app/code/resource/image/bk.png",
-    "uiInfo.rotation3BgImage": "/app/code/resource/image/bk_90.png",
+    "uiInfo.rotation0BgImage": "/app/code/resource/image/background.png",
+    "uiInfo.rotation1BgImage": "/app/code/resource/image/background_90.png",
+    "uiInfo.rotation2BgImage": "/app/code/resource/image/background.png",
+    "uiInfo.rotation3BgImage": "/app/code/resource/image/background_90.png",
     // base64图片格式
     "uiInfo.horBgImage": "",
     "uiInfo.verBgImage": "",
@@ -79,31 +77,49 @@
     // 设备状态，0-未激活，1-正常，2-禁用
     "sysInfo.status": 1,
     // 应用版本号
-    "sysInfo.appVersion": "dw200_access_v2.0.1",
+    "sysInfo.appVersion": "dw200_v20_access_2.0.0",
     // 版本显示/隐藏
-    "sysInfo.version_show": 1,
+    "sysInfo.version_show": 0,
     // 应用发布日期
     "sysInfo.createTime": "2024-08-23 10:49:00",
     // 设备名称
     "sysInfo.deviceName": "欢迎使用",
     // 设备号
     "sysInfo.deviceNum": 0,
-    // ui语言
-    "sysInfo.language": "CN",
+    // ui语言，0中文1英文
+    "sysInfo.language": 0,
     // 设置系统时间，秒级
     "sysInfo.time": "",
     // 配置码密码校验
     "sysInfo.com_passwd": "1234567887654321",
-    // 通行记录上报，批处理数量
-    "sysInfo.reportCount": 500,
+    // 通行记录上报，批处理数量，默认50条
+    "sysInfo.reportCount": 50,
+    // 通行记录上报时间间隔，默认5秒
+    "sysInfo.reportInterval": 5000,
     //云证开关 3:云证获取 1:物理卡号
     "sysInfo.nfc_identity_card_enable": 1,
     //1打开0关闭
     "sysInfo.nfc": 1,
+    //日期格式 1 年/月/日 2 日/月/年
+    "sysInfo.dateFormat": 1,
+    //时间格式 1 24小时制 2 12小时制
+    "sysInfo.timeFormat": 1,
+    //-1 关闭自动重启 0-23 整点重启
+    "sysInfo.autoRestart": 3,
     // 码制
-    "scanInfo.deType": 64511,
+    "scanInfo.de_type": 64511,
     //扫码模式 0是间隔 1是单次
     "scanInfo.sMode": 0,
     // 扫码间隔模式间隔时间
     "scanInfo.interval": 1000,
+    // 读卡方式 1: 读物理卡号 2: 固定扇区 3: 一卡一密
+    "nfcInfo.nfcType": 1,
+    // 读卡扇区号
+    "nfcInfo.sectorNumber": 0,
+    // 读卡块号
+    "nfcInfo.blockNumber": 0,
+    // 密钥类型 1:0x60 2:0x61
+    "nfcInfo.secretkeyType": 1,
+    // 密钥
+    "nfcInfo.secretkey": "FFFFFFFFFFFF"
 }

@@ -5,6 +5,7 @@ import utils from '../common/utils/utils.js'
 import common from '../../dxmodules/dxCommon.js'
 import dxNtp from '../../dxmodules/dxNtp.js'
 import base64 from '../../dxmodules/dxBase64.js'
+import bus from '../../dxmodules/dxEventBus.js'
 import * as os from "os";
 
 const configService = {}
@@ -18,6 +19,8 @@ const ipOrDomainCheckWithPort = v => /^(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0
 const regpCheck = v => /^[1-9]\d*$/.test(v)
 // 非负整数
 const regnCheck = v => /^([1-9]\d*|0{1})$/.test(v)
+// base64格式
+const base64Check = v => /^data:image\/(png|jpg|jpeg|bmp);base64,[A-Za-z0-9+/]+={0,2}$/.test(v)
 // 所有支持的配置项的检验规则以及设置成功后的回调
 
 const supported = {
@@ -31,11 +34,15 @@ const supported = {
         subnetMask: { rule: ipCheck },
         netMac: { rule: v => typeof v == 'string' },
         fixed_macaddr_enable: { rule: v => [0, 2].includes(v) },
-        // 0：关闭 1：间隔同步
-        ntp: { rule: v => [0, 1].includes(v) },
-        ntpAddr: { rule: v => typeof v == 'string' },
-        ntpInterval: { rule: regpCheck },
+        // 0：关闭 2：定时同步
+        ntp: { rule: v => [0, 2].includes(v) },
+        ntpAddr: { rule: v => typeof v == 'string', callback: v => bus.fire("ntpUpdate") },
+        ntpHour: { rule: regpCheck },
         ntpLocaltime: { rule: regnCheck, callback: v => dxNtp.updateGmt(v) },
+        //wifi用户名
+        ssid: { rule: v => typeof v == 'string' },
+        //wifi 密码
+        psk: { rule: v => typeof v == 'string' },
     },
     mqttInfo: {
         mqttAddr: { rule: ipOrDomainCheckWithPort },
@@ -76,7 +83,7 @@ const supported = {
         rotation2BgImage: { rule: v => typeof v == 'string', callback: v => driver.screen.reload() },
         rotation3BgImage: { rule: v => typeof v == 'string', callback: v => driver.screen.reload() },
         horBgImage: {
-            rule: v => typeof v == 'string', callback: v => {
+            rule: base64Check, callback: v => {
                 let suffix = ""
                 try {
                     suffix = base64ImageSave(v, true)
@@ -96,7 +103,7 @@ const supported = {
             }
         },
         verBgImage: {
-            rule: v => typeof v == 'string', callback: v => {
+            rule: base64Check, callback: v => {
                 let suffix = ""
                 try {
                     suffix = base64ImageSave(v, false)
@@ -115,20 +122,16 @@ const supported = {
                 driver.screen.reload()
             }
         },
-        // 日期显示隐藏 1开 0 关
-        show_date: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
-        // 设备名称显示隐藏 1开 0 关
-        show_devname: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
         //sn是否隐藏 1 显示 0 隐藏
         sn_show: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
         //ip是否隐藏 1 显示 0 隐藏
         ip_show: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
-        // buttonText: { rule: v => typeof v == 'string' && v.length <= 6, callback: v => driver.screen.reload() },
+        buttonText: { rule: v => typeof v == 'string' && v.length <= 6, callback: v => driver.screen.reload() },
         fontPath: { rule: v => typeof v == 'string', callback: v => driver.screen.reload() },
         show_unlocking: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
     },
     doorInfo: {
-        openMode: { rule: v => [0, 1, 2].includes(v), callback: openModeCb },
+        openMode: { rule: v => [0, 1, 2, 3].includes(v), callback: openModeCb },
         openTime: { rule: regpCheck },
         openTimeout: { rule: regpCheck },
         onlinecheck: { rule: v => [0, 1].includes(v) },
@@ -144,7 +147,7 @@ const supported = {
         volume3: { rule: regnCheck },
         //版本号显示隐藏
         version_show: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
-        heart_time: { rule: regpCheck },
+        heart_time: { rule: v => /^(3[0-9]{1,}|[4-9]\d*)$/.test(v) },
         heart_en: { rule: v => [0, 1].includes(v) },
         heart_data: { rule: v => typeof v == 'string' },
         //设备号
@@ -152,44 +155,59 @@ const supported = {
         // 设备名称
         deviceName: { rule: v => typeof v == 'string', callback: v => driver.screen.reload() },
         com_passwd: { rule: v => v.length == 16 },
-        // 0:中文, 1:英文
-        language: {
-            rule: v => [0, 1].includes(v), callback: v => {
-                config.set("sysInfo.language", v == 1 ? "EN" : "CN")
-                driver.screen.reload()
-            }
-        },
+        //语言  0中文1英文
+        language: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
         status: { rule: v => [1, 2].includes(v) },
         nfc_identity_card_enable: { rule: v => [1, 3].includes(v) },
         //1打开0关闭
         nfc: { rule: v => [0, 1].includes(v) },
         // 设置系统时间，秒级
-        time: { rule: regnCheck, callback: v => common.systemBrief(`date -s "@${v}"`) },
+        time: { rule: v => /^([1-9]\d{0,9}|0)$/.test(v), callback: v => common.systemBrief(`date -s "@${v}"`) },
+        //蓝牙名称
+        ble_name: { rule: v => typeof v == 'string', callback: v => driver.uartBle.setConfig({ name: v }) },
+        //蓝牙 mac
+        ble_mac: { rule: v => typeof v == 'string', callback: v => driver.uartBle.setConfig({ mac: v }) },
+        dateFormat: { rule: v => [1, 2].includes(v), callback: v => driver.screen.timeFormat() },
+        timeFormat: { rule: v => [1, 2].includes(v), callback: v => driver.screen.timeFormat() },
+        reportCount: { rule: regnCheck },
+        reportInterval: { rule: regnCheck },
+        //-1 关闭自动重启 0-23 整点重启
+        autoRestart: { rule: v => typeof v == 'number' && /^(-1|[0-9]|1[0-9]|2[0-3])$/.test(v.toString()) },
     },
     scanInfo: {
         //码制选择根据比特位来的 全选64511
-        deType: { rule: regnCheck },
+        de_type: { rule: regnCheck },
         //扫码模式 0是间隔 1是单次
         sMode: { rule: v => [0, 1].includes(v) },
         //间隔生效  间隔时间
         interval: { rule: regnCheck },
+    },
+    nfcInfo: {
+        nfcType: { rule: v => [1, 2, 3].includes(v) },
+        sectorNumber: { rule: v => typeof v == 'number' && /^([0-9]|1[0-5])$/.test(v.toString()) },
+        blockNumber: { rule: v => [0, 1, 2].includes(v) },
+        secretkeyType: { rule: v => [1, 2].includes(v) },
+        secretkey: { rule: v => /^[0-9a-fA-F]{12}$/.test(v) }
     }
 }
 // 需要重启的配置
-const needReboot = ["netInfo", "mqttInfo", "sysInfo.volume", "sysInfo.volume2", "sysInfo.volume3", "sysInfo.heart_time", "sysInfo.heart_en", "sysInfo.nfc_identity_card_enable", 'sysInfo.language',
-    'scanInfo.deType', 'sysInfo.nfc']
+const needReboot = ["netInfo", "mqttInfo", "sysInfo.volume", "sysInfo.volume2", "sysInfo.volume3", "sysInfo.heart_time", "sysInfo.heart_en", "sysInfo.nfc_identity_card_enable",
+    'scanInfo.de_type', 'sysInfo.nfc', 'uiInfo.fontPath', 'sysInfo.autoRestart']
 
 // 统一用户配置校验方法
 configService.configVerifyAndSave = function (data) {
     let isReboot = false
+    let allPassed = true
     for (const key in data) {
         if (!supported[key]) {
+            allPassed = false
             return key + " not supported"
         }
         const item = data[key];
         if (typeof item != 'object') {
+            allPassed = false
             // 必须是一个组
-            continue
+            return
         }
         if (needReboot.includes(key)) {
             isReboot = true
@@ -197,26 +215,35 @@ configService.configVerifyAndSave = function (data) {
         for (const subKey in item) {
             let option = supported[key][subKey]
             if (utils.isEmpty(option)) {
+                allPassed = false
                 return subKey + " not supported"
             }
             const value = item[subKey];
             if (needReboot.includes(key + "." + subKey)) {
                 isReboot = true
             }
-
-            if (!option.rule || option.rule(value)) {
-                // 没有校验规则，或者校验通过
-                config.set(key + "." + subKey, value)
-                if (option.callback) {
-                    log.info("执行配置设置回调")
-                    // 执行配置设置回调
-                    option.callback(value)
-                }
-            } else {
+            if (option.rule && !option.rule(value)) {
+                allPassed = false
                 return value + " check failure"
             }
         }
     }
+    if (allPassed) {
+        for (const key in data) {
+            const item = data[key];
+            for (const subKey in item) {
+                let option = supported[key][subKey]
+                const value = item[subKey];
+                config.set(key + "." + subKey, value)
+                if (option.callback) {
+                    log.info("[configService] configVerifyAndSave: 执行配置设置回调")
+                    // 执行配置设置回调
+                    option.callback(value)
+                }
+            }
+        }
+    }
+
     config.save()
     // 检查需要重启的配置，3秒后重启
     if (isReboot) {
@@ -226,7 +253,7 @@ configService.configVerifyAndSave = function (data) {
 }
 
 // 开门模式修改回调
-function openModeCb(value) {
+function openModeCb (value) {
     if (value == 1) {
         driver.gpio.open()
     } else {
@@ -238,7 +265,7 @@ function openModeCb(value) {
 // data:image/jpg;base64,/data:image/jpeg;base64,
 // data:image/png;base64,
 // data:image/bmp;base64,
-function base64ImageSave(value, isHor) {
+function base64ImageSave (value, isHor) {
     if (value == "") {
         return false
     }
@@ -268,8 +295,7 @@ function base64ImageSave(value, isHor) {
     let buf = base64.toUint8Array(value)
     let fd = os.open("/app/code/resource/image/" + (isHor ? "horBgImage" : "verBgImage") + suffix, os.O_RDWR | os.O_CREAT | os.O_TRUNC);
     let len = os.write(fd, buf.buffer, 0, buf.length)
-    console.log("=======================",len);
-    
+
     if (len != buf.length) {
         log.error("base64转图片失败")
         return false

@@ -1,6 +1,7 @@
 import sqliteObj from '../../dxmodules/dxSqlite.js'
 import common from '../../dxmodules/dxCommon.js'
 import std from '../../dxmodules/dxStd.js'
+import log from '../../dxmodules/dxLogger.js'
 //-------------------------variable-------------------------
 
 const sqliteService = {}
@@ -11,11 +12,11 @@ sqliteService.init = function (path) {
     if (!path) {
         throw ("path should not be null or empty")
     }
-    let newPath=getLastSegment(path)
-    if(newPath){
+    let newPath = getLastSegment(path)
+    if (newPath) {
         std.mkdir(newPath)
     }
-    
+
     sqliteObj.init(path)
     let passRecordSql = `CREATE TABLE IF NOT EXISTS d1_pass_record (
         id VARCHAR(128),
@@ -64,7 +65,7 @@ sqliteService.init = function (path) {
 sqliteService.getFunction = function () {
     return funcs(sqliteObj)
 }
-function funcs(sqliteObj) {
+function funcs (sqliteObj) {
     const dbFuncs = {}
     //权限表：查询所有权限并且分页的方法
     dbFuncs.permissionFindAll = function (page, size, code, type, id, index) {
@@ -92,7 +93,7 @@ function funcs(sqliteObj) {
         try {
             return judgmentPermission(filteredData)
         } catch (error) {
-            console.log('校验权限时间报错，错误内容为', error.stack);
+            log.info('[sqliteService] permissionVerifyByCodeAndType: 校验权限时间报错，错误内容为 ' + error.stack)
             return false
         }
 
@@ -191,7 +192,27 @@ function funcs(sqliteObj) {
 
         let res = sqliteObj.exec(sql.substring(0, sql.length - 1))
         if (res != 0) {
-            throw ("入库错误，新增失败")
+            //出现新增失败
+            //0、根据 ids批量查询出
+            let ids = datas.map(obj => obj.id);
+            let findAllByIds = sqliteObj.select("select * from d1_security where id in (" + ids.map(item => `'${item}'`).join(',') + ")")
+            if (findAllByIds.length == 0) {
+                //没查出来直接返回失败
+                throw ("Parameter error Please check and try again")
+            }
+
+            //删除
+            let deleteIds = findAllByIds.map(obj => obj.id);
+            res = sqliteObj.exec("delete from d1_security where id in (" + deleteIds.map(item => `'${item}'`).join(',') + ")")
+            if (res != 0) {
+                throw ("Failed to add - Failed to delete security in the first step")
+            }
+            //再次新增
+            res = sqliteObj.exec(sql.substring(0, sql.length - 1))
+            if (res != 0) {
+                throw ("Failed to add - Failed to add security in step 2")
+            }
+            // throw ("入库错误，新增失败")
         }
         return res
     }
@@ -219,7 +240,7 @@ function funcs(sqliteObj) {
  * @param {*} id 
  * @returns 
  */
-function selectSecurity(sqliteObj, code, type, id, time, key, index) {
+function selectSecurity (sqliteObj, code, type, id, time, key, index) {
     var query = `SELECT * FROM d1_security WHERE 1=1`
     if (code) {
         query += ` AND code = '${code}'`
@@ -239,9 +260,15 @@ function selectSecurity(sqliteObj, code, type, id, time, key, index) {
     if (time) {
         query += ` AND endTime >= '${time}'`
     }
-    return sqliteObj.select(query)
+    let result = sqliteObj.select(query)
+    result = result.map(record => {
+        record.startTime = safeBigInt(record.startTime)
+        record.endTime = safeBigInt(record.endTime)
+        return record
+    })
+    return result
 }
-function securityFindAllPage(page, size, key, type, id, index, sqliteObj) {
+function securityFindAllPage (page, size, key, type, id, index, sqliteObj) {
     // 构建 SQL 查询
     let query = `SELECT * FROM d1_security WHERE 1=1`
     let where = ''
@@ -255,7 +282,7 @@ function securityFindAllPage(page, size, key, type, id, index, sqliteObj) {
         where += ` AND id = '${id}'`
     }
     // 获取总记录数
-    const totalCountQuery = 'SELECT COUNT(*) AS count FROM d1_security' + where
+    const totalCountQuery = 'SELECT COUNT(*) AS count FROM d1_security WHERE 1=1' + where
     const totalCountResult = sqliteObj.select(totalCountQuery)
 
     const total = totalCountResult[0].count
@@ -277,8 +304,8 @@ function securityFindAllPage(page, size, key, type, id, index, sqliteObj) {
         key: record.key,
         key: record.key,
         value: record.value,
-        startTime: record.startTime,
-        endTime: record.endTime
+        startTime: safeBigInt(record.startTime),
+        endTime: safeBigInt(record.endTime)
     }))
     return {
         content: content,
@@ -299,7 +326,7 @@ function securityFindAllPage(page, size, key, type, id, index, sqliteObj) {
  * @param {*} id 
  * @returns 
  */
-function permissionFindAllPage(page, size, code, type, id, index, sqliteObj) {
+function permissionFindAllPage (page, size, code, type, id, index, sqliteObj) {
     // 构建 SQL 查询
     let query = `SELECT * FROM d1_permission WHERE 1=1`
     let where = ''
@@ -316,7 +343,7 @@ function permissionFindAllPage(page, size, code, type, id, index, sqliteObj) {
         where += ` AND door = '${index}'`
     }
     // 获取总记录数
-    const totalCountQuery = 'SELECT COUNT(*) AS count FROM d1_permission' + where
+    const totalCountQuery = 'SELECT COUNT(*) AS count FROM d1_permission WHERE 1=1' + where
 
     const totalCountResult = sqliteObj.select(totalCountQuery)
 
@@ -339,9 +366,9 @@ function permissionFindAllPage(page, size, code, type, id, index, sqliteObj) {
         extra: JSON.parse(record.extra),
         time: {
             type: parseInt(record.tiemType),
-            beginTime: parseInt(record.timeType) != 2 ? undefined : record.repeatBeginTime,
-            endTime: parseInt(record.timeType) != 2 ? undefined : record.repeatEndTime,
-            range: parseInt(record.tiemType) === 0 ? undefined : { beginTime: parseInt(record.beginTime), endTime: parseInt(record.endTime) },
+            beginTime: parseInt(record.timeType) != 2 ? undefined : safeBigInt(record.repeatBeginTime),
+            endTime: parseInt(record.timeType) != 2 ? undefined : safeBigInt(record.repeatEndTime),
+            range: parseInt(record.tiemType) === 0 ? undefined : { beginTime: safeBigInt(parseInt(record.beginTime)), endTime: safeBigInt(parseInt(record.endTime)) },
             weekPeriodTime: parseInt(record.tiemType) != 3 ? undefined : JSON.parse(record.period)
         }
 
@@ -364,7 +391,7 @@ function permissionFindAllPage(page, size, code, type, id, index, sqliteObj) {
  * @param {*} id 
  * @returns 
  */
-function selectPermission(sqliteObj, code, type, id, index) {
+function selectPermission (sqliteObj, code, type, id, index) {
     var query = `SELECT * FROM d1_permission WHERE 1=1`
     if (code) {
         query += ` AND code = '${code}'`
@@ -378,12 +405,20 @@ function selectPermission(sqliteObj, code, type, id, index) {
     if (index) {
         query += ` AND door = '${index}'`
     }
-    return sqliteObj.select(query)
+    let result = sqliteObj.select(query)
+    result = result.map(record => {
+        record.beginTime = safeBigInt(record.beginTime)
+        record.endTime = safeBigInt(record.endTime)
+        record.repeatBeginTime = safeBigInt(record.repeatBeginTime)
+        record.repeatEndTime = safeBigInt(record.repeatEndTime)
+        return record
+    })
+    return result
 }
 
 
 //校验多参数,第二个参数如果不传，则遍历所有field
-function verifyData(data, fields) {
+function verifyData (data, fields) {
     if (!data) {
         throw ("data should not be null or empty")
     }
@@ -406,7 +441,7 @@ function verifyData(data, fields) {
  * @param {*} permissions 
  * @returns 
  */
-function judgmentPermission(permissions) {
+function judgmentPermission (permissions) {
     let currentTime = Math.floor(Date.now() / 1000)
     for (let permission of permissions) {
         if (permission.tiemType == '0') {
@@ -453,7 +488,7 @@ function judgmentPermission(permissions) {
     }
     return false
 }
-function insertSql(permssionss) {
+function insertSql (permssionss) {
     let sql = "INSERT INTO d1_permission values"
     for (let permssions of permssionss) {
         if (permssions.type !== 200 && permssions.type !== 203 && permssions.type !== 400 && permssions.type !== 101 && permssions.type !== 600 && permssions.type !== 103 && permssions.type !== 100) {
@@ -469,7 +504,7 @@ function insertSql(permssionss) {
  * 获取从 0 点到当前时间的秒数
  * @returns 
  */
-function secondsSinceMidnight() {
+function secondsSinceMidnight () {
     // 创建一个表示当前时间的 Date 对象
     const now = new Date();
     // 获取当前时间的小时、分钟和秒数
@@ -486,7 +521,7 @@ function secondsSinceMidnight() {
  * @param {*} timeRangeString 
  * @returns 
  */
-function isCurrentTimeInTimeRange(timeRangeString) {
+function isCurrentTimeInTimeRange (timeRangeString) {
     // 分割开始时间和结束时间
     var [startTime, endTime] = timeRangeString.split('-');
     // 获取当前时间
@@ -503,21 +538,26 @@ function isCurrentTimeInTimeRange(timeRangeString) {
     var endDate = new Date();
     endDate.setHours(parseInt(endHour, 10));
     endDate.setMinutes(parseInt(endMinute, 10));
-
     // 检查当前时间是否在时间范围内
-    return currentTime >= startDate && currentTime <= endDate;
+    return currentTime >= startDate && currentTime < endDate;
 }
-function checkTimeValidity(permission, currentTime) {
+function checkTimeValidity (permission, currentTime) {
     return parseInt(permission.beginTime) <= currentTime && currentTime <= parseInt(permission.endTime)
 }
 //获取路径文件夹
-function getLastSegment(path) {
+function getLastSegment (path) {
     let lastIndex = path.lastIndexOf('/');
     if (lastIndex > 0) { // 如果找到了 `/` 并且不是在字符串的第一个位置
         return path.substring(0, lastIndex);
     } else {
         return undefined; // 如果没有找到 `/` 或者 `/` 在第一个位置，直接返回原始字符串
     }
+}
+// 将数据库中解析出来的负数（因类型溢出）转回无符号整数
+function safeBigInt (val) {
+    const num = Number(val);
+    const fixed = num < 0 ? num >>> 0 : num;
+    return fixed; // 返回普通 Number 类型
 }
 export default sqliteService
 

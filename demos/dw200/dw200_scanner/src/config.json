@@ -1,0 +1,159 @@
+{
+    "sysInfo.w_mode": 1, //1透传 2协议  
+    "sysInfo.p_uart1": "115200-8-N-1", //RS232 RS485参数 默认115200-8-O-1 
+    "sysInfo.p_uart2": "115200-8-N-1", //TTL参数 默认115200-8-O-1 
+    "sysInfo.wiegand_busy_delay": 50, //韦根忙时时间	
+    "sysInfo.wiegand_free_delay": 100, //韦根闲时时间	
+    //刷卡输出通道
+    "sysInfo.nochannel": 1, //输出通道  bit位为1代表一种 RS485输出:bit第一位()为 1 就是==2  网络输出比如 tpc是第 3、6、9位为1 =584 如果 485tcp 都开就是586  默认1 usb
+    "sysInfo.ndchannel": 1, //协议模式输出通道 微光协议是64  一托 4 是 32  默认1 usb
+    //扫码和心跳和密码输出通道
+    "sysInfo.ochannel": 1, //输出通道  bit位为1代表一种 RS485输出:bit第一位()为 1 就是==2  网络输出比如 tpc是第 3、6、9位为1 =584 如果 485tcp 都开就是586  默认1 usb
+    "sysInfo.dchannel": 1, //协议模式输出通道 微光协议是64  一托 4 是 32  默认1 usb
+    //蓝牙输出通道
+    "sysInfo.blochannel": 1, //输出通道  bit位为1代表一种 RS485输出:bit第一位()为 1 就是==2  网络输出比如 tpc是第 3、6、9位为1 =584 如果 485tcp 都开就是586  默认1 usb
+    "sysInfo.bldchannel": 1, //协议模式输出通道 微光协议是64  一托 4 是 32  默认1 usb
+    "sysInfo.haddr": "http://192.168.1.1:8080", //http地址
+    "sysInfo.houttime": 2, //http超时时间，暂不支持
+    "sysInfo.owifi": 1, //wifi 或者以太网输出端口选择
+    "sysInfo.awifi_s": 1089, //网络传输成功行为	
+    "sysInfo.relayd": 1000, //继电器延迟毫秒
+    "sysInfo.awifi_f": 2049, //网络传输失败行为
+    "sysInfo.taddr": "192.168.1.1", //tcp服务地址
+    "sysInfo.port": 8080, //tcp端口
+    "sysInfo.touttime": 2, //tcp超时时间
+    "sysInfo.codeSwitch": 1, //扫码开关  1开 0关
+    "sysInfo.ST": 0,
+    "sysInfo.A1": 0,
+    "sysInfo.B1": 2,
+    "sysInfo.C1": 120,
+    "sysInfo.D1": 90,
+    "sysInfo.E1": 32,
+    "sysInfo.F1": 1700,
+    "sysInfo.G1": 400,
+    "sysInfo.H1": 512,
+    "sysInfo.I1": 64,
+    "sysInfo.J1": 100,
+    "sysInfo.K1": 64,
+    "sysInfo.chorc": 1, //前后缀格式1是char 2是hex
+    "sysInfo.prefix": "", //前缀
+    "sysInfo.postfix": "", //后缀
+    "sysInfo.ft": 0, //扫码输出格式
+    "sysInfo.nl": 0, //加回车   0不加1加
+    "sysInfo.cr": 0, //加换行   0不加1加
+    "sysInfo.ascan": 1, //扫码后动作	 bit位控制
+    "sysInfo.beepd": 30, //蜂鸣器延迟
+    "sysInfo.ledd": 200, //闪灯延迟
+    "sysInfo.de_type": 64511, //码制选择根据比特位来的 全选64511
+    "sysInfo.s_mode": 0, //扫码模式 0是间隔 1是单词
+    "sysInfo.interval": 1000, //间隔生效  间隔时间
+    "sysInfo.search_timeout": 80,
+    "sysInfo.decoder": 1,
+    "sysInfo.decoder_timeout": 100,
+    "sysInfo.search_mode": 0,
+    "sysInfo.decoder_mode": 3,
+    "sysInfo.qr_mode": 15,
+    "sysInfo.decoder_delay": 1,
+    "sysInfo.ocr_mode": 1,
+    "sysInfo.ocr_template": "1&8&14&30&2&8&14&30&2&8&14&30&2&0",
+    "sysInfo.net_type": 2, //网络类型  1以太网 0关闭网络 2wifi
+    "sysInfo.ssid": "admin",
+    "sysInfo.psk": "password",
+    "sysInfo.fixed_macaddr_enable": 1, //mac地址 0默认 2手动设置
+    "sysInfo.macaddr": "00:00:00:00:00:00", //mac地址 手动设置
+    "sysInfo.ip_mode": 0, //0 动态 1 静态
+    "sysInfo.ip": "0.0.0.0",
+    "sysInfo.gateway": "0.0.0.0",
+    "sysInfo.dns": "0.0.0.0",
+    "sysInfo.mask": "0.0.0.0",
+    "sysInfo.nfc": 1, //nfc 1打开0关闭
+    "sysInfo.nfcReport": 1, //nfc 上报开关 1 开 0 关
+    "sysInfo.nfc_identity_card_enable": 1, //配置是否读取身份证物理卡号0开1关
+    "sysInfo.nfc_card_protocol": 1, // NFC 支持的协议bit0: ISO14443-A 106kbps bit1: ISO14443-B 106kbps bit3: ISO15693
+    "sysInfo.st": 1, // 起始位
+    "sysInfo.len": 8, // 输出长度
+    "sysInfo.nft": 2, // 0：透传（eg:卡号：9384ED18=>93 84 ED 18，四字节），1：转16进制输出(卡号每一位用ascii16进制表示，八字节)，2：转10进制输出（卡号作为数字转10进制数字，数字每一位用ascii16进制表示，字节数不定）
+    "sysInfo.anfc": 1, //刷卡后动作
+    "sysInfo.pri": "", // 前缀，char（每个字符用ascii16进制表示），hex（必须是偶数且每位大小于0-f）
+    "sysInfo.pos": "", // 后缀，同前缀
+    "sysInfo.horc": 1, // 0:字符串，1：16进制
+    "sysInfo.nnl": 0, // 输出的 NFC 数据是否添加回车(0D)，在前后缀之后,0:不添加,1:添加
+    "sysInfo.ncr": 0, // 输出的 NFC 数据是否添加换行(0A，在0D之后),0:不添加,1:添加
+    "sysInfo.ord": 1, // 0: 输出的NFC数据为正序（卡号就是正序），1: 输出的NFC数据为反序，优先判断
+    "sysInfo.nfc_otag": 0, //输出信息默认0不输出 其他按照bit位来判断
+    "sysInfo.online_id_format": 1, //身份证数据格式0 ASCII 2是JOSN格式
+    "sysInfo.blhorc": 1, //蓝牙前后缀 1char 2hex
+    "sysInfo.blpri": "", //蓝牙前缀 
+    "sysInfo.blpos": "", //蓝牙后缀
+    "sysInfo.blcr": 0, //蓝牙加回车 0不加1加
+    "sysInfo.blnl": 0, //蓝牙加换行  0不加1加
+    "sysInfo.ble_name": "", //蓝牙名称
+    "sysInfo.ble_mac": "", //蓝牙 mac
+    "sysInfo.blft": 0, //蓝牙输出格式 0直接输出
+    "sysInfo.boot_music": 0, //开机提示音 0关闭
+    "sysInfo.volume": 60, //音量0-60，语音
+    "sysInfo.volume1": 100, //音量0-100，蜂鸣
+    "sysInfo.backlight": 100, //LCD背光亮度
+    "sysInfo.brightness": 200, //白色补光灯亮度
+    "sysInfo.userid": "userid", //userId
+    "sysInfo.devnum": 0, //设备号
+    "sysInfo.devname": "欢迎使用", //设备名称
+    "sysInfo.heart_en": 0, //心跳开关 0 关 1 开
+    "sysInfo.heart_data": "www.vguang.cn", //心跳内容
+    "sysInfo.heart_time": 60, //心跳间隔时间，秒
+    "sysInfo.sn": "", //sn 只读
+    "sysInfo.uuid": "", //uuid 只读
+    "sysInfo.sn_show": 1, //是否隐藏sn  0隐藏1显示
+    "sysInfo.ip_show": 1, //是否隐藏ip  0隐藏1显示
+    "sysInfo.rotation": 1, //屏幕角度
+    "sysInfo.language": 0, //语言  0中文1英文
+    "sysInfo.com_passwd": "1234567887654321", //配置密码 默认1234567887654321
+    "sysInfo.ntp_en": 1, //ntp 对时0禁用 1启用
+    "sysInfo.ntp_addr": "182.92.12.11", //对时服务器 默认182.92.12.11
+    "sysInfo.ntp_port": 123, //端口默认 123，暂不支持
+    "sysInfo.ntp_timeout": 5, //ntp同步超时时间	默认 5，暂不支持
+    "sysInfo.ntp_interval": 43200, //ntp同步间隔	默认43200秒，即12小时
+    "sysInfo.ntp_hour": 23, //ntp 固定时间同步	定时同步，23 即为每天 23：00 自动同步时间
+    "sysInfo.version": "dw200_scanner_v2.0.0", //版本号
+    "sysInfo.version_show": 0, //版本显示/隐藏
+    //配合协议上报走哪个接口使用
+    //上报模式:00 代表 上位机轮询 0X30获取扫码器数据、01 代表选用0x30 指令主动上报数据、80 代表上位机轮询0x33获取扫描器数据、0x81 代表 选用 0x33 指令主动上报数据
+    "sysInfo.report_mode": "1",
+    //扫码器数据有效时间默认为 2000ms
+    "sysInfo.report_timeout": 2000,
+    // 密码按钮1开 0 关
+    "sysInfo.show_unlocking": 1,
+    // 日期显示隐藏 1开 0 关
+    "sysInfo.show_date": 1,
+    // 设备名称显示隐藏 1开 0 关
+    "sysInfo.show_devname": 1,
+    "sysInfo.buttonText": "密码",
+    // 设置背景图片
+    "sysInfo.rotation0BgImage": "/app/code/resource/image/background.png",
+    "sysInfo.rotation1BgImage": "/app/code/resource/image/background_90.png",
+    "sysInfo.rotation2BgImage": "/app/code/resource/image/background.png",
+    "sysInfo.rotation3BgImage": "/app/code/resource/image/background_90.png",
+    // 时区
+    "sysInfo.ntpLocaltime": 8,
+    //安全模块，0是关，1是开 2是重置秘钥
+    "sysInfo.safe_open": 0,
+    "sysInfo.safe_keytype": 1,
+    "sysInfo.safe_key_pub": "5de3dd7f5b725c7d27f36019a2ddd94f3866e0d383c93bd51780e938a2ddda4f",
+    "sysInfo.safe_iv_pri": "39fe007b83c92bd527f36019a2ddd94f5da3dd7f1780e93828e3601a1d8cb9f8",
+    //日期格式 1 年/月/日 2 日/月/年
+    "sysInfo.dateFormat": 1,
+    //时间格式 1 24小时制 2 12小时制
+    "sysInfo.timeFormat": 1,
+    // 读卡方式 1: 读物理卡号 2: 固定扇区 3: 一卡一密
+    "sysInfo.nfcType": 1,
+    // 读卡扇区号
+    "sysInfo.sectorNumber": 0,
+    // 读卡块号
+    "sysInfo.blockNumber": 0,
+    // 密钥类型 1:0x60 2:0x61
+    "sysInfo.secretkeyType": 1,
+    // 密钥
+    "sysInfo.secretkey": "FFFFFFFFFFFF",
+    //-1 关闭自动重启   0-23 整点重启
+    "sysInfo.autoRestart": 3
+}

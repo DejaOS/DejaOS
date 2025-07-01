@@ -18,14 +18,14 @@ import dxUart from '../dxmodules/dxUart.js'
 pool.callback((data) => {
     let topic = data.topic
     let msg = data.data
-    log.info("topic:"+topic)
-    log.info("msg:"+msg)
+    log.info("[services] callback: topic " + topic)
+    log.info("[services] callback: msg " + msg)
     switch (topic) {
         case "code":
             codeService.code(msg)
             break;
         case "password":
-            log.info("password:"+JSON.stringify(msg))
+            log.info("[services] callback: password " + JSON.stringify(msg))
             accessService.access(msg)
             break;
         case dxNet.STATUS_CHANGE:
@@ -49,8 +49,11 @@ pool.callback((data) => {
         case dxUart.VG.RECEIVE_MSG + driver.uartBle.id:
             uartBleService.receiveMsg(msg)
             break;
+        case "bleupgrade":
+            driver.uartBle.upgrade(msg)
+            break;
         default:
-            log.error("No such topic ", topic)
+            log.error("[services] callback: No such topic ", topic)
             break;
     }
 })

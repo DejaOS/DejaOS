@@ -127,3 +127,6 @@ driver.net.loop(); // Network status monitoring
 
 This demo currently runs on DW200_V20 devices. To run on other devices, simply update the corresponding modules as needed.
 
+## Auto Reboot
+
+Due to the use of a watchdog, if you start the application through VSCode and then stop it, the application will trigger a restart in about 20 seconds
