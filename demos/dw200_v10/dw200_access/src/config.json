@@ -1,0 +1,115 @@
+{
+    // mqtt连接标识
+    "mqttInfo.clientId": "",
+    // mqtt服务地址
+    "mqttInfo.mqttAddr": "101.200.139.97:51883",
+    "mqttInfo.qos": 1,
+    "mqttInfo.mqttName": "admin",
+    "mqttInfo.password": "password",
+    "mqttInfo.prefix": "",
+    // ntp开关
+    "netInfo.ntp": 1,
+    // ntp服务ip
+    "netInfo.ntpAddr": "182.92.12.11",
+    // 对时时间
+    "netInfo.ntpHour": 23,
+    // 系统时区
+    "netInfo.ntpLocaltime": 8,
+    // 网络类型(1:以太网 2:wifi 4:4G)
+    "netInfo.type": 1,
+    // 是否为DHCP(1:动态,0:静态)，c版配置工具是反的，已对扫码配置做相应处理
+    "netInfo.dhcp": 1,
+    "netInfo.ip": "",
+    "netInfo.gateway": "",
+    "netInfo.dns": "",
+    "netInfo.subnetMask": "",
+    "netInfo.netMac": "",
+    // 0:默认mac 2:自定义mac
+    "netInfo.fixed_macaddr_enable": 0,
+    // ip/sn显示/隐藏
+    "uiInfo.sn_show": 1,
+    "uiInfo.ip_show": 1,
+    // 状态栏显示/隐藏
+    "uiInfo.statusBar": 1,
+    // 日期显示隐藏 1开 0 关
+    "uiInfo.show_date": 1,
+    // 设备名称显示隐藏 1开 0 关
+    "uiInfo.show_devname": 1,
+    // 密码按钮显示和隐藏
+    "uiInfo.show_unlocking": 1,
+    // "uiInfo.buttonText": "密码",
+    // 修改系统字体
+    "uiInfo.fontPath": "/app/code/resource/font/PangMenZhengDaoBiaoTiTi-1.ttf",
+    "uiInfo.rotation0BgImage": "/app/code/resource/image/bk.png",
+    "uiInfo.rotation1BgImage": "/app/code/resource/image/bk_90.png",
+    "uiInfo.rotation2BgImage": "/app/code/resource/image/bk.png",
+    "uiInfo.rotation3BgImage": "/app/code/resource/image/bk_90.png",
+    // base64图片格式
+    "uiInfo.horBgImage": "",
+    "uiInfo.verBgImage": "",
+    "uiInfo.rotation": 1,
+    // 开门模式，0-正常，1-常开模式，2-常闭模式，3-测试模式（暂不支持）
+    "doorInfo.openMode": 0,
+    // 开门时长，ms
+    "doorInfo.openTime": 2000,
+    // 开门超时时长，s
+    "doorInfo.openTimeout": 10,
+    // 0:不在线验证，1：离线验证失败走在线验证
+    "doorInfo.onlinecheck": 1,
+    // 在线验证超时时长
+    "doorInfo.timeout": 5000,
+    // 数据库离线通行最大存储数量，默认2000条
+    "doorInfo.offlineAccessNum": 2000,
+    // 语音音量0-60
+    "sysInfo.volume": 60,
+    // 按键音量0-100
+    "sysInfo.volume2": 100,
+    // 蜂鸣提示音量0-100
+    "sysInfo.volume3": 100,
+    // 心跳开关
+    "sysInfo.heart_en": 1,
+    // 心跳间隔，秒
+    "sysInfo.heart_time": 60,
+    // 心跳数据
+    "sysInfo.heart_data": "",
+    // mac地址
+    "sysInfo.mac": "",
+    "sysInfo.uuid": "",
+    "sysInfo.sn": "",
+    // 设备状态，0-未激活，1-正常，2-禁用
+    "sysInfo.status": 1,
+    // 应用版本号
+    "sysInfo.appVersion": "dw200_v10_access_v2.0.2.1",
+    // 版本显示/隐藏
+    "sysInfo.version_show": 1,
+    // 应用发布日期
+    "sysInfo.createTime": "2024-08-23 10:49:00",
+    // 设备名称
+    "sysInfo.deviceName": "欢迎使用",
+    // 设备号
+    "sysInfo.deviceNum": 0,
+    // ui语言
+    "sysInfo.language": "CN",
+    // 设置系统时间，秒级
+    "sysInfo.time": "",
+    // 配置码密码校验
+    "sysInfo.com_passwd": "1234567887654321",
+    // 通行记录上报，批处理数量
+    "sysInfo.reportCount": 500,
+    //云证开关 3:云证获取 1:物理卡号
+    "sysInfo.nfc_identity_card_enable": 1,
+    //1打开0关闭
+    "sysInfo.nfc": 1,
+    //在线验证错误提示 开关 0 关闭 1 开启
+    "sysInfo.onlinecheckErrorMsg": 0,
+    //-1 关闭自动重启   0-23 整点重启
+    "sysInfo.autoRestart": 3,
+    // 码制
+    "scanInfo.deType": 64511,
+    //扫码模式 0是间隔 1是单次
+    "scanInfo.sMode": 0,
+    // 扫码间隔模式间隔时间
+    "scanInfo.interval": 1000,
+    // 0x01, 0x23, 0x45, 0x67, 0x89, 0x01, 0x23, 0x45, 0x67, 0x89, 0x01, 0x23, 0x45, 0x67, 0x89, 0x01
+    "bleInfo.secretKey":[1, 35, 69, 103, 137, 1, 35, 69, 103, 137, 1, 35, 69, 103, 137, 1],
+}

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Test Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.5.6/jsoneditor.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.5.6/jsoneditor.min.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            /* max-width: 1200px; */
+        }
+
+        .left-panel,
+        .right-panel {
+            padding: 10px;
+        }
+
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .topic-div {
+            margin-bottom: 2px;
+        }
+
+        textarea {
+            width: 100%;
+            resize: vertical;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        button {
+            width: 100%;
+        }
+
+        .connect-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
+        }
+
+        .input-group input[type="text"],
+        .input-group input[type="password"] {
+            width: 300px;
+            /* 设置合适的宽度 */
+            max-width: 100%;
+            /* 确保在小屏幕上不会超出 */
+        }
+
+        button#connectBtn,
+        button#disconnectBtn {
+            max-width: 150px;
+            /* 设置按钮的最大宽度 */
+            flex-shrink: 0;
+            /* 确保按钮不会缩小 */
+        }
+
+        .connection-status {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: grey;
+            /* 初始为灰色 */
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+
+        .left-panel .topic-div {
+            width: 48%;
+            margin-right: 1%;
+        }
+
+        .right-panel .topic-div {
+            width: 48%;
+            margin-right: 1%;
+        }
+
+        .json-editor {
+            width: 100%;
+            /* 确保编辑器占满容器宽度 */
+            height: 300px;
+            /* 根据需要调整高度 */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>MQTT Test Tool</h1>
+    <div class="connect-container">
+        <div class="input-group">
+            <label for="broker-url">Broker URL:</label>
+            <input type="text" id="broker-url" placeholder="Broker URL">
+        </div>
+        <div class="input-group">
+            <label for="broker-username">Username:</label>
+            <input type="text" id="broker-username" placeholder="Username">
+        </div>
+        <div class="input-group">
+            <label for="broker-password">Password:</label>
+            <input type="password" id="broker-password" placeholder="Password">
+        </div>
+        <button id="connectBtn">Connect</button>
+        <button id="disconnectBtn" style="display:none;">Disconnect</button>
+        <div id="connectionStatus" class="connection-status"></div>
+    </div>
+    <div class="container">
+        <div class="left-panel" id="publishMessages"></div>
+        <div class="right-panel" id="subscribeTopics"></div>
+    </div>
+    <script>
+        let uuid = 'deb363c999b61f14'
+        let config = {
+            "broker": {
+                "url": "ws://101.200.139.97:58083/mqtt",
+                "username": "admin",
+                "password": "password"
+            },
+
+            "subscribeTopics": ["access_device/v1/event/access_online", "access_device/v1/cmd/getConfig_reply", "access_device/v1/cmd/setConfig_reply", "access_device/v1/cmd/control_reply", "access_device/v1/cmd/upgradeFirmware_reply"],
+            "publishMessages": [
+                {
+                    "topic": `access_device/v1/cmd/${uuid}/getConfig`, "payload": {
+                        "serialNo": "6w8keif5g6",
+                        "uuid": uuid,
+                        "time": 1647580466
+                    }
+                },
+                {
+                    "topic": `access_device/v1/cmd/${uuid}/setConfig`, "payload": {
+                        "serialNo": "6w8keif5g6",
+                        "uuid": uuid,
+                        "data": {
+                            "sys.devname": "ttttttt",
+                            "mqtt.username": "aaabbb",
+                        },
+                        "time": 1647580466
+                    }
+                },
+                {
+                    "topic": `access_device/v1/cmd/${uuid}/getConfig`, "payload": {
+                        "serialNo": "6w8keif5g6",
+                        "uuid": uuid,
+                        "data": "sys.appVersion",
+                        "time": 1647580466
+                    }
+                },
+                {
+                    "topic": `access_device/v1/cmd/${uuid}/control`, "payload": {
+                        "serialNo": "6w8keif5g6",
+                        "uuid": uuid,
+                        "data": {
+                            "command": 0
+                        },
+                        "time": 1647580466
+                    }
+                },
+                {
+                    "topic": `access_device/v1/cmd/${uuid}/control`, "payload": {
+                        "serialNo": "6w8keif5g6",
+                        "uuid": uuid,
+                        "data": {
+                            "command": 1,
+                            "extra": {
+                                "timeout": 5000
+                            }
+                        },
+                        "time": 1647580466
+                    }
+                },
+                {
+                    "topic": `access_device/v1/cmd/${uuid}/control`, "payload": {
+                        "serialNo": "6w8keif5g6",
+                        "uuid": uuid,
+                        "data": {
+                            "command": 6,
+                            "extra": {
+                                "image": "success.png"
+                            }
+                        },
+                        "time": 1647580466
+                    }
+                },
+                {
+                    "topic": `access_device/v1/cmd/${uuid}/control`, "payload": {
+                        "serialNo": "6w8keif5g6",
+                        "uuid": uuid,
+                        "data": {
+                            "command": 5,
+                            "extra": {
+                                "wav": "3.wav"
+                            }
+                        },
+                        "time": 1647580466
+                    }
+                },
+                {
+                    "topic": `access_device/v1/cmd/${uuid}/upgradeFirmware`, "payload": {
+                        "serialNo": "6w8keif5g6",
+                        "uuid": uuid,
+                        "data": {
+                            "type": 0,
+                            "url": "http://101.200.139.97:12346/download/michael_dw200_1.0.9",
+                            "md5": "4966d4494d369d2458e44676ce157935"
+                        },
+                        "time": 1647580466
+                    }
+                }
+            ]
+        }
+
+        let subEditor = {}
+        let sendEditor = {}
+        setupUI(config);
+        setupMQTT(config);
+
+        function setupUI(config) {
+            // Setup broker connection inputs
+            document.getElementById('broker-url').value = config.broker.url;
+            document.getElementById('broker-username').value = config.broker.username;
+            document.getElementById('broker-password').value = config.broker.password;
+
+            const subscribeContainer = document.getElementById('subscribeTopics');
+            config.subscribeTopics.forEach(topic => {
+                const div = document.createElement('div');
+                div.className = 'topic-div';
+                div.innerHTML = `<strong>${topic}</strong><br><div id="output-${topic}" class="json-editor"></div>`;
+                subscribeContainer.appendChild(div);
+
+                // Initialize JSON editor for each subscribed topic
+                subEditor[`output-${topic}`] = new JSONEditor(document.getElementById(`output-${topic}`), { mode: 'code' });
+            });
+
+            const publishContainer = document.getElementById('publishMessages');
+            config.publishMessages.forEach((message, index) => {
+                const div = document.createElement('div');
+                div.className = 'topic-div';
+                div.innerHTML = `
+                    <input type="text" id="pub-topic-${index}" value="${message.topic}" />
+                    <div id="pub-payload-${index}" class="json-editor"></div>
+                    <button onclick="sendMessage(${index})">Send</button>`;
+                publishContainer.appendChild(div);
+
+                // Initialize JSON editor for each publish message
+                sendEditor[`pub-payload-${index}`] = new JSONEditor(document.getElementById(`pub-payload-${index}`), { mode: 'code', modes: ['code', 'form', 'text', 'tree', 'view', 'preview'] });
+                sendEditor[`pub-payload-${index}`].set(message.payload)
+            });
+        }
+        let client
+        function setupMQTT(config) {
+            document.getElementById('connectBtn').addEventListener('click', () => {
+                const brokerUrl = document.getElementById('broker-url').value;
+                const brokerUsername = document.getElementById('broker-username').value;
+                const brokerPassword = document.getElementById('broker-password').value;
+                client = new Paho.MQTT.Client(brokerUrl, "clientId-" + Math.random().toString(16).substr(2, 8));
+                client.onConnectionLost = function (responseObject) {
+                    if (responseObject.errorCode !== 0) {
+                        console.log("onConnectionLost:" + responseObject.errorMessage);
+                        updateConnectionStatus('lost');
+                    }
+                };
+
+                client.onMessageArrived = function (message) {
+                    console.log("onMessageArrived:" + message.payloadString);
+                    const output = subEditor[`output-${message.destinationName}`];
+                    if (output) {
+                        try {
+                            output.set(JSON.parse(message.payloadString));
+                        } catch (error) {
+                            console.error("Invalid JSON payload received");
+                            output.set("Invalid JSON payload received:" + message.payloadString)
+                        }
+                    }
+                };
+                client.connect({
+                    onSuccess: () => {
+                        console.log("Connected to broker");
+                        updateConnectionStatus('connected');
+                        config.subscribeTopics.forEach(topic => {
+                            client.subscribe(topic);
+                        });
+                    },
+                    onFailure: (error) => {
+                        console.error("Connection failed: " + error.errorMessage);
+                        alert("Connection failed: " + error.errorMessage);
+                        updateConnectionStatus('error');
+                    },
+                    userName: brokerUsername,
+                    password: brokerPassword
+                });
+            });
+
+            document.getElementById('disconnectBtn').addEventListener('click', () => {
+                client.disconnect();
+                console.log("Disconnected from broker");
+                updateConnectionStatus('disconnected');
+            });
+
+            window.sendMessage = function (index) {
+                const topic = document.getElementById(`pub-topic-${index}`).value;
+                const payloadEditor = sendEditor[`pub-payload-${index}`];
+                const payload = JSON.stringify(payloadEditor.get());
+                const message = new Paho.MQTT.Message(payload);
+                message.destinationName = topic;
+                client.send(message);
+                console.log(`Message sent to ${topic}: ${payload}`);
+            };
+
+            function updateConnectionStatus(status) {
+                const connectionStatus = document.getElementById('connectionStatus');
+                const connectBtn = document.getElementById('connectBtn');
+                const disconnectBtn = document.getElementById('disconnectBtn');
+
+                if (status === 'connected') {
+                    connectionStatus.style.backgroundColor = 'green';
+                    connectBtn.style.display = 'none';
+                    disconnectBtn.style.display = 'inline-block';
+                } else if (status === 'error') {
+                    connectionStatus.style.backgroundColor = 'red';
+                    connectBtn.style.display = 'inline-block';
+                    disconnectBtn.style.display = 'none';
+                } else if (status === 'lost') {
+                    connectionStatus.style.backgroundColor = 'red';
+                    connectBtn.style.display = 'inline-block';
+                    disconnectBtn.style.display = 'none';
+                } else if (status === 'disconnected') {
+                    connectionStatus.style.backgroundColor = 'grey';
+                    connectBtn.style.display = 'inline-block';
+                    disconnectBtn.style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

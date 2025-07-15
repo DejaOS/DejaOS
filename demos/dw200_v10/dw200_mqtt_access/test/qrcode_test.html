@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRCode Test Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #container {
+            width: 80%;
+            max-width: 1200px;
+        }
+
+        #header {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #mainContent {
+            display: flex;
+        }
+
+        #leftPanel,
+        #rightPanel {
+            flex: 1;
+            padding: 20px;
+        }
+
+        #formContainer {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .formRow {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .formRow label {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .formRow input[type="text"],
+        .formRow input[type="number"] {
+            flex: 2;
+            padding: 5px;
+        }
+
+        #generateBtn {
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        #qrcode {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+            border: 1px solid #000;
+        }
+
+        #qrTextLabel {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div id="header">
+            <h1>QRCode Test Tool</h1>
+        </div>
+        <div id="mainContent">
+            <div id="leftPanel">
+                <form id="formContainer"></form>
+            </div>
+            <div id="rightPanel">
+                <button id="generateBtn">Generate QR Code</button>
+                <div id="qrcode"></div>
+                <div id="qrTextLabel"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Include QRCode.js library -->
+    <script src="https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+    <script>
+        // JSON object
+        const jsonData = [
+            { "id": "devname", "desc": "device name", "type": "string", "value": "device new name" },
+            { "id": "sn_show", "desc": "show sn and ip in screen", "type": "number", "value": 1 },
+            { "id": "ver_show", "desc": "show version in screen", "type": "number", "value": 0 },
+            { "id": "boot_music", "desc": "play 0.wav when device start", "type": "number", "value": 1 },
+            { "id": "volume", "desc": "volume to play wav(0-60)", "type": "number", "value": 50 },
+            { "id": "net_show", "desc": "show net and mqtt icon in screen", "type": "number", "value": 0 },
+            { "id": "ntpgmt", "desc": "time zone GMT value(0-24)", "type": "number", "value": 8 },
+            { "id": "mqttaddr", "desc": "mqtt borker addr", "type": "string", "value": "" },
+            { "id": "mqttusername", "desc": "mqtt borker username", "type": "string", "value": "" },
+            { "id": "mqttpassword", "desc": "mqtt borker password", "type": "string", "value": "" }
+        ];
+
+        // Generate form based on JSON data
+        const formContainer = document.getElementById('formContainer');
+
+        jsonData.forEach(item => {
+            const formRow = document.createElement('div');
+            formRow.className = 'formRow';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = item.id + '_checkbox';
+
+            const label = document.createElement('label');
+            label.htmlFor = item.id;
+            label.textContent = `${item.id}`;
+            const desc = document.createElement('label');
+            desc.textContent = ` ${item.desc}`;
+            const input = document.createElement('input');
+            input.type = item.type === 'number' ? 'number' : 'text';
+            input.id = item.id;
+            input.name = item.id;
+            input.value = item.value
+
+            formRow.appendChild(checkbox);
+            formRow.appendChild(label);
+            formRow.appendChild(desc);
+            formRow.appendChild(input);
+
+            formContainer.appendChild(formRow);
+        });
+
+        // Function to encode string to utf-8
+        function toUtf8(str) {
+            var out, i, len, c;
+            out = "";
+            len = str.length;
+            for (i = 0; i < len; i++) {
+                c = str.charCodeAt(i);
+                if ((c >= 0x0001) && (c <= 0x007F)) {
+                    out += str.charAt(i);
+                } else if (c > 0x07FF) {
+                    out += String.fromCharCode(0xE0 | ((c >> 12) & 0x0F));
+                    out += String.fromCharCode(0x80 | ((c >> 6) & 0x3F));
+                    out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
+                } else {
+                    out += String.fromCharCode(0xC0 | ((c >> 6) & 0x1F));
+                    out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
+                }
+            }
+            return out;
+        }
+        function truncateIfEndsWith(str, char) {
+            if (str.endsWith(char)) {
+                return str.slice(0, -1);
+            }
+            return str;
+        }
+        // Generate QR code on button click
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            let qrText = '___VBAR_CONFIG_V1.1.0___{';
+
+            jsonData.forEach(item => {
+                const checkbox = document.getElementById(item.id + '_checkbox');
+                if (checkbox.checked) {
+                    const input = document.getElementById(item.id);
+                    if (item.type == 'string') {
+                        qrText += `${item.id}:"${input.value}",`;
+                    } else if (item.type == 'number') {
+                        qrText += `${item.id}:${input.value},`;
+                    }
+                }
+                qrText = truncateIfEndsWith(qrText, ',')
+            });
+            qrText += '}--'
+            qrText = toUtf8(qrText);
+
+            // Clear previous QR code and label
+            document.getElementById("qrcode").innerHTML = '';
+            document.getElementById("qrTextLabel").innerHTML = '';
+
+            // Generate QR code
+            $("#qrcode").qrcode({
+                render: "canvas", //table方式
+                width: 256, //宽度
+                height: 256, //高度
+                text: qrText
+            });
+
+            // Display the text below the QR code
+            document.getElementById("qrTextLabel").textContent = decodeURIComponent(escape(qrText));
+        });
+    </script>
+</body>
+
+</html>
