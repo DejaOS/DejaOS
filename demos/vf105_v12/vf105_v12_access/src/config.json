@@ -1,0 +1,92 @@
+{
+    // CN/EN
+    "base.language": "CN",
+    // 管理员密码
+    "base.password": "1",
+    //是否第一次登录后台 0 未登录 1 已登录
+    "base.firstLogin": 0,
+    // 人脸识别相似度
+    "face.similarity": 0.6,
+    // 活体检测
+    "face.livenessOff": 1,
+    // 活体检测阈值（0-100）
+    "face.livenessVal": 0,
+    "face.showNir": 1,
+    "face.detectMask": 0,
+    // ["无语音", "播放请先注册", "播放陌生人你好"]
+    "face.stranger": 1,
+    // ["无语音", "播放名字", "播放问候语"]
+    "face.voiceMode": 1,
+    "face.voiceModeDate": "欢迎光临",
+    "mqtt.addr": "101.200.139.97:51883",
+    "mqtt.clientId": "",
+    "mqtt.username": "admin",
+    "mqtt.password": "password",
+    "mqtt.qos": 1,
+    "mqtt.prefix": "",
+    "mqtt.onlinecheck": 0,
+    "mqtt.timeout": 5000,
+    "mqtt.willTopic": "access_device/v2/event/offline",
+    "net.type": 1,
+    "net.ssid": "",
+    "net.psk": "",
+    "net.dhcp": 2,
+    "net.ip": "",
+    "net.gateway": "192.168.60.1",
+    "net.mask": "255.255.255.0",
+    "net.dns": "218.4.4.4,218.2.2.2",
+    "net.mac": "",
+    // 0关闭，1定时同步
+    "ntp.ntp": 2,
+    "ntp.server": "182.92.12.11",
+    // 定时同步，24小时制
+    "ntp.hour": 3,
+    "ntp.gmt": 8,
+     // mac地址
+    "sys.mac": "",
+    "sys.uuid": "",
+    "sys.sn": "",
+    "sys.model": "vf105",
+    "sys.version": "",
+    "sys.appVersion": "vf105_v11_access_2.0.0",
+    "sys.releaseTime": "2024-09-13 09:52:00",
+    "sys.heart_en": 0, //心跳1开 0 关
+    "sys.heart_time": 30,
+    "sys.nfc": 1, //1开 0 关    刷卡开关
+    "sys.pwd": 1, //1开 0 关    密码开门开关
+    "sys.strangerImage": 1, //1开 0 关   陌生人保存图片开关
+    "sys.accessImageType": 1, //1人脸 0 全景   通行图片类型
+    "sys.com_passwd": "1234567887654321", // 配置码密码校验
+    //云证开关 3:云证获取 1:物理卡号
+    "sys.nfcIdentityCardEnable": 1,
+    "sys.interval": 1000, //扫码间隔模式间隔时间
+    "access.offlineAccessNum": 2000,
+    "access.relayTime": 2000,
+    "access.tamperAlarm": 1,
+    // 熄屏时间，单位分钟，0从不
+    "base.screenOff": 0,
+    // 屏幕保护，单位分钟，0从不
+    "base.screensaver": 0,
+    //屏幕亮度
+    "base.brightness": 70,
+    //自动调节亮度  1 自动调节
+    "base.brightnessAuto": 1,
+    //音量
+    "base.volume": 50,
+    // ip 显示  1 显示 0 隐藏
+    "base.showIp": 1,
+    // sn 显示  1 显示 0 隐藏
+    "base.showSn": 1,
+    //小程序码 显示  1 显示 0 隐藏
+    "base.showProgramCode": 1,
+    //云证功能菜单 显示  1 显示 0 隐藏
+    "base.showIdentityCard": 1,
+    // 0: 标准模式 1: 简约模式
+    "base.appMode": 1,
+    // 白色补光灯亮度
+    "base.luminanceWhite": 80,
+    // 红外补光灯亮度
+    "base.luminanceNir": 80,
+    // 0:wifi 版本  1:4G版本  2:以太网版本 默认 3未读取状态
+    "sys.devType": 0,
+}
