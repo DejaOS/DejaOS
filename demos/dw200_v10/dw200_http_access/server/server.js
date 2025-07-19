@@ -39,6 +39,13 @@ app.get('/api/access', (req, res) => {
     // Get query parameters
     const { type, data } = req.query;
 
+    // Get Authorization header and extract token
+    const authHeader = req.headers.authorization;
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7); // Remove "Bearer " prefix
+    }
+
     // Randomly generate success or failure (50% probability)
     const isSuccess = Math.random() > 0.5;
 
@@ -47,6 +54,7 @@ app.get('/api/access', (req, res) => {
         success: isSuccess,
         message: isSuccess ? 'Operation successful' : 'Operation failed',
         timestamp: new Date().toISOString(),
+        token: token || 'No token provided',
         requestData: {
             type: type || 'Not provided',
             data: data || 'Not provided'
