@@ -15,5 +15,6 @@ vg.send = function (type, data) {
         }
     }
     driver.pwm.fail()
+    driver.audio.play('mj_f_eng')
 }
 export default vg

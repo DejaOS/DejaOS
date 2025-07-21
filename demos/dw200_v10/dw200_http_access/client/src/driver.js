@@ -7,8 +7,17 @@ import logger from '../dxmodules/dxLogger.js'
 import ntp from '../dxmodules/dxNtp.js'
 import bus from '../dxmodules/dxEventBus.js'
 import common from '../dxmodules/dxCommon.js'
+import dxAlsaplay from '../dxmodules/dxAlsaplay.js'
 const driver = {}
-
+driver.audio = {
+    init: function () {
+        dxAlsaplay.init()
+        dxAlsaplay.setVolume(4)
+    },
+    play: function (fileName) {
+        dxAlsaplay.play('/app/code/resource/wav/' + fileName + '.wav')
+    }
+}
 driver.pwm = {
     init: function () {
         // Initialize pwm
@@ -77,6 +86,8 @@ driver.initMain = function () {
     this.gpio.init()
     std.sleep(100)
     this.pwm.init()
+    std.sleep(100)
+    this.audio.init()
     std.sleep(100)
 }
 driver.initService = function () {
