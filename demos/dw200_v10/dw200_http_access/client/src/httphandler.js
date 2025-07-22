@@ -2,6 +2,7 @@
 import logger from '../dxmodules/dxLogger.js'
 import http from '../dxmodules/dxHttpClient.js'
 import driver from './driver.js'
+import bus from '../dxmodules/dxEventBus.js'
 const vg = {}
 const url = 'http://192.168.50.31:3000/api/access'
 vg.send = function (type, data) {
@@ -16,5 +17,6 @@ vg.send = function (type, data) {
     }
     driver.pwm.fail()
     driver.audio.play('mj_f_eng')
+    bus.fire('ui.toast', 'Authentication failed')
 }
 export default vg

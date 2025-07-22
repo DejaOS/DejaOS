@@ -100,9 +100,9 @@ GET http://192.168.50.31:3000/api/access?type=pin&data=1234
 
 ## **Screenshots**
 
-| Main UI                               | PIN Entry UI                                    |
-| ------------------------------------- | ----------------------------------------------- |
-| ![Main UI](screenshot1.png "Main UI") | ![PIN Entry UI](screenshot2.png "PIN Entry UI") |
+| Main UI                               | PIN Entry UI                                    | Toast UI                                |
+| ------------------------------------- | ----------------------------------------------- | --------------------------------------- |
+| ![Main UI](screenshot1.png "Main UI") | ![PIN Entry UI](screenshot2.png "PIN Entry UI") | ![Toast UI](screenshot3.png "Toast UI") |
 
 ## **Device Compatibility**
 
