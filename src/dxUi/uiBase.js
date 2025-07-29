@@ -4,13 +4,13 @@
  */
 import utils from "./uiUtils.js"
 import logger from './dxLogger.js'
-const dxui = {}
-
+import * as os from "os"
+const uibase = {}
 /**
 * 修改或获取控件的宽度
 * @param {number} w 非必填，如果不填是获取宽度，否则就是修改宽度 
 */
-dxui.width = function (w) {
+uibase.width = function (w) {
      if (!utils.validateNumber(w)) {
           return this.obj.getWidth()
      }
@@ -20,7 +20,7 @@ dxui.width = function (w) {
 * 修改或获取控件的高度
 * @param {number} h 非必填，如果不填就是获取高度，否则就是修改高度 
 */
-dxui.height = function (h) {
+uibase.height = function (h) {
      if (!utils.validateNumber(h)) {
           return this.obj.getHeight()
      }
@@ -30,42 +30,42 @@ dxui.height = function (h) {
  * 获取去除边框、内边距的宽度
  * @returns 
  */
-dxui.contentWidth = function () {
+uibase.contentWidth = function () {
      return this.obj.lvObjGetContentWidth()
 }
 /**
  * 获取去除边框、内边距的高度
  * @returns 
  */
-dxui.contentHeight = function () {
+uibase.contentHeight = function () {
      return this.obj.lvObjGetContentHeight()
 }
 /**
  * 获取上方滚动距离
  * @returns 
  */
-dxui.scrollTop = function () {
+uibase.scrollTop = function () {
      return this.obj.getScrollTop()
 }
 /**
  * 获取下方滚动距离
  * @returns 
  */
-dxui.scrollBottom = function () {
+uibase.scrollBottom = function () {
      return this.obj.getScrollBottom()
 }
 /**
  * 获取左方滚动距离
  * @returns 
  */
-dxui.scrollLeft = function () {
+uibase.scrollLeft = function () {
      return this.obj.getScrollLeft()
 }
 /**
  * 获取右方滚动距离
  * @returns 
  */
-dxui.scrollRight = function () {
+uibase.scrollRight = function () {
      return this.obj.getScrollRight()
 }
 /**
@@ -73,7 +73,7 @@ dxui.scrollRight = function () {
 * @param {number} w 必填 
 * @param {number} h 必填 
 */
-dxui.setSize = function (w, h) {
+uibase.setSize = function (w, h) {
      let err = 'dxui.setSize: width or height should not be empty'
      utils.validateNumber(w, err)
      utils.validateNumber(h, err)
@@ -83,7 +83,7 @@ dxui.setSize = function (w, h) {
 * 修改或获取控件相当于父对象的x坐标
 * @param {number} x 非必填，如果不填就是获取x坐标，否则就是修改x坐标 
 */
-dxui.x = function (x) {
+uibase.x = function (x) {
      if (!utils.validateNumber(x)) {
           return this.obj.getX()
      }
@@ -93,7 +93,7 @@ dxui.x = function (x) {
 * 修改或获取控件相当于父对象的x坐标
 * @param {number} y 非必填，如果不填就是获取y坐标，否则就是修改y坐标 
 */
-dxui.y = function (y) {
+uibase.y = function (y) {
      if (!utils.validateNumber(y)) {
           return this.obj.getY()
      }
@@ -104,34 +104,22 @@ dxui.y = function (y) {
 * @param {number} x 必填 
 * @param {number} y 必填 
 */
-dxui.setPos = function (x, y) {
+uibase.setPos = function (x, y) {
      let err = 'dxui.setPos: x or y should not be empty'
      utils.validateNumber(x, err)
      utils.validateNumber(y, err)
      this.obj.lvObjSetPos(x, y)
 }
 /**
-* 修改或获取控件的父对象
-* @param {number} parent 非必填，如果不填就是获取parent对象，否则就是为对象设置新的父对象
-*/
-dxui.parent = function (p) {
-     if (!utils.validateNumber(p)) {
-          let res = {}
-          res.obj = this.obj.getParent()
-          return Object.assign(res, dxui)
-     }
-     this.obj.setParent(p)
-}
-/**
  * 把控件移动到最上层，相当于父对象最后一个创建的子控件，会覆盖其它所有子控件
  */
-dxui.moveForeground = function () {
+uibase.moveForeground = function () {
      this.obj.moveForeground()
 }
 /**
  * 把控件移动到最底层，相当于父对象第一个创建的子控件，会被其它所有子控件覆盖
  */
-dxui.moveBackground = function () {
+uibase.moveBackground = function () {
      this.obj.moveBackground()
 }
 /**
@@ -140,7 +128,7 @@ dxui.moveBackground = function () {
  * @param {function} cb 事件触发的回调函数（不能是匿名函数）
  * @param {object} ud 用户数据
  */
-dxui.on = function (type, cb, ud) {
+uibase.on = function (type, cb, ud) {
      this.obj.addEventCb(() => {
           if (cb) {
                cb({ target: this, ud: ud })
@@ -151,33 +139,37 @@ dxui.on = function (type, cb, ud) {
  * 发送事件，比如模拟点击按钮，可以给按钮发送CLICK事件
  * @param {number} type 枚举utils.EVENT,比如点击、长按等
  */
-dxui.send = function (type) {
+uibase.send = function (type) {
      NativeObject.APP.NativeComponents.NativeEvent.lvEventSend(this.obj, type)
 }
 /**
  * 隐藏ui对象
  */
-dxui.hide = function () {
-     this.obj.lvObjAddFlag(1);
+uibase.hide = function () {
+     if (!this.obj.hasFlag(1)) {
+          this.obj.lvObjAddFlag(1);
+     }
 }
 /**
  * 判断是否隐藏
  * @returns 
  */
-dxui.isHide = function () {
+uibase.isHide = function () {
      return this.obj.hasFlag(1);
 }
 /**
  * 显示已经隐藏的ui对象
  */
-dxui.show = function () {
-     this.obj.lvObjClearFlag(1);
+uibase.show = function () {
+     if (this.obj.hasFlag(1)) {
+          this.obj.lvObjClearFlag(1);
+     }
 }
 /**
  * 禁启用对象
  * @param {*} en false/true，true是禁用，false是启用
  */
-dxui.disable = function (en) {
+uibase.disable = function (en) {
      if (en) {
           this.obj.addState(utils.STATE.DISABLED)
      } else {
@@ -188,7 +180,7 @@ dxui.disable = function (en) {
  * 是否可点击对象
  * @param {*} en false/true，true是可点击，false是不可点击
  */
-dxui.clickable = function (en) {
+uibase.clickable = function (en) {
      if (en) {
           this.obj.lvObjAddFlag(utils.OBJ_FLAG.CLICKABLE)
      } else {
@@ -199,14 +191,14 @@ dxui.clickable = function (en) {
  * 判断是否禁启用
  * @returns true是已禁用，false是已启用
  */
-dxui.isDisable = function () {
+uibase.isDisable = function () {
      return this.obj.hasState(utils.STATE.DISABLED)
 }
 /**
  * 聚焦对象
  * @param {*} en false/true，true是聚焦，false是取消聚焦
  */
-dxui.focus = function (en) {
+uibase.focus = function (en) {
      if (en) {
           this.obj.addState(utils.STATE.FOCUSED)
      } else {
@@ -217,7 +209,7 @@ dxui.focus = function (en) {
  * 判断是否聚焦
  * @returns true是已聚焦，false是没聚焦
  */
-dxui.isFocus = function () {
+uibase.isFocus = function () {
      return this.obj.hasState(utils.STATE.FOCUSED)
 }
 
@@ -227,7 +219,7 @@ dxui.isFocus = function () {
  * @param {object} style  style.js build函数返回的对象
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.addStyle = function (style, type) {
+uibase.addStyle = function (style, type) {
      if (!style || !style.obj) {
           throw new Error('dxui.addStyle: style should not be null')
      }
@@ -241,7 +233,7 @@ dxui.addStyle = function (style, type) {
 * @param {number} pad 边距值
 * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
 */
-dxui.padAll = function (pad, type) {
+uibase.padAll = function (pad, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -252,7 +244,7 @@ dxui.padAll = function (pad, type) {
  * @param {number} pad 边距值
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.padRight = function (pad, type) {
+uibase.padRight = function (pad, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -266,7 +258,7 @@ dxui.padRight = function (pad, type) {
   * @param {number} pad 边距值
   * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
   */
-dxui.padLeft = function (pad, type) {
+uibase.padLeft = function (pad, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -280,7 +272,7 @@ dxui.padLeft = function (pad, type) {
   * @param {number} pad 边距值
   * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
   */
-dxui.padTop = function (pad, type) {
+uibase.padTop = function (pad, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -294,7 +286,7 @@ dxui.padTop = function (pad, type) {
   * @param {number} pad 边距值
   * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
   */
-dxui.padBottom = function (pad, type) {
+uibase.padBottom = function (pad, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -308,7 +300,7 @@ dxui.padBottom = function (pad, type) {
  * @param {number} w 
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.borderWidth = function (w, type) {
+uibase.borderWidth = function (w, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -322,7 +314,7 @@ dxui.borderWidth = function (w, type) {
  * @param {number} color  支持数字类型：比如0x34ffaa；字符串类型(#开头),比如:'#34ffaa'
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.setBorderColor = function (color, type) {
+uibase.setBorderColor = function (color, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -333,7 +325,7 @@ dxui.setBorderColor = function (color, type) {
  * @param {number} r 
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.radius = function (r, type) {
+uibase.radius = function (r, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -344,7 +336,7 @@ dxui.radius = function (r, type) {
  * @param {number} opa 必须是0-100
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.bgOpa = function (opa, type) {
+uibase.bgOpa = function (opa, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -355,7 +347,7 @@ dxui.bgOpa = function (opa, type) {
  * @param {any} color 支持数字类型：比如0x34ffaa；字符串类型(#开头),比如:'#34ffaa'
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.bgColor = function (color, type) {
+uibase.bgColor = function (color, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -371,7 +363,7 @@ dxui.bgColor = function (color, type) {
  * @param {number} opa 透明度，必须是0-100
  * @param {number} type 参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.shadow = function (width, x, y, spread, color, opa, type) {
+uibase.shadow = function (width, x, y, spread, color, opa, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -387,7 +379,7 @@ dxui.shadow = function (width, x, y, spread, color, opa, type) {
  * @param {any} color  支持数字类型：比如0x34ffaa；字符串类型(#开头),比如:'#34ffaa'
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.textColor = function (color, type) {
+uibase.textColor = function (color, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -398,7 +390,7 @@ dxui.textColor = function (color, type) {
  * @param {number} align  参考utils.TEXT_ALIGN
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.textAlign = function (align, type) {
+uibase.textAlign = function (align, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -409,7 +401,7 @@ dxui.textAlign = function (align, type) {
  * @param {object} font font.js里build返回的对象 
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.textFont = function (font, type) {
+uibase.textFont = function (font, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -423,7 +415,7 @@ dxui.textFont = function (font, type) {
  * @param {any} color  支持数字类型：比如0x34ffaa；字符串类型(#开头),比如:'#34ffaa'
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.lineColor = function (color, type) {
+uibase.lineColor = function (color, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -434,7 +426,7 @@ dxui.lineColor = function (color, type) {
  * @param {number} w 
  * @param {number} type  参考utils.STYLE 非必填，缺省是和对象自身绑定
  */
-dxui.lineWidth = function (w, type) {
+uibase.lineWidth = function (w, type) {
      if (!utils.validateNumber(type)) {
           type = 0
      }
@@ -444,21 +436,21 @@ dxui.lineWidth = function (w, type) {
  * 设置线对象(line)圆角
  * @param {boolean} enable true/false
  */
-dxui.lineRound = function (enable) {
+uibase.lineRound = function (enable) {
      this.obj.lvObjSetStyleLineRounded(enable)
 }
 /**
  * 设置ui对象的滚动条显示方式
  * @param {boolean} state ture/false 
  */
-dxui.scrollbarMode = function (state) {
+uibase.scrollbarMode = function (state) {
      this.obj.lvObjSetScrollbarMode(state)
 }
 /**
  * 设置ui对象是否支持滚动
  * @param {boolean} state 
  */
-dxui.scroll = function (state) {
+uibase.scroll = function (state) {
      if (state) {
           this.obj.lvObjAddFlag(16)
      } else {
@@ -472,7 +464,7 @@ dxui.scroll = function (state) {
  * @param {number} x 偏移的x
  * @param {number} y 偏移的y
  */
-dxui.alignTo = function (ref, type, x, y) {
+uibase.alignTo = function (ref, type, x, y) {
      if (!ref || !ref.obj) {
           throw new Error("dxui.alignto: 'ref' parameter should not be null")
      }
@@ -484,7 +476,7 @@ dxui.alignTo = function (ref, type, x, y) {
  * @param {number} x 偏移的x
  * @param {number} y 偏移的y
  */
-dxui.align = function (type, x, y) {
+uibase.align = function (type, x, y) {
      this.obj.lvObjAlign(type, x, y)
 }
 /**
@@ -499,7 +491,7 @@ dxui.align = function (type, x, y) {
  * 5、整体对齐方式：将容器内所有项目看作一个整体，在容器中对齐，对齐方式同主轴，由flexAlign()设置。
  * @param {number} type 主轴和侧轴的设置
  */
-dxui.flexFlow = function (type) {
+uibase.flexFlow = function (type) {
      this.obj.lvObjSetFlexFlow(type)
 }
 /**
@@ -508,27 +500,27 @@ dxui.flexFlow = function (type) {
  * @param {number} cross 子元素按侧轴方向的对齐方式
  * @param {number} track 所有子元素对于容器的对齐方式
  */
-dxui.flexAlign = function (main, cross, track) {
+uibase.flexAlign = function (main, cross, track) {
      this.obj.lvObjSetFlexAlign(main, cross, track)
 }
 /**
  * 更新一个控件的尺寸，当获取一个控件的尺寸为0时可以先调用，相当于更新显示缓存。
  */
-dxui.update = function () {
+uibase.update = function () {
      this.obj.lvObjUpdateLayout()
 }
 /**
  * 添加一个控件的状态
  * @param {number} state 状态枚举
  */
-dxui.addState = function (state) {
+uibase.addState = function (state) {
      this.obj.addState(state)
 }
 /**
  * 删除一个控件的状态，如果想让一个聚焦输入框失焦，可以调用此方法删除FOCUSED状态
  * @param {number} state 状态枚举
  */
-dxui.clearState = function (state) {
+uibase.clearState = function (state) {
      this.obj.clearState(state)
 }
 /**
@@ -536,13 +528,13 @@ dxui.clearState = function (state) {
  * @param {number} state 状态枚举
  * @returns true/false
  */
-dxui.hasState = function (state) {
+uibase.hasState = function (state) {
      return this.obj.hasState(state)
 }
 /**
  * 重绘一个控件，强制刷新控件的缓存，可以强制解决花屏的问题，但是如果死循环中调用会降低性能
  */
-dxui.invalidate = function () {
+uibase.invalidate = function () {
      this.obj.invalidate()
 }
 /**
@@ -550,7 +542,7 @@ dxui.invalidate = function () {
  * @param {boolean} en 是否开启动画，开启会缓慢滚动出来，关闭则直接跳出。
  * @param {boolean} notRecursive 默认递归，适用于一般滚动和滚动嵌套控件
  */
-dxui.scrollToView = function (en, isRecursive) {
+uibase.scrollToView = function (en, isRecursive) {
      if (isRecursive) {
           this.obj.scrollToView(en)
      } else {
@@ -562,7 +554,7 @@ dxui.scrollToView = function (en, isRecursive) {
  * @param {number} x 滚动x轴距离
  * @param {boolean} en 是否开启动画
  */
-dxui.scrollToX = function (x, en) {
+uibase.scrollToX = function (x, en) {
      this.obj.scrollToX(x, en)
 }
 /**
@@ -570,7 +562,21 @@ dxui.scrollToX = function (x, en) {
  * @param {number} y 滚动y轴距离
  * @param {boolean} en 是否开启动画
  */
-dxui.scrollToY = function (y, en) {
+uibase.scrollToY = function (y, en) {
      this.obj.scrollToY(y, en)
 }
-export default dxui;
+/**
+ * 元素快照（其实就是截图，如果想保存全屏截图，可以对屏幕对象使用此方法）
+ * @param {string} fileName 必填，保存快照的文件名（注意后缀应与格式对应）
+ * @param {number} type 非必填，缺省png，快照格式 0:bmp/1:png/2:jpg(jpeg)
+ * @param {number} cf 非必填，一种RGB颜色存储格式
+ */
+uibase.snapshot = function (fileName, type = 1, cf = NativeObject.APP.NativeComponents.NativeEnum.LV_IMG_CF_TRUE_COLOR_ALPHA) {
+     if (!fileName) {
+          return
+     }
+     // 默认存储在/app/data/snapshot位置
+     os.mkdir("/app/data/snapshot/")
+     this.obj.lvSnapshotTake(cf, "/app/data/snapshot/" + fileName, type)
+}
+export default uibase;

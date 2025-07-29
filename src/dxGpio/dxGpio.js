@@ -63,6 +63,27 @@ gpio.getValue = function (gpio_) {
 }
 
 /**
+ * 申请gpio,每个gpio只需要申请一次
+ * @param {number} gpio的标识，不同的设备不同的标识，必填
+ * @returns true/false
+ */
+gpio.requestGpio = function (gpio_) {
+	let res = gpioObj.request(gpio_)
+	return res
+}
+
+/**
+ * 设置gpio功能
+ * @param {number} gpio的标识，不同的设备不同的标识，必填
+ * @param {number} gpio功能属性，不同的设备不同的功能属性，必填
+ * @returns true/false
+ */
+gpio.setFuncGpio = function (gpio_, func) {
+	let res = gpioObj.setFunc(gpio_, func)
+	return res
+}
+
+/**
  * 设置指定gpio上拉状态
  * @param {number} gpio的标识，不同的设备不同的标识，必填
  * @param {number} state 上拉状态，必填

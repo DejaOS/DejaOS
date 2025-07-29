@@ -6,9 +6,8 @@ let list = {}
 
 list.build = function (id, parent) {
     let temp = utils.validateBuild(list.all, id, parent, 'list')
-    let my = {}
+    let my = {type: 'list'}
     my.obj = new utils.GG.NativeList({ uid: id }, temp)
-    list.all[id] = my.obj
     my.id = id
     /**
      * 添加单个文本项
@@ -40,6 +39,7 @@ list.build = function (id, parent) {
         return this.obj.lvListGetBtnText(btn.obj)
     }
     let comp = Object.assign(my, base);
+    utils.setParent(this.all, comp, parent)
     return comp;
 }
 export default list;

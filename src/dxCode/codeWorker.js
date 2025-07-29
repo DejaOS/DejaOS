@@ -4,6 +4,7 @@ import log from './dxLogger.js'
 import dxMap from './dxMap.js'
 import * as os from "os";
 import code from './dxCode.js'
+import std from './dxStd.js'
 
 const map = dxMap.get("default")
 let options = map.get("__code__run_init")
@@ -12,17 +13,16 @@ let decoderOptions = options.decoder
 function run() {
     code.worker.beforeLoop(capturerOptions, decoderOptions)
     log.info('code start......')
-    while (true) {
+    std.setInterval(() => {
         try {
-            code.worker.loop(capturerOptions, decoderOptions)
+            code.worker.loop(options.mode, options.interval)
         } catch (error) {
-            log.error(error, error.stack)
+            log.error(error)
         }
-        os.sleep(10)
-    }
+    }, 10)
 }
 try {
     run()
 } catch (error) {
-    log.error(error, error.stack)
+    log.error(error)
 }

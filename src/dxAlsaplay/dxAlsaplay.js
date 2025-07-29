@@ -61,6 +61,26 @@ alsaplay.play = function (path, id) {
 }
 
 /**
+ * 中断当前正在播放的音频
+ * @param {string} id 句柄id，非必填（需保持和init中的id一致）
+ * @returns true/false
+ */
+alsaplay.interrupt = function (id) {
+	let pointer = dxCommon.handleId("alsaplay", id)
+	return alsaplayObj.alsaplayPlayingInterrupt(pointer)
+}
+
+/**
+ * 清除播放缓存
+ * @param {string} id 句柄id，非必填（需保持和init中的id一致）
+ * @returns true/false
+ */
+alsaplay.clearPlayCache = function (id) {
+	let pointer = dxCommon.handleId("alsaplay", id)
+	return alsaplayObj.alsaplayClearPlayCache(pointer)
+}
+
+/**
  * 获取音量
  * @param {string} id 句柄id，非必填（需保持和init中的id一致）
  * @returns 返回数字类型的音量，不会超出音量范围

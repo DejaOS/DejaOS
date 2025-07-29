@@ -1,4 +1,4 @@
-//build:20240524
+//build:20240724
 /**
  * UI 的基础组件，需要先了解一些概念
  * 1. 图层：设备具备2个基本图层，主图层（main）和顶部图层（top）
@@ -7,7 +7,10 @@
 
  * 2. UI对象：有很多种类的UI对象，其中最基础的是 'view' 对象，主图层和顶部图层的根ui对象必须是 'view'对象，剩下的 ui 对象都是某个 ui 对象的子ui。
       ui对象包括常见的 'button'、'label'、'image'等等，所有对象都有一些通用的属性，也有一些独特的属性
-      所有 ui 对象都有全局唯一的 id ，不能重复。
+      所有 ui 对象都有全局唯一的 id ，不能重复。通用的属性还包括
+      - type：获取ui对象的类型，字符串
+      - parent：获取ui对象的父节点，字符串
+      - children：获取ui对象的所有子对象的id，字符串数组
 
  * 3. dxui文件：以.dxui为扩展名的文件是利用可视化拖拽工具生成的 ui 树,工具会自动生成对应的js文件，可以import对应的js文件来操作
 
@@ -55,7 +58,7 @@ let orientation = 1 //默认横屏
  *        @param {number} options.orientation 屏幕方向 可以为0，1，2，3，分别表示竖屏，屏幕在左；横屏，屏幕在上；竖屏，屏幕在右；横批，屏幕在下
  * @param {object} context 上下文，每个应用都有唯一的一个上下文变量，不同的js可以都引用dxUi.js，但是context必须一致 
 */
-dxui.init = function (options, context) {
+dxui.init = function (options, context = {}) {
      this.initContext(context)
      if (options && options.orientation != undefined && options.orientation != null && [0, 1, 2, 3].includes(options.orientation)) {
           orientation = options.orientation
@@ -85,15 +88,13 @@ dxui.initContext = function (context) {
      dxui.Buttons.all = dxui.all
 }
 /**
- * 构建完ui后必须在代码最后调用，死循环刷新屏幕，和init成对出现
- * 如果需要在外部循环里加上刷新，使用handler方法
+ * 根据id获取已经构建的ui对象
+ * @param {string} id 
+ * @returns 
  */
-dxui.run = function () {
-     //死循环刷新界面
-     while (utils.GG.NativeTimer.lvTimerHandler() >= 0) {
-     }
+dxui.getUi = function (id) {
+     return dxui.all[id]
 }
-
 /**
  * 外部循环需要调用此方法
  */
@@ -124,7 +125,10 @@ dxui.setInterval = function (id, callback, ms, user_data) {
      if (!ms || (typeof ms != 'number')) {
           throw new Error('The interval should not be empty, and should be number')
      }
-     this.all[id] = utils.GG.NativeTimer.lvTimerCreate(callback, ms, user_data)
+     if (!this.all.__interval) {
+          this.all.__interval = {}
+     }
+     this.all.__interval[id] = utils.GG.NativeTimer.lvTimerCreate(callback, ms, user_data)
 }
 /**
  * 定时器不再需要后，可以删除这个定时器
@@ -135,17 +139,54 @@ dxui.clearInterval = function (id) {
           return
      }
      utils.GG.NativeTimer.lvTimerDel(dxui.all[id])
-     delete dxui.all[id]
+     delete dxui.all.__interval[id]
+}
+/**
+ * 获取ui对象的父对象
+ * @param {Object} ui 
+ */
+dxui.getParent = function (ui) {
+     if (ui.parent) {
+          return dxui.getUi(ui.parent)
+     }
+     return null
 }
 /**
  * 删除当前自身ui对象
  */
 dxui.del = function (ui) {
-     if (!dxui.all[ui.id]) {
-          return
+     function recursiveDelete(ui) {
+          // 如果对象不存在，直接返回
+          if (!dxui.all[ui.id]) {
+               return;
+          }
+
+          // 先递归删除所有子对象
+          if (ui.children && Array.isArray(ui.children)) {
+               // 倒序遍历子节点
+               for (let i = ui.children.length - 1; i >= 0; i--) {
+                    const childId = ui.children[i];
+                    if (dxui.all[childId]) {
+                         recursiveDelete(dxui.all[childId]);
+                    }
+               }
+          }
+          // 从父对象中移除当前对象
+          if (ui.parent && dxui.all[ui.parent] && Array.isArray(dxui.all[ui.parent].children)) {
+               const children = dxui.all[ui.parent].children
+               let index = children.indexOf(ui.id);
+               if (index !== -1) {
+                    children.splice(index, 1);
+               }
+          }
+
+          // 删除当前对象
+          ui.obj.lvObjDel();
+          delete dxui.all[ui.id];
      }
-     ui.obj.lvObjDel()
-     delete dxui.all[ui.id]
+
+     // 开始递归删除
+     recursiveDelete(ui);
 }
 /**
  * 在主图层加载（切换）已经构建好的 ui 对象，
@@ -164,6 +205,12 @@ dxui.loadMain = function (ui) {
  */
 dxui.getIdleDuration = function () {
      return utils.GG.NativeDisp.lvDispGetInactiveTime()
+}
+/**
+ * 重置用户活动显示(如点击)经过的时间
+ */
+dxui.trigActivity = function () {
+     utils.GG.NativeDisp.lvDispTrigActivity()
 }
 
 export default dxui;

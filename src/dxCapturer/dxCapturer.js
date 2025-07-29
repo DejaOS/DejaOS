@@ -6,7 +6,7 @@ import * as os from "os"
 import std from './dxStd.js'
 import dxMap from './dxMap.js'
 import dxCommon from './dxCommon.js';
-import center from './dxEventCenter.js'
+import bus from './dxEventBus.js'
 const capturerObj = new capturerClass();
 const map = dxMap.get('default')
 const capturer = {}
@@ -46,11 +46,18 @@ capturer.init = function (options, id) {
 /**
  * 回调注册
  * @param {string} id 句柄id，非必填（需保持和init中的id一致）
+ * @param {string} capturerDogId 摄像头看门狗句柄id，非必填
  * @returns true/false
  */
-capturer.registerCallback = function (id) {
+capturer.registerCallback = function (id, capturerDogId) {
     let pointer = dxCommon.handleId("capturer", id)
-    return capturerObj.registerCallback(pointer, "decoderCapturerImage")
+    let capturerDogPointer = null;
+    print("capturerDogPointer:", capturerDogPointer)
+    if(capturerDogId){
+        capturerDogPointer = dxCommon.handleId("watchdog", capturerDogId)
+        print("capturerDogPointer:", capturerDogPointer)
+    }
+    return capturerObj.registerCallback(pointer, "decoderCapturerImage", capturerDogPointer)
 }
 /**
  * 获取基本信息
@@ -105,6 +112,122 @@ capturer.capturerEnable = function (enable, id) {
 }
 
 /**
+ * @brief 图片文件转image
+ * @param {string} fileName 文件路径
+ * @param {number} type 图像类型 IMAGE_YUV420P = 0, 1IMAGE_YUV420SP = 1,
+ * @return imageId image句柄id
+ */
+capturer.pictureFileToImage = function (fileName, type) {
+    if (fileName == null) {
+        throw new Error("fileName should not be null or empty")
+    }
+    if (type == null) {
+        throw new Error("type should not be null or empty")
+    }
+    return capturerObj.pictureFileToImage(fileName, type)
+}
+
+/**
+ * 图片数据转image
+ * @param {string}  base64Data 图片base64数据
+ * @param {number}  dataLen 数据长度dataLen
+ * @param {number}  type 图像类型 IMAGE_YUV420P = 0, 1IMAGE_YUV420SP = 1,
+ * @returns imageId image句柄id
+ */
+capturer.pictureDataToImage = function (base64Data, dataLen, type) {
+    if (base64Data == null) {
+        throw new Error("base64Data should not be null or empty")
+    }
+    if (dataLen == null) {
+        throw new Error("dataLen should not be null or empty")
+    }
+    if (type == null) {
+        throw new Error("type should not be null or empty")
+    }
+    return capturerObj.pictureDataToImage(base64Data, dataLen, type)
+}
+
+// image, (enum image_type)type, (enum vbar_drv_picture_type)save_type, quality, pic_data, data_len
+/**
+ * image 转图片数据
+ * @param {number}  imageId image图片句柄id
+ * @param {number}  type 图像类型 IMAGE_YUV420P = 0, 1IMAGE_YUV420SP = 1,
+ * @param {number}  saveType 转换后的图片类型 TYPE_JPEG = 0, TYPE_BMP = 1, TYPE_PNG = 2, TYPE_UNKNOE = 3;
+ * @param {number}  quality 压缩比，jpeg 0-100， png 无损压缩无需此参数， bmp位图无需此参数
+ * @returns 图片base64数据
+ */
+capturer.imageToPictureData = function (imageId, type, saveType, quality) {
+    if (imageId == null) {
+        throw new Error("imageId should not be null or empty")
+    }
+    if (type == null) {
+        throw new Error("type should not be null or empty")
+    }
+    if (saveType == null) {
+        throw new Error("saveType should not be null or empty")
+    }
+    if (quality == null) {
+        throw new Error("quality should not be null or empty")
+    }
+    return capturerObj.imageToPictureData(imageId, type, saveType, quality)
+}
+
+/**
+ * 转图片文件
+ * @param {number}  imageId image图像句柄id
+ * @param {string}  type 图像类型 IMAGE_YUV420P = 0, 1IMAGE_YUV420SP = 1,
+ * @param {number}  saveType 转换后的图片类型 YPE_JPEG = 0, TYPE_BMP = 1, TYPE_PNG = 2, TYPE_UNKNOE = 3;
+ * @param {number}  quality 压缩比，jpeg 0-100， png 无损压缩无需此参数， bmp位图无需此参数
+ * @param {number}  savePath 图片保存路径
+ * @returns true/false
+ */
+capturer.imageToPictureFile = function (imageId, type, saveType, quality, savePath) {
+    if (imageId == null) {
+        throw new Error("imageId should not be null or empty")
+    }
+    if (type == null) {
+        throw new Error("type should not be null or empty")
+    }
+    if (saveType == null) {
+        throw new Error("saveType should not be null or empty")
+    }
+    if (quality == null) {
+        throw new Error("quality should not be null or empty")
+    }
+    if (savePath == null) {
+        throw new Error("savePath should not be null or empty")
+    }
+    return capturerObj.imageToPictureFile(imageId, type, saveType, quality, savePath)
+}
+
+/**
+* 图片缩放
+* @param {number}   imageId image图像句柄id
+* @param {number}   width  目标图像宽度
+* @param {number}   height 目标图像高度
+* @param {number}   mode       滤波器模式
+*                   FILTER_MODE_NONE     不进行滤波，直接采样；速度最快。
+*                   FILTER_MODE_LINEAR   只沿水平方向滤波。
+*                   FILTER_MODE_BILINEAR 双线性滤波；比盒滤波更快，但在缩小图像时质量较低。
+*                   FILTER_MODE_BOX      盒滤波；提供最高的缩放质量
+*/
+capturer.imageResizeResolution = function (imageId, width, height, mode) {
+    if (imageId == null) {
+        throw new Error("imageId should not be null or empty")
+    }
+    if (width == null) {
+        throw new Error("width should not be null or empty")
+    }
+    if (height == null) {
+        throw new Error("height should not be null or empty")
+    }
+    if (mode == null) {
+        throw new Error("mode should not be null or empty")
+    }
+    return capturerObj.imageResizeResolution(imageId, width, height, mode)
+}
+
+/**
  * 判断capturer消息队列是否为空
  * @param {string} id 句柄id，非必填（需保持和init中的id一致）
  * @returns true/false
@@ -137,7 +260,7 @@ capturer.msgQueueSize = function (id) {
 capturer.RECEIVE_MSG = '__capturer__MsgReceive'
 
 /**
- * 用于简化capturer组件的使用，把capturer封装在这个worker里，使用者只需要订阅eventcenter的事件就可以监听capturer
+ * 用于简化capturer组件的使用，把capturer封装在这个worker里，使用者只需要订阅eventbus的事件就可以监听capturer
  * @param {object} options capturer组件参数，参考capturer.init，必填
  * @param {string} options.id  句柄id，非必填（若初始化多个实例需要传入唯一id）
  */
@@ -159,7 +282,7 @@ capturer.run = function (options) {
     let init = map.get("__capturer__run_init" + options.id)
     if (!init) {//确保只初始化一次
         map.put("__capturer__run_init" + options.id, options)
-        new os.Worker(newfile)
+        bus.newWorker(options.id || '__capturer', newfile)
     }
 }
 
@@ -181,7 +304,7 @@ capturer.worker = {
                 // 句柄id
                 options.id = ""
             }
-            center.fire(capturer.RECEIVE_MSG + options.id, res)
+            bus.fire(capturer.RECEIVE_MSG + options.id, res)
         }
     }
 }

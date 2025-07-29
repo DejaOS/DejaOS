@@ -6,9 +6,8 @@ let _switch = {}
 
 _switch.build = function (id, parent) {
     let temp = utils.validateBuild(_switch.all, id, parent, '_switch')
-    let my = {}
+    let my = {type: 'switch'}
     my.obj = new utils.GG.NativeSwitch({ uid: id }, temp)
-    _switch.all[id] = my.obj
     my.id = id
 
     /**
@@ -44,6 +43,7 @@ _switch.build = function (id, parent) {
         return my.obj.hasState(utils.STATE.CHECKED)
     }
     let comp = Object.assign(my, base);
+    utils.setParent(this.all, comp, parent)
     return comp;
 }
 export default _switch;

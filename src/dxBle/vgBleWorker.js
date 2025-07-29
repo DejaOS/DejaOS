@@ -2,9 +2,11 @@
 //用于简化uart组件微光通信协议的使用，把uart封装在这个worker里，使用者只需要订阅eventcenter的事件就可以监听uart
 import log from './dxLogger.js'
 import uart from './dxUart.js'
+import gpio from './dxGpio.js'
 import ble from './dxBle.js'
 import common from './dxCommon.js'
 import dxMap from './dxMap.js'
+import bus from './dxEventBus.js'
 import * as os from "os"
 import std from './dxStd.js'
 const map = dxMap.get('default')
@@ -38,6 +40,12 @@ let auth = [
 
 function run() {
     uart.open(options.type, options.path, options.id)
+
+    gpio.requestGpio(75)
+    gpio.setFuncGpio(75, 0x04)
+    os.sleep(10)
+    gpio.setFuncGpio(75, 0x05)
+    os.sleep(10)
 
     // 设置秘钥
     if(options.bleKey){
@@ -102,11 +110,12 @@ function readPacket(noResult) {
 
     // 读取1Byte的校验位
     pack.crc = ble.toHexadecimal(uart.receive(1, timeout, options.id))
-    let crc = ble.genCrc(pack)
-    if (crc != parseInt(pack.crc, 16)) {
-        log.error("校验失败：" + JSON.stringify(pack) + "，正确的校验字：" + crc)
-        return;
-    }
+    // 目前的CRC校验是错误的，需要重写该函数
+    // let crc = ble.genCrc(pack)
+    // if (crc != parseInt(pack.crc, 16)) {
+    //     log.error("校验失败：" + JSON.stringify(pack) + "，正确的校验字：" + crc)
+    //     return;
+    // }
 
     let res;
     switch (cmd) {
@@ -133,7 +142,11 @@ function readPacket(noResult) {
                 res.data = userId
             }
 
-            __bus.fire(ble.VG.RECEIVE_MSG + options.id, res)
+            bus.fire(ble.VG.RECEIVE_MSG + options.id, res)
+            break;
+        case "fa":
+            // 蓝牙回复，回复查询的设备信息
+            CMDfa(pack);
             break;
         default:
             break;
@@ -210,9 +223,75 @@ function CMD08(pack) {
 }
 
 /**
+ * 过滤蓝牙Central模式的指令
+ */
+function CMDIsBleControl(pack){
+    if(pack.data.length < 5){
+        return false
+    }else if(pack.data[0] == 0x0a && pack.data[1] == 0x00 && pack.data[2] == 0x00 && (pack.data[3] >= 0x01 && pack.data[3] <= 0x05)){
+        // 扫描设备请求的回复
+        // 停止扫描设备的回复
+        // 请求连接设备的回复
+        // 断开连接设备的回复
+        // 扫描特定的服务的回复
+        return true
+    }else if(pack.data[0] == 0x0a && pack.data[1] == 0x00 && pack.data[2] == 0x00 && (pack.data[3] >= 0x08 && pack.data[3] <= 0x0a)){
+        // 特征写的回复
+        // 订阅特征的回复
+        // 特征读的回复
+        return true
+    }else if(pack.data[0] == 0x0a && pack.data[1] == 0x80 && (pack.data[2] >= 0x01 && pack.data[2] <= 0x04)){
+        // 特征写的回复
+        // 订阅特征的回复
+        // 特征读的回复
+        return true
+    }else if(pack.data[0] == 0x0a && pack.data[1] == 0x80 && (pack.data[2] >= 0x06 || pack.data[2] <= 0x08)){
+        // 特征写的回复
+        // 订阅特征的回复
+        // 特征读的回复
+        return true
+    }else{
+        return false
+    }
+}
+
+/**
+ * 过滤蓝牙升级的指令
+ */
+function CMDIsBleUpdate(pack){
+    if(pack.data.length < 5){
+        return false
+    }else if(pack.data[0] == 0x03 && pack.data[1] == 0x01 && pack.data[2] == 0x80 && (pack.data[3] == 0x01 || pack.data[3] == 0x02 || pack.data[3] == 0x03 || pack.data[3] == 0x04 || pack.data[3] == 0x05)){
+        // pack.data[3] == 0x01发送蓝牙进入升级模式指令的回复 
+
+        // pack.data[3] == 0x02发送蓝牙升级包描述信息指令的回复
+
+        // pack.data[3] == 0x03发送蓝牙升级包的回复
+
+        // pack.data[3] == 0x04发送蓝牙升级结束指令的回复
+
+        // pack.data[3] == 0x05发送安装升级包指令的回复
+        return true
+    }else{
+        return false
+    }
+}
+
+/**
  * 获取蓝牙的回复(查询蓝牙信息回复、修改蓝牙配置成功与否回复)
  */
 function CMD60(pack) {
+
+    if(CMDIsBleControl(pack)){
+        bus.fire("characterRead", pack)
+        return
+    }
+
+    if(CMDIsBleUpdate(pack)){
+        bus.fire("bleUpgrade", pack)
+        return
+    }
+
     let res = {}
     let data = pack.data.map(v => v.toString(16).padStart(2, '0'))
     if (data.slice(-1)[0] == 'fe') {
@@ -262,6 +341,18 @@ function CMD60(pack) {
     } else {
         log.info("other ble info data")
     }
+}
+
+function CMDfa(pack) {
+    let data = pack.data
+    let index = data[pack.dlen - 1].toString(16).padStart(2, '0');
+    // 记录连接标识
+    log.info("index:" + index);
+    if(data[0] == 0xFA && data[1] == 0xFB){
+        // 表明这是读取到的特征信息
+        bus.fire("characterRead", pack)
+    }
+    return
 }
 
 try {

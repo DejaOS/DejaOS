@@ -6,9 +6,8 @@ let textarea = {}
 
 textarea.build = function (id, parent) {
     let temp = utils.validateBuild(textarea.all, id, parent, 'textarea')
-    let my = {}
+    let my = {type: 'textarea'}
     my.obj = new utils.GG.NativeTextarea({ uid: id }, temp)
-    textarea.all[id] = my.obj
     my.id = id
     /**
      * 设置单行模式，不能换行
@@ -71,6 +70,7 @@ textarea.build = function (id, parent) {
         }
     }
     let comp = Object.assign(my, base);
+    utils.setParent(this.all, comp, parent)
     return comp;
 }
 export default textarea;

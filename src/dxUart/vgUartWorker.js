@@ -1,11 +1,11 @@
-//build:20240524
+//build:20240715
 //用于简化uart组件微光通信协议的使用，把uart封装在这个worker里，使用者只需要订阅eventcenter的事件就可以监听uart
 import log from './dxLogger.js'
 import uart from './dxUart.js'
 import common from './dxCommon.js';
 import dxMap from './dxMap.js'
 import * as os from "os";
-import center from './dxEventCenter.js'
+import std from './dxStd.js'
 const map = dxMap.get('default')
 const id = "{{id}}"
 const options = map.get("__vguart__run_init" + id)
@@ -15,21 +15,23 @@ const longTimeout = 500
 function run() {
     uart.open(options.type, options.path, options.id)
     log.info('vg uart start......,id =', id)
-    while (true) {
+    std.setInterval(() => {
         try {
             // 接收数据模式
             if (options.passThrough) {
                 // 透传模式，适配韦根之类
                 passThrough()
+            }
+            if(options.type == uart.TYPE.USBHID){
+                receiveUsb() 
             } else {
                 // 微光通信协议模式
                 receive()
             }
         } catch (error) {
-            log.error(error, error.stack)
+            log.error(error)
         }
-        os.sleep(10)
-    }
+    }, 10)
 }
 
 // 透传模式
@@ -42,7 +44,7 @@ function passThrough() {
         buffer = readOne()
     }
     if (pack.length !== 0) {
-        center.fire(uart.VG.RECEIVE_MSG + options.id, pack)
+        __bus.fire(uart.VG.RECEIVE_MSG + options.id, pack)//bus.newworker的时候会import eventbus as __bus
     }
 }
 
@@ -112,8 +114,36 @@ function receive() {
     if (options.result) {
         res.result = int2hex(pack.result)
     }
-    center.fire(uart.VG.RECEIVE_MSG + options.id, res)
+    __bus.fire(uart.VG.RECEIVE_MSG + options.id, res)//bus.newworker的时候会import eventbus as __bus
 }
+
+
+function receiveUsb() {
+    let arr = uart.receive(1024, 100, options.id)
+    if (arr && arr[0] == 0x55 && arr[1] == 0xAA) {
+        let cmd = arr[2]
+        let dlen = arr[4] * 256 + arr[3]
+        if (dlen > (1024 - 6)) {
+            let tempLen = dlen - 1024 + 5 
+            while(tempLen >= 0){
+                let tempArr = uart.receive(1024, 100, options.id)
+                tempLen = tempLen - tempArr.length
+                let newArr = new Uint8Array(arr.length + tempArr.length)
+                newArr.set(arr)
+                newArr.set(tempArr, arr.length)
+                arr = newArr
+            }
+        }
+        let data = (dlen == 0 ? [] : Object.values(arr.slice(5, 5 + dlen)))
+        let bcc = common.calculateBcc([0x55, 0xAA, arr[2], arr[3], arr[4]].concat(data))
+        data = data.map(v => v.toString(16).padStart(2, '0')).join('')
+        if (bcc == arr[5 + dlen]) {
+            let res = { "cmd": cmd.toString(16).padStart(2, '0'), "length": dlen, "data": data, "bcc": true }
+            __bus.fire(uart.VG.RECEIVE_MSG + options.id, res)//bus.newworker的时候会import eventbus as __bus
+        }
+    }
+}
+
 function valid(pack, bcc) {
     let temp = common.calculateBcc([0x55, 0xaa, pack.cmd, pack.result, pack.length % 256, Math.floor(pack.length / 256)].concat(pack.data))
     return temp === bcc

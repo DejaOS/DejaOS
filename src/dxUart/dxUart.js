@@ -1,11 +1,11 @@
-//build: 20240524 
+//build: 20240715
 //数据通信通道，包括串口（Serial port）、USB（Universal Serial Bus）和韦根（Wiegand）
-//依赖组件:dxDriver，dxStd，dxLogger，dxMap，dxEventCenter,dxCommon
+//依赖组件:dxDriver，dxStd，dxLogger，dxMap，dxEventBus,dxCommon
 import { channelClass } from './libvbar-m-dxchannel.so'
 import std from './dxStd.js'
-import * as os from "os"
 import dxMap from './dxMap.js'
 import dxCommon from './dxCommon.js'
+import bus from './dxEventBus.js'
 const uartObj = new channelClass();
 const map = dxMap.get('default')
 const uart = {}
@@ -15,6 +15,50 @@ uart.TYPE = {
 	UART: 3,//表示UART通道类型，即串口通道
 	WIEGAND: 4//韦根（Wiegand）通道类型
 }
+
+/* 各类通道 IO 控制操作的设置选项枚举 */
+uart.IOC_SET_CMD = {
+    /* 设置KBW通道的配置参数 */
+    CHANNEL_IOC_SET_KBW_CONFIG      : 1,
+    /* 设置KBW通道的上位机参数 */
+    CHANNEL_IOC_SET_KBW_UPPER       : 2,
+    /* KBW上线时间 */
+    CHANNEL_IOC_SET_KBW_UPTIME      : 3,
+    /* KBW下线时间 */
+    CHANNEL_IOC_SET_KBW_DOWNTIME    : 4,
+    /* 设置HID通道的报告长度 */
+    CHANNEL_IOC_SET_HID_REPORT_LEN  : 5,
+    /* 设置UART通道的参数 */
+    CHANNEL_IOC_SET_UART_PARAM      : 6,
+    /* 设置韦根通道的工作模式 */
+    CHANNEL_IOC_SET_WIEGAND_MODE    : 7,
+    /* 设置韦根通道的GPIO配置 */
+    CHANNEL_IOC_SET_WIEGAND_GPIO    : 8,
+    /* 设置韦根通道的延迟时间 */
+    CHANNEL_IOC_SET_WIEGAND_DELAY   : 9,
+    /* 设置韦根通道的日志记录功能 */
+    CHANNEL_IOC_SET_WIEGAND_LOG     : 10
+
+};
+
+/* 韦根通道的不同工作模式 */
+uart.WIEGAND_MODE = {
+    /* 韦根模式初始化值 */
+    WIEGAND_MODE_INIT      : 0,
+    /* 韦根 26 位模式 */
+    WIEGAND_MODE_26		  : 1,
+    /* 韦根 34 位模式 */
+    WIEGAND_MODE_34		  : 2,
+    /* 韦根 128 位模式 */
+    WIEGAND_MODE_128       : 3,
+    /* 韦根 256 位模式 */
+    WIEGAND_MODE_256       : 4,
+    /* 韦根 2048 位模式 */
+    WIEGAND_MODE_2048      : 5,
+    /* 自定义的韦根模式, 最大发送 6400 位 */
+    WIEGAND_MODE_CUSTOM    : 6
+};
+
 /**
  * 打开信道
  * @param {number} type 通道类型，参考枚举 TYPE，必填
@@ -153,19 +197,19 @@ uart.VG = {
 
 /**
  * 简化微光通信协议的使用，
- * 1. 接受数据：把TLV的二进制的数据接受到后解析成对象，并以eventcenter的event发送出去(uart.VG.RECEIVE_MSG+options.id)
+ * 1. 接受数据：把TLV的二进制的数据接受到后解析成对象，并以eventbus的event发送出去(uart.VG.RECEIVE_MSG+options.id)
  * 返回的对象格式：{cmd:"2a",result:"01",length:7,data:"0a1acc320fee32",bcc:true}
  * cmd: 1个字节的命令字，16进制字符串
  * result:1个字节的标识字，表示数据处理的结果，成功或失败或其他状态。只有反馈数据才有标识字，16进制字符串
  * length：数据的长度，在TLV里用2个字节来定义，这里直接转成10进制的数字
  * data：多个字节的数据域，16进制字符串
  * bcc: bcc校验成功或失败
- * 2. 发送数据：把对象转成TLV格式的二进制数据再发送出去，可以通过uart.sendVg('要发送的数据',uart.VG.SEND_MSG+options.id)，数据格式如下
+ * 2. 发送数据：把对象转成TLV格式的二进制数据再发送出去，可以通过uart.sendVg('要发送的数据',id)，数据格式如下
  * 发送的数据格式有二种 1.对象格式 ：{cmd:"2a",result:"01",length:7,data:"0a1acc320fee32"} 2. 完整的16进制字符串'55AA09000000F6'
  * 3. 同样的id，多次调用runvg也只会执行一次
  * 
  * @param {object} options 启动的参数
- *			@param {number} options.type 通道类型，参考枚举 TYPE，必填
+ *			@param {number} options.type 通道类型，参考枚举 TYPE，必填  （兼容USBHID块传输，默认1024每块）
  *			@param {string} options.path 不同的设备或同一设备的不同类型通道对应的path不一样，比如DW200的485对应的值是"/dev/ttyS2"，必填
  *			@param {number} options.result 0和1(缺省是0)，标识是接收的数据还是发送的数据包含标识字节，0表示接受的数据不包括标识字，发送的数据包括，1是反之
  *			@param {number} options.passThrough passThrough为true则接收的数据使用透传模式，非必填
@@ -192,7 +236,7 @@ uart.runvg = function (options) {
 	let init = map.get("__vguart__run_init" + options.id)
 	if (!init) {//确保只初始化一次
 		map.put("__vguart__run_init" + options.id, options)
-		new os.Worker(newfile)
+		bus.newWorker(options.id || "__uart",newfile)
 	}
 }
 export default uart;

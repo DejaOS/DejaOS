@@ -89,7 +89,7 @@ watchdog.close = function (id) {
 watchdog.loop = function (chan, id) {
 	const now = new Date().getTime()
 	const minus = now - watchdog.last
-	if (minus > 3000) {//每3秒检查一次
+	if (minus > 3000 || minus < 0) {//每3秒检查一次或者小于0代表操作了往前改时间
 		watchdog.last = now
 		let keys = map.keys()
 		let check = true
@@ -97,8 +97,8 @@ watchdog.loop = function (chan, id) {
 			let key = keys[i]
 			let value = map.get(key)
 			const temp = now - value.now
-			if (temp > value.timeout * 1000) {
-				logger.error(`The worker ${key} did not feed the dog in time.`)
+			if (temp > value.timeout * 1000 && temp < 1700000000) {
+				logger.error(`The worker ${key} did not feed the dog in time.`, temp)
 				check = false
 				break
 			}

@@ -6,9 +6,8 @@ let checkbox = {}
 
 checkbox.build = function (id, parent) {
     let temp = utils.validateBuild(checkbox.all, id, parent, 'checkbox')
-    let my = {}
+    let my = { type: 'checkbox' }
     my.obj = new utils.GG.NativeCheckbox({ uid: id }, temp)
-    checkbox.all[id] = my.obj
     my.id = id
     /**
      * 获取/设置文字
@@ -43,6 +42,7 @@ checkbox.build = function (id, parent) {
         return my.obj.hasState(utils.STATE.CHECKED)
     }
     let comp = Object.assign(my, base);
+    utils.setParent(this.all, comp, parent)
     return comp;
 }
 export default checkbox;

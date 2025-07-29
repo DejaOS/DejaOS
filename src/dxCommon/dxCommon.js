@@ -1,110 +1,214 @@
-//build: 20240617
-// 系统的一些基本操作、还有一些常用的工具函数，基本上每个项目都需要依赖这个组件，另外dxLogger也依赖这个组件
-// 依赖组件：dxDriver，dxMap
+/**
+ * Common Module
+ * Features:
+ * - common.sys     System related methods
+ * - common.algo    Algorithm encryption and decryption related methods
+ * - common.utils   General tool methods
+ * 
+ * Usage:
+ * - System operation, encryption and decryption operations
+ * 
+ * Doc/Demo : https://github.com/DejaOS/DejaOS
+ */
 import { commonClass } from './libvbar-m-dxcommon.so'
 import dxMap from './dxMap.js'
 import * as std from 'std';
+import * as os from "os"
 
-const commonObj = new commonClass();
-
+let commonObj = null
 const common = {}
+
+
 /**
- * 获取系统启动的运行时间(单位是秒)
- * @returns 
+ * Common is divided into three major modules
+ * Common.sys module - System Information and Command Execution
+ *                  Purpose: To provide interfaces for system resource monitoring, command execution, and device status management.
+ * Common.algo module - Encryption and Encoding Algorithms
+ *                  Purpose: To implement operations such as symmetric encryption, hashing, KBC, Base64, and file conversion.
+ * Common.utils module - Data Conversion and Utility Tools
+ *                  Purpose: Provide conversion functions between hexadecimal, encoding, byte arrays, and structured data.
+ * Attention: Try not to directly call methods under common. Please use the latest comm.module.xxx, as the old methods below will gradually be phased out
+ */
+// System related functional modules
+common.sys = {
+    getUptime : common.getUptime,
+    getTotalmem : common.getTotalmem,
+    getFreemem : common.getFreemem,
+    getTotaldisk : common.getTotaldisk,
+    getFreedisk : common.getFreedisk,
+    getCpuid : common.getCpuid,
+    getUuid : common.getUuid,
+    getSn : common.getSn,
+    getUuid2mac : common.getUuid2mac,
+    getFreecpu : common.getFreecpu,
+    execute: function (cmd, options) {
+		if (options.brief) {
+			return common.systemBrief(cmd)
+		}else if(options.withRes){
+            return common.systemWithRes(cmd)
+        }else if(options.blocked){
+            return common.systemBlocked(cmd)
+        }else{
+            return common.system(cmd)
+        }
+	},
+    asyncReboot : common.asyncReboot,
+    sync : common.sync,
+    setMode : common.setMode,
+    getMode : common.getMode,
+    handleId : common.handleId,
+}
+
+// Encryption, decryption, and algorithm related modules
+common.algo = {
+    aes : {
+        ecbEncrypt : common.aes128EcbEncrypt,
+        ecbDecrypt : common.aes128EcbDecrypt,
+        ecbPkcs5Encode : common.aes128EcbPkcs5PaddingEncode,
+        ecbPkcs5Decode : common.aesEcb128Pkcs5PaddingDecode,
+        ecbPkcs5Encrypt : common.aes128EcbPkcs5PaddingEncrypt,
+        ecbPkcs5Decrypt : common.aes128EcbPkcs5PaddingDecrypt,
+    },
+    calculateBcc : common.calculateBcc,
+    md5: function(option){
+        if(option.isHashFile){
+            return common.md5HashFile(option.filePath)
+        }else{
+            return common.md5Hash(option.arr)
+        }
+    },
+    hmac: function(option){
+        if(option.md5Hash){
+            return common.hmacMd5Hash(option.data, option.key);
+        }else if(option.md5HashFile){
+            return common.hmacMd5HashFile(option.filePath, option.key);
+        }else{
+            return common.hmac(option.data, option.key);
+        }
+    },
+    base64ToBinfile : common.base64_2binfile,
+    binfileToBase64 : common.binfile_2base64,
+}
+
+// Tool function module
+common.utils = {
+    arrayBufferRsaDecrypt : common.arrayBufferRsaDecrypt,
+    hexToArr : common.hexToArr,
+    arrToHex : common.arrToHex,
+    hexToString : common.hexToString,
+    strToUtf8Hex : common.strToUtf8Hex,
+    utf8HexToStr : common.utf8HexToStr,
+    stringToHex : common.stringToHex,
+    littleEndianToDecimal : common.littleEndianToDecimal,
+    decimalToLittleEndianHex : common.decimalToLittleEndianHex,
+    hexStringToArrayBuffer : common.hexStringToArrayBuffer,
+    hexStringToUint8Array : common.hexStringToUint8Array,
+    arrayBufferToHexString : common.arrayBufferToHexString,
+    uint8ArrayToHexString : common.uint8ArrayToHexString,
+}
+
+/**
+ * Initialize the common module
+ */
+function init() {
+    if (!commonObj)
+        commonObj = new commonClass();
+}
+init();
+
+/**
+ * Get the running time of system startup (in seconds)
+ * @returns {number} Running time
  */
 common.getUptime = function () {
     return commonObj.getUptime();
 }
 
 /**
- * 获取系统的总内存(单位是字节)
- * @returns 
+ * Get the total memory of the system (in bytes)
+ * @returns {number} Total memory
  */
 common.getTotalmem = function () {
     return commonObj.getTotalmem();
 }
 
 /**
- * 获取系统剩余内存(单位是字节)
- * @returns 
+ * Retrieve the remaining memory of the system (in bytes)
+ * @returns {number} Remaining memory
  */
 common.getFreemem = function () {
     return commonObj.getFreemem();
 }
 
-common.__start = new Date().getTime()
-common.__last = common.__start
-common.__min = common.getFreemem() / 1024
-common.__max = common.__min
 /**
- * 每隔n秒打印一下当前内存，用于调试监控内存使用
- * @param {object} logger 打印日志组件对象
- * @param {number} interval 打印间隔，缺省是10秒 
+ * The principle of converting asynchronous to synchronous is as follows: 
+ * the `request` function periodically checks a designated variable in memory for a value. 
+ * If the value is found within the timeout period, the result is returned; otherwise, 
+ * it is considered a timeout. The `response` function is responsible for storing the result
+ *  in the designated variable once the asynchronous request is completed.
  */
-common.logMem = function (logger, interval = 10) {
-    const now = new Date().getTime()
-    const pass = (now - this.__start) / 1000
-    const free = this.getFreemem() / 1024
-    this.__min = Math.min(this.__min, free)
-    this.__max = Math.max(this.__max, free)
-    let passStr;
-    if (pass >= 3600) {
-        const hours = Math.floor(pass / 3600)
-        const minutes = Math.floor((pass % 3600) / 60)
-        const seconds = Math.floor(pass % 60)
-        passStr = `${hours}h ${minutes}m ${seconds}s`
-    } else if (pass >= 60) {
-        const minutes = Math.floor(pass / 60)
-        const seconds = Math.floor(pass % 60)
-        passStr = `${minutes}m ${seconds}s`
-    } else {
-        passStr = `${Math.floor(pass)}s`
-    }
+common.sync = {
+    // 异步转同步小实现
+    request: function (topic, timeout) {
+        let map = dxMap.get("SYNC");
+        map.put(topic + "__request__", topic);
+        let count = 0;
+        let data = map.get(topic);
+        while (utils.isEmpty(data) && count * 10 < timeout) {
+            data = map.get(topic);
+            std.sleep(10);
+            count += 1;
+        }
+        let res = map.get(topic);
+        map.del(topic);
+        map.del(topic + "__request__");
+        return res;
+    },
+    response: function (topic, data) {
+        let map = dxMap.get("SYNC");
+        if (map.get(topic + "__request__") == topic) {
+            map.put(topic, data);
+        }
+    },
+};
 
-    let log = `------ ${passStr} passed,free memory(k):${free},min free memory(k):${this.__min},max free memory(k):${this.__max} ------`
-    if ((now - this.__last) >= (interval * 1000)) {
-        this.__last = now
-        // common.systemBrief("free")
-        logger.info(log)
-    }
-}
 /**
- * 获取系统可用磁盘总量(单位是字节)
- * @param {string} path 不同的磁盘分区名称（不是目录名），非必填，缺省是'/'
+ * Get the total number of available disks in the system (in bytes)
+ * @param {string} path Different disk partition names (not directory names), not mandatory, default is'/'
+ * @returns {number} Total number of available disks
  */
 common.getTotaldisk = function (path) {
     return commonObj.getTotaldisk(!path ? "/" : path);
 }
 
 /**
- * 获取系统磁盘剩余可用量(单位是字节)
- * @param {string} path 不同的磁盘分区名称（不是目录名），非必填，缺省是'/'
- * @returns 
+ * Retrieve the remaining available amount of system disk (in bytes)
+ * @param {string} path Different disk partition names (not directory names), not mandatory, default is'/'
+ * @returns {number} Total number of available disks
  */
 common.getFreedisk = function (path) {
     return commonObj.getFreedisk(!path ? "/" : path);
 }
 
 /**
- * 获取CPU ID
- * @param {number} len 非必填，缺省长度是33位长
- * @returns 
+ * Get CPU ID
+ * @returns {string} CPU ID
  */
 common.getCpuid = function () {
     return commonObj.getCpuid(33);
 }
 
 /**
- * 获取设备uuid（字符串）
- * @returns 
+ * Get device uuid
+ * @returns {string} Device UUID
  */
 common.getUuid = function () {
     return commonObj.getUuid(19);
 }
 
 /**
- * 获取设备唯一标识
- * @returns 
+ * Obtain the unique identifier of the device
+ * @returns {string} unique identifier of the device
  */
 common.getSn = function () {
     let sn = std.loadFile('/etc/.sn')
@@ -116,28 +220,26 @@ common.getSn = function () {
 }
 
 /**
- * 获取通过uuid计算的mac地址，这个可以用来初始化网卡的时候用
- * @returns 格式类似：b2:a1:63:3f:99:b6
+ * Obtain the MAC address calculated through UUID, which can be used to initialize the network card
+ * @returns {string} Similar format：b2:a1:63:3f:99:b6
  */
 common.getUuid2mac = function () {
     return commonObj.getUuid2mac(19);
 }
 
 /**
- * 获取cpu占用率（不大于100的数字）
- * @returns 
+ * Get CPU usage rate
+ * @returns {number} a number not greater than 100
  */
 common.getFreecpu = function () {
     return commonObj.getFreecpu();
 }
 
-
 /**
- * RSA 解密 （私钥加密公钥解密）
- * 比如公钥是
- * @param {ArrayBuffer} data 要解密的数据，必填
- * @param {string} publicKey 公钥，必填
- * @returns 
+ * RSA decryption (private key encryption public key decryption)
+ * @param {ArrayBuffer} data The data to be decrypted is required
+ * @param {string} publicKey Public key, required
+ * @returns {number} 0 success; other failed
  */
 common.arrayBufferRsaDecrypt = function (data, publicKey) {
     if (data === undefined || data === null) {
@@ -150,34 +252,75 @@ common.arrayBufferRsaDecrypt = function (data, publicKey) {
 }
 
 /**
- * @brief   Stirng aes 加密
+ * @brief  Aes128Ecb encryption
+ * @param {array} input Clear text array
+ * @param {array} key Secret key
+ * @returns {array} Ciphertext array
  */
 common.aes128EcbEncrypt = function (input, key) {
     return commonObj.aes128EcbEncrypt(input, key)
 }
 /**
- * @brief   Stirng aes 解密
+ * @brief  Aes128Ecb decrypt
+ * @param {array} input Ciphertext array
+ * @param {array} key Secret key
+ * @returns {array} Clear text array
  */
 common.aes128EcbDecrypt = function (input, key) {
     return commonObj.aes128EcbDecrypt(input, key)
 }
 
 /**
- * @brief   arraybuffer ecb 128bit Pkcs7Padding aes 加密
- */
-common.aes128Pkcs7PaddingEncode = function (input, key) {
+ * Arranguffer ECB 128 bit Pkcs5Padding AES encryption
+ * @param {ArrayBuffer} input Plaintext
+ * @param {ArrayBuffer} key Secret key
+ * @returns {ArrayBuffer} Ciphertext array
+*/
+common.aes128EcbPkcs5PaddingEncode = function (input, key) {
     return commonObj.aes128Pkcs7PaddingEncode(input, key)
 }
+
 /**
- * @brief   arraybuffer ecb 128bit Pkcs7Padding aes 解密
+ * Arranguffer ECB 128 bit Pkcs5Padding AES decrypt
+ * @param {ArrayBuffer} input Ciphertext array
+ * @param {ArrayBuffer} key Secret key
+ * @returns {ArrayBuffer} Plaintext
  */
-common.aes128Pkcs7PaddingDecode = function (input, key) {
+common.aesEcb128Pkcs5PaddingDecode = function (input, key) {
     return commonObj.aes128Pkcs7PaddingDecode(input, key)
 }
 
 /**
- * 执行操作系统的命令
- * @param {*} cmd 命令
+ * AES ECB Pkcs5Padding 128 encryption
+ * example：common.aes128EcbPkcs5PaddingEncrypt("stamp=202008文&tic", "1234567890123456")
+ * result：ef7c3cff9df57b3bcb0951938c574f969e13ffdcc1eadad298ddbd1fb1a4d2f7
+ * refer to https://www.devglan.com/online-tools/aes-encryption-decryption
+ * @param {string} input  Plaintext(string)
+ * @param {string} key    Secret key(16 byte string)
+ * @return {string} Ciphertext
+ */
+common.aes128EcbPkcs5PaddingEncrypt = function (input, key) {
+    let data = common.hexStringToArrayBuffer(common.strToUtf8Hex(input))
+    key = common.hexStringToArrayBuffer(common.strToUtf8Hex(key))
+    // encryption
+    let hex = common.arrayBufferToHexString(common.aes128EcbPkcs5PaddingEncode(data, key))
+    return hex
+}
+/**
+   * AES ECB Pkcs5Padding 128 decrypt
+   * @param {string} input Ciphertext(16 byte string)
+   * @param {string} key   Secret key(16 byte string)
+   * @return Plaintext(string)
+   */
+common.aes128EcbPkcs5PaddingDecrypt = function (input, key) {
+    key = common.hexStringToArrayBuffer(common.strToUtf8Hex(key))
+    let res = common.aesEcb128Pkcs5PaddingDecode(common.hexStringToArrayBuffer(input), key)
+    return common.utf8HexToStr(common.arrayBufferToHexString(res))
+}
+
+/**
+ * Execute commands of the operating system
+ * @param {string} cmd Common operating system instructions (supported by the vast majority of Linux instructions)
  * @returns 
  */
 common.system = function (cmd) {
@@ -185,8 +328,8 @@ common.system = function (cmd) {
 }
 
 /**
- * 执行操作系统的命令 
- * @param {*} cmd 命令 操作系统常用指令(linux绝大部分指令都支持)，必填
+ * Execute commands of the operating system(will output the execution result to the terminal)
+ * @param {string} cmd Common operating system instructions (supported by the vast majority of Linux instructions)
  * @returns 
  */
 common.systemBrief = function (cmd) {
@@ -194,87 +337,57 @@ common.systemBrief = function (cmd) {
 }
 
 /**
- * 执行操作系统的命令并返回结果
- * @param {*} cmd 命令 操作系统常用指令(linux绝大部分指令都支持)，必填
- * @param {*} resLen 接收数据长度 有时候返回的数据很大，可以通过这个值来返回固定长度的数据，必填
- * @returns 
+ * Execute command-line commands (will return the execution result to JS)
+ * @param {string} cmd Common operating system instructions (supported by the vast majority of Linux instructions)
+ * @param {number} resLen The length of the received data is sometimes very large, and this value can be used to return fixed length data
+ * @returns {string}
  */
 common.systemWithRes = function (cmd, resLen) {
     return commonObj.systemWithRes(cmd, resLen)
 }
 
 /**
- * 执行操作系统的命令阻塞执行
- * @param {*} cmd 命令  操作系统常用指令(linux绝大部分指令都支持)，必填
- * @returns 
+ * Block execution of operating system commands
+ * @param {string} cmd Common operating system instructions (supported by the vast majority of Linux instructions)
+ * @returns {number} result
  */
 common.systemBlocked = function (cmd) {
     return commonObj.systemBlocked(cmd)
 }
 
 /**
- * 异步延迟重启
- * @param {*} delay_s 延迟时间
- * @returns 
+ * Asynchronous delayed restart (non blocking execution of sync sleep reboot)
+ * @param {number} delay_s Asynchronous Delay Time (seconds)
+ * @returns {number} result
  */
 common.asyncReboot = function (delay_s) {
     return commonObj.asyncReboot(delay_s)
 }
 
 /**
- * bcc校验
- * @param {array} data eg:[49,50,51,52,53,54]对应的值是7
- * @returns 校验计算结果
+ * BCC verification
+ * @param {array} data eg:[49,50,51,52,53,54] The corresponding value is 7
+ * @returns {number} result
  */
 common.calculateBcc = function (data) {
     return commonObj.calculateBcc(data)
 }
 
 /**
- * aes cbc解密
- * @param {*}
- * @returns 
- */
-common.aes128CbcDecrypt = function (val1, val2, val3) {
-    return commonObj.aes128CbcDecrypt(val1, val2, val3)
-}
-
-/**
- * aes cbc加密
- * @param {*}
- * @returns 
- */
-common.aes128CbcEncrypt = function (val1, val2, val3) {
-    return commonObj.aes128CbcEncrypt(val1, val2, val3)
-}
-
-/**
- * crc校验 比如字符串'123456'校验计算的结果是数字 158520161
- * @param {string} content 要校验的字符串数据，
- * @returns 
- */
-common.crc32 = function (content) {
-    if (content === undefined || content === null || typeof (content) != "string" || content.length < 1) {
-        throw new Error("dxCommon.crc32:'content' paramter should not be empty")
-    }
-    return commonObj.crc32(content)
-}
-
-/**
- * 计算MD5哈希，比如'123456'对应的数字数组是[49,50,51,52,53,54] 对应的md5是'e10adc3949ba59abbe56e057f20f883e'，
- * 但是返回的不是16进制字符串，是数字数组，可以使用arrToHex函数转换
- * @param {array} arr 数字数组 
- * @returns 数字数组
+ * Calculate MD5 hash, for example, the number array corresponding to '123456' is [49,50,51,52,53,54], and the corresponding md5 is' e10adc3949ba59abbe56e057f20f883e ',
+ * But the returned string is not a hexadecimal string, it is an array of numbers, which can be converted using the arrToHex function
+ * @param {array} arr Numeric array 
+ * @returns {array} Numeric array
  */
 common.md5Hash = function (arr) {
     return commonObj.md5Hash(arr)
 }
 
 /**
- * 文件计算MD5哈希,比如文件里的内容是'123456'，对应的md5是'e10adc3949ba59abbe56e057f20f883e'
- * 但是返回的不是16进制字符串，是数字数组，可以使用arrToHex函数转换
- * @param {string} 文件路径，绝对路径，必填，通常是以/app/code开头
- * @returns 数字数组
+ * Calculate the MD5 hash of a file, for example, if the content of the file is' 123456 ', the corresponding MD5 is' e10adc3949ba59abbe56e057f20f883e'
+ * But the returned string is not a hexadecimal string, it is an array of numbers, which can be converted using the arrToHex function
+ * @param {string} filePath File path, absolute path, required, usually starting with/app/code
+ * @returns {array} Numeric array
  */
 common.md5HashFile = function (filePath) {
     if (filePath === undefined || filePath === null || typeof (filePath) != "string") {
@@ -284,53 +397,92 @@ common.md5HashFile = function (filePath) {
 }
 
 /**
- * 计算HMAC MD5加密,比如加密的数据是'123456',密钥是'654321'，对应的结果是'357cbe6d81a8ec770799879dc8629a53'
- * 但是参数和返回的值都是ArrayBuffer
- * @param {ArrayBuffer} data 需要加密的内容,必填
- * @param {ArrayBuffer} key 密钥 ,必填
- * @returns ArrayBuffer
+ * Calculate the HMAC MD5 encryption, for example, if the encrypted data is' 123456 'and the key is' 654321', the corresponding result is' 357cbe6d81a8ec770799879dc8629a53 '
+ * But both the parameters and the returned value are in the form of an ArrayBuffer
+ * @param {ArrayBuffer} data Content that requires encryption
+ * @param {ArrayBuffer} key Secret key
+ * @returns {ArrayBuffer} ArrayBuffer
  */
 common.hmacMd5Hash = function (data, key) {
     return commonObj.hmacMd5Hash(data, key)
 }
 
 /**
- * 计算HMAC MD5加密,比如加密的数据是'123456',密钥是'654321'，对应的结果是'357cbe6d81a8ec770799879dc8629a53'
- * @param {string} data 需要加密的内容,必填
- * @param {string} key 密钥 ,必填
- * @returns ArrayBuffer
+ * Calculate the HMAC MD5 encryption, for example, if the encrypted data is' 123456 'and the key is' 654321', the corresponding result is' 357cbe6d81a8ec770799879dc8629a53 '
+ * @param {string} data Content that requires encryption
+ * @param {string} key Secret key
+ * @returns {ArrayBuffer} ArrayBuffer
  */
 common.hmac = function (data, key) {
     return commonObj.hmac(data, key)
 }
 
 /**
- * 文件计算HMAC MD5加密，比如文件里的内容是'123456'，密钥是'654321'，对应的结果是'357cbe6d81a8ec770799879dc8629a53'
- * @param {string} filePath 需要加密的内容存储的文件路径，绝对路径，必填，通常是以/app/code开头
- * @param {array} key 密钥 ,数字数组,必填
- * @returns 数字数组
+ * The file calculation is based on HMAC MD5 encryption. For example, if the content of the file is' 123456 'and the key is' 654321', the corresponding result is' 357cbe6d81a8ec770799879dc8629a53 '
+ * @param {string} filePath The file path for storing encrypted content, absolute path, required, usually starting with/app/code
+ * @param {array} key Key, numerical array
+ * @returns {array} Numeric array
  */
 common.hmacMd5HashFile = function (filePath, key) {
     return commonObj.hmacMd5HashFile(filePath, key)
 }
 
+
 /**
- * 切换设备模式
- * @description 模式切换后会重启设备，进入指定模式，使用方法时需完整维护相互切换的逻辑，切换为业务模式后不能使用IDE功能
- * @param {number} mode 业务模式：1 开发模式：2
- * @returns true false
+ * Convert base64 to bin file
+ * @param {string} file_path File Path
+ * @param {string} base64Data Base64 data
+ * @returns {number} result
+ */
+common.base64_2binfile = function (file_path, base64Data) {
+    return commonObj.base64_2binfile(file_path, base64Data);
+}
+
+/**
+ * Convert bin file to base64
+ * @param {string} file_path File Path
+ * @returns {string} base64 Data
+ */
+common.binfile_2base64 = function (file_path) {
+    return commonObj.binfile_2base64(file_path);
+}
+
+/**
+ * Switch device mode
+ * @description After switching modes, the device will restart and enter the specified mode. When using it, it is necessary to fully maintain the logic of mutual switching. After switching to business mode, IDE functions cannot be used
+ * @param {number} mode Attention: Switching between old version modes (1, 2, 3) and new version modes (dev, test, prod, safe)
+ * @returns {boolean} true false
  */
 common.setMode = function (mode) {
+    // Attention: Switching between old version modes (1, 2, 3)
     if (mode == 1) {
-        //业务模式
+        // Production mode
         commonObj.systemWithRes(`echo 'app' > /etc/.mode`, 2)
-        // 1.0版本切换为其他模式后删除工厂检测（后续版本可能会调整）
+        // Delete factory detection after switching to other modes in version 1.0 (adjustments may be made in subsequent versions)
         commonObj.systemWithRes(`rm -rf /test`, 2)
     } else if (mode == 2) {
-        //开发模式
+        // Debug Mode
         commonObj.systemWithRes(`echo 'debug' > /etc/.mode`, 2)
-        // 1.0版本切换为其他模式后删除工厂检测（后续版本可能会调整）
+        // Delete factory detection after switching to other modes in version 1.0 (adjustments may be made in subsequent versions)
         commonObj.systemWithRes(`rm -rf /test`, 2)
+    } else if (mode == 3) {
+        // 试产模式
+        commonObj.systemWithRes(`echo 'pp' > /etc/.mode`, 2)
+    }
+
+    // Attention: New version mode switching uses (dev, test, prod, safe)
+    else if (mode == "dev") {
+        // Development mode
+        commonObj.systemWithRes(`echo 'dev' > /etc/.mode_v1`, 2)
+    } else if (mode == "test") {
+        // Test mode (trial production mode)
+        commonObj.systemWithRes(`echo 'test' > /etc/.mode_v1`, 2)
+    } else if (mode == "prod") {
+        // Production mode
+        commonObj.systemWithRes(`echo 'prod' > /etc/.mode_v1`, 2)
+    } else if (mode == "safe") {
+        // Safe mode
+        commonObj.systemWithRes(`echo 'safe' > /etc/.mode_v1`, 2)
     } else {
         return false
     }
@@ -340,9 +492,9 @@ common.setMode = function (mode) {
 }
 
 /**
- * 查询设备模式
- * @description 获取设备当前模式
- * @returns 业务模式：1，开发模式：2，工厂模式：28， 异常模式：-1
+ * Query device mode
+ * @description Get the current mode of the device
+ * @returns {number} Business mode: 1, Development mode: 2, Factory mode: 28, Exception mode: -1
  */
 common.getMode = function () {
     let ret = commonObj.systemWithRes(`test -e "/etc/.mode" && echo "OK" || echo "NO"`, 2)
@@ -359,9 +511,9 @@ common.getMode = function () {
     }
 }
 /**
- * 十六进制转字节数组 eg:313233616263->[49,50,51,97,98,99]
- * @param {string} str 16进制字符串 小写且中间无空隔的十六进制字符串
- * @returns 数字数字
+ * Hexadecimal to byte array eg: 313233616263->[49,50,51,97,98,99]
+ * @param {string} str A hexadecimal string in lowercase with no space in between
+ * @returns {number} Digital numbers
  */
 common.hexToArr = function (str) {
     if (str === undefined || str === null || (typeof str) != 'string' || str.length < 1) {
@@ -372,9 +524,9 @@ common.hexToArr = function (str) {
     return arr.map(item => parseInt(item, 16));
 }
 /**
- * 字节数组转十六进制 eg:[49,50,51,97,98,99]->313233616263
- * @param {array}numbers 数字数组
- * @returns str 16进制字符串 小写且中间无空隔的十六进制字符串
+ * Byte array to hexadecimal eg: [49,50,51,97,98,99] ->313233616263
+ * @param {array}numbers Numeric array
+ * @returns {string} A hexadecimal string in lowercase with no space in between
  */
 common.arrToHex = function (numbers) {
     const hexArray = numbers.map(num => num.toString(16).padStart(2, '0').toLowerCase());
@@ -382,10 +534,10 @@ common.arrToHex = function (numbers) {
     return hexString;
 }
 /**
- * 十六进制转字符串 eg:313233616263->123abc
- * 注意如果16进制字符串是由中文转过去的，再转回中文字符串会有乱码，因为是一个一个字节的转换
- * @param {string} str 要转的16进制字符串
- * @returns 
+ * Hexadecimal to string conversion eg: 313233616263->123abc
+ * Note that if the hexadecimal string is converted from Chinese, there will be garbled characters when it is converted back to a Chinese string, as it is a byte by byte conversion
+ * @param {string} str The hexadecimal string to be converted
+ * @returns {string} The real string
  */
 common.hexToString = function (str) {
     let regex = /.{2}/g;
@@ -393,7 +545,7 @@ common.hexToString = function (str) {
     arr = arr.map(item => String.fromCharCode(parseInt(item, 16)));
     return arr.join("");
 }
-// 将字符串转换为 UTF-8 编码的16进制字符串
+// Convert a string to a UTF-8 encoded hexadecimal string
 common.strToUtf8Hex = function (str) {
     const bytes = [];
     for (let i = 0; i < str.length; i++) {
@@ -405,7 +557,7 @@ common.strToUtf8Hex = function (str) {
         } else if (code < 0xd800 || code >= 0xe000) {
             bytes.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
         } else {
-            // 处理 Unicode 编码
+            // Processing Unicode Encoding
             i++;
             code = 0x10000 + (((code & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff));
             bytes.push(
@@ -419,9 +571,9 @@ common.strToUtf8Hex = function (str) {
     return this.arrToHex(bytes);
 }
 /**
- * 传递过来的utf-8的16进制字符串转换成字符串
- * @param {string} hex 
- * @returns 
+ * Convert the hexadecimal string of utf-8 passed over to a string
+ * @param {string} hex Hexadecimal string
+ * @returns {string} The real string
  */
 common.utf8HexToStr = function (hex) {
     let array = this.hexToArr(hex)
@@ -457,9 +609,9 @@ common.utf8HexToStr = function (hex) {
     return out;
 }
 /**
- * 字符串转十六进制 eg:123abc->313233616263
- * @param {string} str 要转的字符串
- * @returns 
+ * Convert string to hexadecimal eg: 123abc ->313233616263
+ * @param {string} str The string to be converted
+ * @returns {string} Hexadecimal string
  */
 common.stringToHex = function (str) {
     if (str === undefined || str === null || typeof (str) != "string") {
@@ -473,30 +625,30 @@ common.stringToHex = function (str) {
 }
 
 /**
- * 小端格式转十进制数 eg:001001->69632
- * @param {string} hexString 16进制字符串 小写且中间无空隔的十六进制字符串
- * @returns 数字
+ * Convert small format to decimal eg: 001001->69632
+ * @param {string} hexString A hexadecimal string in lowercase with no space in between
+ * @returns {number} Decimal number
  */
 common.littleEndianToDecimal = function (hexString) {
-    // 将小端格式的十六进制字符串进行反转
+    // Invert hexadecimal strings in small format
     let reversedHexString = hexString
-        .match(/.{2}/g)  // 每两个字符分隔
-        .reverse()  // 反转数组
-        .join("");  // 合并为字符串
+        .match(/.{2}/g)  // Separate every two characters
+        .reverse()  // Reverse array
+        .join("");  // Merge into a string
 
-    // 将反转后的十六进制字符串转换为十进制数
+    // Convert the inverted hexadecimal string to a decimal number
     let decimal = parseInt(reversedHexString, 16);
     return decimal;
 }
 
 
 /**
- * 十进制数转换为16进制小端格式字符串
+ * Convert decimal numbers to hexadecimal small format strings
  * eg:300->2c01
  * eg:230->e600
- * @param {number} decimalNumber 十进制数字,必填
- * @param {number} byteSize 生成位数 字节的个数，如果超出实际字节个数，会在右边补0，低于会截取，非必填，缺省是2
- * @returns 
+ * @param {number} decimalNumber Decimal digit
+ * @param {number} byteSize Generate the number of bytes, if it exceeds the actual number of bytes, it will be padded with 0 on the right, and if it is lower, it will be truncated. It is not required and defaults to 2
+ * @returns {string} Hexadecimal small format string
  */
 common.decimalToLittleEndianHex = function (decimalNumber, byteSize) {
     if (decimalNumber === undefined || decimalNumber === null || (typeof decimalNumber) != 'number') {
@@ -508,7 +660,7 @@ common.decimalToLittleEndianHex = function (decimalNumber, byteSize) {
     const littleEndianBytes = [];
     for (let i = 0; i < byteSize; i++) {
         littleEndianBytes.push(decimalNumber & 0xFF);
-        decimalNumber >>= 8;//相当于除以256
+        decimalNumber >>= 8; // Equivalent to dividing by 256
     }
     const littleEndianHex = littleEndianBytes
         .map((byte) => byte.toString(16).padStart(2, '0'))
@@ -517,18 +669,18 @@ common.decimalToLittleEndianHex = function (decimalNumber, byteSize) {
 }
 
 /**
- * 将16进制字符串转换为ArrayBuffer
- * @param {*} hexString 要转换的16进制字符串
- * @returns 
+ * Convert a hexadecimal string to an ArrayBuffer
+ * @param {*} hexString The hexadecimal string to be converted
+ * @returns {ArrayBuffer} Converted ArrayBuffer
  */
 common.hexStringToArrayBuffer = function (hexString) {
     return this.hexStringToUint8Array(hexString).buffer;
 }
 
 /**
- * 将16进制字符串转换为Uint8Array
- * @param {string} hexString 要转换的16进制字符串，小写且中间无空隔的十六进制字符串
- * @returns Uint8Array对象
+ * Convert hexadecimal string to Uint8Array
+ * @param {string} hexString The hexadecimal string to be converted is a lowercase hexadecimal string with no space in between
+ * @returns {ArrayBuffer} Uint8Array object
  */
 common.hexStringToUint8Array = function (hexString) {
     if (hexString === undefined || hexString === null || (typeof hexString) != 'string' || hexString.length <= 0) {
@@ -543,17 +695,17 @@ common.hexStringToUint8Array = function (hexString) {
 }
 
 /**
- * 将 ArrayBuffer 转换为十六进制字符串格式
+ * Convert ArrayBuffer to hexadecimal string format
  * @param {ArrayBuffer} buffer 
- * @returns 小写且中间无空隔的十六进制字符串
+ * @returns {string} A hexadecimal string in lowercase with no space in between
  */
 common.arrayBufferToHexString = function (buffer) {
     return this.uint8ArrayToHexString(new Uint8Array(buffer))
 }
 /**
- * 将 Uint8Array 转换为十六进制字符串格式
+ * Convert Uint8Array to hexadecimal string format
  * @param {Uint8Array} array 
- * @returns 小写且中间无空隔的十六进制字符串
+ * @returns {string} A hexadecimal string in lowercase with no space in between
  */
 common.uint8ArrayToHexString = function (array) {
     let hexString = '';
@@ -564,30 +716,30 @@ common.uint8ArrayToHexString = function (array) {
     return hexString
 }
 /**
- * 设置/获取组件句柄id通用方法
- * @param {string} name 组件名，必填
- * @param {string} id 句柄id，非必填
- * @param {number} pointer 句柄指针数字，非必填
- * @returns 
+ * General method for setting/obtaining component handle id
+ * @param {string} name Component name, required
+ * @param {string} id Handle ID, not required
+ * @param {number} pointer Handle pointer number, not required
+ * @returns {string} Component handle ID
  */
 common.handleId = function (name, id, pointer) {
-    // 组件名不能为空
+    // Component name cannot be empty
     if (name === undefined || name === null || name === "" || typeof name !== 'string') {
         return
     }
     let map = dxMap.get('handleIds')
-    // 句柄id
+    // Handle ID
     if (id === undefined || id === null || id === "" || typeof id !== 'string') {
         id = "__" + name + "_default"
     }
     if (pointer === undefined || pointer === null || typeof pointer !== 'number') {
-        // pointer为空则为获取
+        // If the pointer is empty, it is obtained
         return map.get(id)
     } else {
-        // pointer不为空则为设置
+        // If the pointer is not empty, it is set
         let isExist = map.get(id)
         if (isExist) {
-            // 句柄已存在
+            // Handle already exists
             return
         }
         map.put(id, pointer)

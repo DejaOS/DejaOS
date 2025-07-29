@@ -38,7 +38,7 @@ dejaOS 提供了丰富的 [JavaScript 库](./src/README_CN.md)支持，包含：
 
 **开发环境准备**
 
-- 软件环境：电脑上安装 Nodejs(20+),VSCode, [DXIDE(VSCode plugin)](https://marketplace.visualstudio.com/items?itemName=dxide.dxide)
+- 软件环境：电脑上安装 Nodejs(20+),VSCode, [DejaOSIDE(VSCode plugin)](https://marketplace.visualstudio.com/items?itemName=dxide.dxide)
 - 硬件环境：目前 dejaOS 适配多款以Ingenic、EeasyTech为主芯片的智能设备，还在持续增加中
 
 **设备准备**
@@ -48,7 +48,7 @@ dejaOS 提供了丰富的 [JavaScript 库](./src/README_CN.md)支持，包含：
 
 **快速上手**
 
-- 在 VSCode 上使用 JavaScript 代码编写您的[第一个应用程序](./docs/demo_CN.md)，实时同步到设备上查看效果，在 VSCode 上查看运行日志
+- 在 VSCode 上使用 JavaScript 代码编写您的[第一个应用程序](https://dejaos.com/docs/basics/quick-start)，实时同步到设备上查看效果，在 VSCode 上查看运行日志
 
 **Build和发布**
 
@@ -69,66 +69,7 @@ dejaOS 提供了丰富的 [JavaScript 库](./src/README_CN.md)支持，包含：
 | main.js | 是 | 项目入口文件
 | app.dxproj | 是 | 项目配置文件
 
-完整项目结构说明请参考 [dejaOS 项目结构介绍](./docs/project_CN.md)
-
-▶️ 学习 dejaOS
----------------
-
-此列表将指导您逐步开始了解 dejaOS.
-
-**文档介绍** 
-- [dejaOS 介绍](docs/introduction_CN.md)
-- [如何安装 dejaOS](docs/install_CN.md)
-- [dejaOS 配套设备介绍](docs/devices_CN.md)
-- [dejaOS 的 JavaScript 引擎介绍](docs/quickjs_CN.md)
-- [dejaOS 的 GUI 引擎介绍](docs/lvgl_CN.md)
-- [dejaOS 的 module 介绍](docs/module_CN.md)
-- [DXIDE 的介绍](docs/dxide_CN.md)
-- [dejaOS 项目结构介绍](docs/project_CN.md)
-- [dxLogger 及调试介绍](docs/logger_CN.md)
-- [应用打包、安装和升级](docs/app_CN.md)
-- [dejaOS 系统模式介绍](docs/mode_CN.md)
-
-**多线程(worker)**
-- worker的概念
-- 异步操作
-- eventbus介绍
-- dxmap和dxqueue介绍
-- 线程池介绍
-
-**GUI 介绍**
-- gui的基本概念
-- gui和其它线程通信
-- dxui组件的介绍
-- ui的几个基本示例
-
-**文件操作**
-- 设备内的文件体系
-- 文本文件的读写
-- 二进制文件的读写
-
-**硬件接口**
-- gpio介绍
-- pwm介绍
-- uart介绍
-- 二维码介绍
-- NFC介绍
-- 蓝牙介绍
-- 音频介绍
-
-**网络接口及协议**
-- 网络类型介绍
-- TCP模块介绍
-- UDP模块介绍
-- HTTP模块介绍
-- MQTT模块介绍
-
-**数据库及杂项**
-- sqlite介绍及基本使用
-- 看门狗介绍
-- 时间同步介绍
-
-**module开发介绍**
+完整项目结构说明请参考 [dejaOS 项目结构介绍](https://dejaos.com/docs/basics/project)
 
 🤝 服务
 -------

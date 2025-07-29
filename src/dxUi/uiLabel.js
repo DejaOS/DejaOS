@@ -6,9 +6,8 @@ let label = {}
 
 label.build = function (id, parent) {
     let temp = utils.validateBuild(label.all, id, parent, 'label')
-    let my = {}
+    let my = {type: 'label'}
     my.obj = new utils.GG.NativeLabel({ uid: id }, temp)
-    label.all[id]=my.obj
     my.id = id
     /**
      * 设置label的文本或获取文本内容
@@ -29,6 +28,7 @@ label.build = function (id, parent) {
         this.obj.lvLabelSetLongMode(mode)
     }
     let comp = Object.assign(my, base);
+    utils.setParent(this.all, comp, parent)
     return comp;
 }
 export default label;

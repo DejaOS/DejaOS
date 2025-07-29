@@ -28,28 +28,76 @@ dxstd.setTimeout = function (func, delay) {
 dxstd.clearTimeout = function (handle) {
     os.clearTimeout(handle)
 }
+// 记录定时器id，用于clear，只能在同一线程中clear
+let allTimerIdsMap = {}
+
 /**
- * 周期性计时器
- * @param {function} func 每隔delay毫秒执行一次func函数 
- * @param {number} delay 周期的时间（毫秒）
- * @returns 返回计时器对象，调用clear方法可以停止计时器
+ * interval定时器
+ * @param {function} callback 回调函数，必填
+ * @param {number} interval 间隔时间，必填
+ * @param {boolean} once 创建后立即执行一次，非必填
+ * @param {number} timerId 定时器id，非必填
  */
-dxstd.setInterval = function(func,delay){
-    const interval = {
-        timer: null,
-        clear: function() {
-          if (interval.timer !== null) {
-            os.clearTimeout(interval.timer)
-            interval.timer = null;
-          }
+dxstd.setInterval = function (callback, interval, once, timerId) {
+    if (timerId === null || timerId === undefined) {
+        timerId = new Date().getTime() + "_" + this.genRandomStr(5)
+        allTimerIdsMap[timerId] = "ready"
+    }
+    if (once === true) {
+        // 创建后立即执行一次
+        os.setTimeout(() => {
+            if (allTimerIdsMap[timerId]) {
+                callback()
+            }
+        }, 0);
+    }
+    if (!allTimerIdsMap[timerId]) {
+        return
+    }
+    allTimerIdsMap[timerId] = os.setTimeout(() => {
+        if (allTimerIdsMap[timerId]) {
+            callback()
+            this.setInterval(callback, interval, false, timerId)
         }
-      };
-      (function run() {
-        func()
-        interval.timer = os.setTimeout(run, delay)
-      })()
-      
-      return interval
+    }, interval);
+    return timerId
+}
+
+/**
+ * 清除interval定时器
+ * @param {number} timerId 定时器id，必填
+ */
+dxstd.clearInterval = function (timerId) {
+    const timer = allTimerIdsMap[timerId];
+    if (timer) {
+        os.clearTimeout(timer);
+        delete allTimerIdsMap[timerId];
+    }
+}
+/**
+ * 删除当前线程所有interval定时器，注意：只是删除当前线程创建的定时器，若有多个线程，每个线程都需要调用删除
+ */
+dxstd.clearIntervalAll = function () {
+    for (let timerId in allTimerIdsMap) {
+        if (allTimerIdsMap.hasOwnProperty(timerId)) {
+            os.clearTimeout(allTimerIdsMap[timerId]);
+            delete allTimerIdsMap[timerId];
+        }
+    }
+}
+/**
+ * 生成指定长度的字母和数字组合的随机字符串
+ * @param {number} length 字符串长度，非必填，缺省是6
+ * @returns 
+ */
+dxstd.genRandomStr = function (length = 6) {
+    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    let result = ''
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * charset.length)
+        result += charset.charAt(randomIndex)
+    }
+    return result
 }
 /**
  * 把一段字符串作为 javascript 脚本执行

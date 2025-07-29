@@ -37,7 +37,7 @@ The development process for dejaOS app is as follows:
 
 **Prepare Development Environment**
 
-- Software Environment: Install Node.js (20+), VSCode, and [DXIDE (VSCode plugin)](https://marketplace.visualstudio.com/items?itemName=dxide.dxide) on your computer.
+- Software Environment: Install Node.js (20+), VSCode, and [DejaOSIDE (VSCode plugin)](https://marketplace.visualstudio.com/items?itemName=dxide.dxide) on your computer.
 - Hardware Environment: Currently, dejaOS is compatible with various smart devices primarily based on Ingenic and EeasyTech chips, with more being added continuously.
 
 **Prepare the Device**
@@ -47,7 +47,7 @@ The development process for dejaOS app is as follows:
 
 **Quick Start**
 
-- Write your [first application](./docs/demo.md) in JavaScript code on VSCode, sync to the device in real time to see the effect, and view the run log on VSCode.
+- Write your [first application](https://dejaos.com/docs/basics/quick-start) in JavaScript code on VSCode, sync to the device in real time to see the effect, and view the run log on VSCode.
 
 **Build and Publish**
 
@@ -68,66 +68,8 @@ The main body of the project consists of five parts, as follows:
 | main.js | YES | Project entry file | 
 | app.dxproj | YES | Project configuration file |
 
-For a complete description of the project structure, please refer to [Introduction to dejaOS Project Structure](/docs/project.md)
+For a complete description of the project structure, please refer to [Introduction to dejaOS Project Structure](https://dejaos.com/docs/basics/project)
 
-▶️ Learning dejaOS
----------------
-
-This list will guide you step by step to get started with dejaOS.
-
-**Document Introduction**
-- [Introduction to dejaOS](docs/introduction.md)
-- [How to Install dejaOS](docs/install.md)
-- [Introduction to dejaOS-Compatible Devices](docs/devices.md)
-- [Introduction to dejaOS's JavaScript Engine](docs/quickjs.md)
-- [Introduction to dejaOS's GUI Engine](docs/lvgl.md)
-- [Introduction to dejaOS Modules](docs/module.md)
-- [Introduction to DXIDE](docs/dxide.md)
-- [Introduction to dejaOS Project Structure](docs/project.md)
-- [dxLogger and Debugging Introduction](docs/logger.md)
-- [App Packaging、Installation、Upgrade](docs/app.md)
-- [dejaOS System Mode Overview](docs/mode.md)
-
-**Multithreading (Worker)**
-- Concept of Workers
-- Asynchronous Operations
-- Introduction to EventBus
-- Introduction to dxMap and dxQueue
-- Introduction to Thread Pools
-
-**GUI Introduction**
-- Basic Concepts of GUI
-- Communication between GUI and Other Threads
-- Introduction to dxUI Components
-- Several Basic UI Examples
-
-**File Operations**
-- File System on the Device
-- Reading and Writing Text Files
-- Reading and Writing Binary Files
-
-**Hardware Interfaces**
-- Introduction to GPIO
-- Introduction to PWM
-- Introduction to UART
-- Introduction to QR Code
-- Introduction to NFC
-- Introduction to Bluetooth
-- Introduction to Audio
-
-**Network Interfaces and Protocols**
-- Introduction to Network Types
-- Introduction to TCP Module
-- Introduction to UDP Module
-- Introduction to HTTP Module
-- Introduction to MQTT Module
-
-**Database and Miscellaneous**
-- Introduction to SQLite and Basic Usage
-- Introduction to Watchdog
-- Introduction to Time Synchronization
-
-**Module Development Introduction**
 
 🤝 Services
 If you have any questions,contact us  service@dxiot.com and let us know how we can help.

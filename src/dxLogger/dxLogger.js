@@ -1,33 +1,14 @@
-//build:20240409
-//打印日志，请不要使用console.log,使用这个组件替代
-//依赖组件：dxCommon,dxMap
+/**
+ * dxLogger module
+ * To replace the `console.log` function, allowing logs to be viewed in the corresponding VSCode plugin during debugging, 
+ * with support for three levels of logging: `debug`,`info`, and `error`.
+ * Supports printing various data types in JavaScript.
+ */
 import dxCommon from './dxCommon.js'
 const logger = {}
-logger.config = {
-    level: 0, // 缺省是debug
-    append: 0, // 缺省是console
-}
-const CONFIG_FILE = '/app/code/src/log.conf'
-function run() {
-    try {
-        if (dxCommon.systemWithRes(`test -e "${CONFIG_FILE}" && echo "OK" || echo "NO"`, 2).includes('OK')) {
-            logger.config = JSON.parse(dxCommon.systemWithRes(`cat ${CONFIG_FILE}`, 1024))
-        }
-    } catch (ignore) {
 
-    }
-}
-run()
-//-----------------------------------public----------------------
-/**
- *  修改一些基础配置 ,需要重启才能生效，如果都使用缺省无需执行该函数
- * @param {number} level 日志级别，总共4级，<0 不输出 0 表示debug，1表示info，2表示error，缺省为0，所有级别的日志都会输出，为1则debug级别的不会输出，为2则输出error
- * @param {number} append 输出方式 0 表示控制台输出 1 表示管道或队列（TODO)
- */
-logger.init = function (level = 0, append = 0) {
-    this.config.level = level
-    this.config.append = append
-    dxCommon.systemBrief(`echo '${JSON.stringify(this.config)}' > ${CONFIG_FILE}`)
+logger.config = {
+    level: 0, // default is all,if<0,no print
 }
 logger.debug = function (...data) {
     if (this.config.level === 0) {

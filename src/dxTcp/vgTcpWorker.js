@@ -1,51 +1,51 @@
-//build:20240229
-//用于简化tcp组件微光通信协议的使用，封装在这个worker里，使用者只需要订阅eventcenter的事件就可以监听tcp数据
+//build:20240716
+//用于简化tcp组件微光通信协议的使用，封装在这个worker里，使用者只需要订阅EventBus的事件就可以监听tcp数据
 import log from './dxLogger.js'
 import tcp from './dxTcp.js'
-import common from './dxCommon.js';
+import common from './dxCommon.js'
+import std from './dxStd.js'
 import dxMap from './dxMap.js'
 import net from './dxNet.js'
-import * as os from "os";
-import center from './dxEventCenter.js'
+import * as os from "os"
 const map = dxMap.get('default')
 const id = "{{id}}"
 const options = map.get("__vgtcp__run_init" + id)
 const timeout = 100
 const longTimeout = 500
+let connected = false
 
 function run() {
     tcp.create(options.ip, options.port, options.timeout, options.heartEn, options.heartTime, options.id)
     log.info('vg tcp start......,id =', id)
-    while (true) {
+    os.sleep(1000)
+    std.setInterval(() => {
         try {
             if (tcp.isConnect(options.id) && net.getStatus().connected) {
-                _fireChange(true)
-                while (true) {
-                    // 连接成功后进入消息监听
-                    if (!tcp.isConnect(options.id) || !net.getStatus().connected) {
-                        // 未连接跳出循环重新连接
-                        _fireChange(false)
-                        break
-                    }
-                    // 接收数据模式
-                    if (options.passThrough) {
-                        // 透传模式
-                        passThrough()
-                    } else {
-                        // 微光通信协议模式
-                        receive()
-                    }
+                if (!connected) {
+                    _fireChange(true)
                 }
-                os.sleep(10)
             } else {
-                // 等待重连
-                os.sleep(1000)//等待重连后等待1秒
+                if (connected) {
+                    _fireChange(false)
+                }
+                os.sleep(1000)
             }
         } catch (error) {
-            log.error(error, error.stack)
+            log.error(error)
         }
-        os.sleep(10)
-    }
+    }, 3000)
+    std.setInterval(() => {
+        if (connected) {
+            // 接收数据模式
+            if (options.passThrough) {
+                // 透传模式
+                passThrough()
+            } else {
+                // 微光通信协议模式
+                receive()
+            }
+        }
+    }, 10)
 }
 
 // 透传模式
@@ -58,7 +58,7 @@ function passThrough() {
         buffer = readOne()
     }
     if (pack.length !== 0) {
-        center.fire(tcp.VG.RECEIVE_MSG + options.id, pack)
+        __bus.fire(tcp.VG.RECEIVE_MSG + options.id, pack)
     }
 }
 
@@ -128,7 +128,7 @@ function receive() {
     if (options.result) {
         res.result = int2hex(pack.result)
     }
-    center.fire(tcp.VG.RECEIVE_MSG + options.id, res)
+    __bus.fire(tcp.VG.RECEIVE_MSG + options.id, res)
 }
 function valid(pack, bcc) {
     let temp = common.calculateBcc([0x55, 0xaa, pack.cmd, pack.result, pack.length % 256, Math.floor(pack.length / 256)].concat(pack.data))
@@ -145,12 +145,7 @@ function int2hex(num) {
     return num.toString(16).padStart(2, '0')
 }
 function _fireChange(status) {
-    if (status) {
-        map.put(tcp.VG.CONNECTED_CURRENT + options.id, 'connected')
-        center.fire(tcp.VG.CONNECTED_CHANGED + options.id, 'connected')
-    } else {
-        map.put(tcp.VG.CONNECTED_CURRENT + options.id, 'disconnected')
-        center.fire(tcp.VG.CONNECTED_CHANGED + options.id, 'disconnected')
-    }
+    __bus.fire(tcp.VG.CONNECTED_CHANGED + options.id, status ? 'connected' : 'disconnected')//bus.newworker的时候会import eventbus as __bus
+    connected = status
 }
 run()

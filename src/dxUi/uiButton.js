@@ -6,11 +6,11 @@ let button = {}
 
 button.build = function (id, parent) {
     let temp = utils.validateBuild(button.all, id, parent, 'button')
-    let my = {}
+    let my = { type: 'button' }
     my.obj = new utils.GG.NativeButton({ uid: id }, temp)
-    button.all[id]=my.obj
     my.id = id
     let comp = Object.assign(my, base);
+    utils.setParent(this.all, comp, parent)
     return comp;
 }
 export default button;

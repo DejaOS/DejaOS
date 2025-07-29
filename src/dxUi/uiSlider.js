@@ -6,9 +6,8 @@ let slider = {}
 
 slider.build = function (id, parent) {
     let temp = utils.validateBuild(slider.all, id, parent, 'slider')
-    let my = {}
+    let my = {type: 'slider'}
     my.obj = new utils.GG.NativeSlider({ uid: id }, temp)
-    slider.all[id] = my.obj
     my.id = id
 
     /**
@@ -37,6 +36,7 @@ slider.build = function (id, parent) {
     }
 
     let comp = Object.assign(my, base);
+    utils.setParent(this.all, comp, parent)
     return comp;
 }
 export default slider;

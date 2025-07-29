@@ -102,4 +102,24 @@ alsa.alsaWavData = function (buffer, id) {
 	return alsaObj.alsaWavData(pointer, buffer)
 }
 
+/**
+ * 中断当前正在播放的音频
+ * @param {string} id 句柄id，非必填（需保持和init中的id一致）
+ * @returns true/false
+ */
+alsa.interrupt = function (id) {
+	let pointer = dxCommon.handleId("alsa", id)
+	return alsaObj.alsaPlayingInterrupt(pointer)
+}
+
+/**
+ * 清除播放缓存
+ * @param {string} id 句柄id，非必填（需保持和init中的id一致）
+ * @returns true/false
+ */
+alsa.clearPlayCache = function (id) {
+	let pointer = dxCommon.handleId("alsa", id)
+	return alsaObj.alsaClearPlayCache(pointer)
+}
+
 export default alsa;

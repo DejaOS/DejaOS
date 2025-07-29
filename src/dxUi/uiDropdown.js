@@ -6,9 +6,8 @@ let dropdown = {}
 
 dropdown.build = function (id, parent) {
     let temp = utils.validateBuild(dropdown.all, id, parent, 'dropdown')
-    let my = {}
+    let my = {type: 'dropdown'}
     my.obj = new utils.GG.NativeDropdown({ uid: id }, temp)
-    dropdown.all[id] = my.obj
     my.id = id
     /**
      * 设置下拉选项内容
@@ -48,6 +47,7 @@ dropdown.build = function (id, parent) {
         this.obj.setSymbol(icon)
     }
     let comp = Object.assign(my, base);
+    utils.setParent(this.all, comp, parent)
     return comp;
 }
 export default dropdown;

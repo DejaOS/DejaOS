@@ -50,7 +50,7 @@ function hexStringToArrayBuffer (hexString) {
  */
 function decode103(str) {
     // FIXME 这个pubKey后期需要从配置中查询
-    let TLV_T_SIZE = 2, TLV_L_SIZE = 2, offset = 0, code, decryptedData
+    let TLV_T_SIZE = 2, TLV_L_SIZE = 2, offset = 0, code, decryptedData, generationCodeTime, expirationTime
 
     // 1、base64解码
     let decodeBuf = base64.toHexString(str)
@@ -145,6 +145,7 @@ function decode103(str) {
         offset += TLV_L_SIZE
         let createTimeBuf = new Uint8Array(decryptedData, offset, createTimeLength);
         offset += createTimeLength
+        generationCodeTime = parseInt(common.arrayBufferToHexString(createTimeBuf.reverse()), 16)
     }
 
 
@@ -157,13 +158,16 @@ function decode103(str) {
         offset += TLV_L_SIZE
         let expireTimeBuf = new Uint8Array(decryptedData, offset, expireTimeLength);
         offset += expireTimeLength
+        expirationTime = parseInt(String.fromCharCode.apply(null, expireTimeBuf))
     }
 
     // 8、校验通行码是否过期
-    if (1) {
+    let timestamp = Date.now();
+    expirationTime = generationCodeTime + expirationTime
+    if (expirationTime * 1000 > timestamp) {
         return code
     } else {
-        throw new Error("code expired")
+        return null
     }
 
 }
@@ -190,13 +194,13 @@ const code = {
         else if (comparePrefix(msg, "vg://v103", "vg://v103".length)) {
             // 103码值
             data.type = 103
-            data.code = decode103(msg.substring(9))
-        } else if (comparePrefix(msg, "___VBAR_CONFIG_V1.1.0___", "___VBAR_CONFIG_V1.1.0___".length)) {
+            data.code = decode103(msg.substring(9)) ? decode103(msg.substring(9)) : msg.substring(9)
+        } else if (comparePrefix(msg, "___VBAR_CONFIG_V1.1.0___", "___VBAR_CONFIG_V1.1.0___".length) || comparePrefix(msg, "___VBAR_KZB_V1.1.0___", "___VBAR_KZB_V1.1.0___".length)) {
             //TODO 先这样写，讨论好后更改流转逻辑
             data.type = 'config'
             data.code = msg
         } else {
-            data.type = "100"
+            data.type = 100
             data.code = msg
         }
         if (data.code) {

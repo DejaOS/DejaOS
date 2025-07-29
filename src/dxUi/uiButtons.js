@@ -2,14 +2,12 @@
 //按钮组控件
 import utils from "./uiUtils.js"
 import base from "./uiBase.js"
-import dxui from "./uiBase.js"
 let buttons = {}
 
 buttons.build = function (id, parent) {
     let temp = utils.validateBuild(buttons.all, id, parent, 'buttons')
-    let my = {}
+    let my = {type: 'buttons'}
     my.obj = new utils.GG.NativeBtnmatrix({ uid: id }, temp)
-    buttons.all[id] = my.obj
     my.id = id
     /**
      * 设置button组对应的数据，必须是数组格式，示例如下：表示三行按钮，总共12个按钮
@@ -31,6 +29,10 @@ buttons.build = function (id, parent) {
      */
     my.clickedButton = function () {
         let id = this.obj.lvBtnmatrixGetSelectedBtn();
+        if (id == 0xFFFF) {
+            // 点击按钮组边界会出现0xFFFF非法值，返回空
+            return { id: null, text: null }
+        }
         let txt = this.obj.lvBtnmatrixGetBtnText(id);
         return { id: id, text: txt }
     }
@@ -99,6 +101,7 @@ buttons.build = function (id, parent) {
         }, utils.ENUM.LV_EVENT_DRAW_PART_END)
     }
     let comp = Object.assign(my, base);
+    utils.setParent(this.all,comp,parent)
     return comp;
 }
 export default buttons;

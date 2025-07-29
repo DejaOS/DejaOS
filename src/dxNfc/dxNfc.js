@@ -1,52 +1,58 @@
-//build:20240524
-//通过这个组件来读取卡，包括M1卡，psam卡之类的
-//依赖组件: dxDriver,dxMap,dxLogger,dxDriver,dxCommon,dxEventCenter
+/**
+ * NFC Module
+ * Features:
+ * - Read M1 card, PSAM card, NTAG card
+ * - Write M1 card, PSAM card, NTAG card
+ * - APDU instruction interaction
+ * 
+ * Doc/Demo : https://github.com/DejaOS/DejaOS
+ */
 import { nfcClass } from './libvbar-p-dxnfc.so'
 import dxCommon from './dxCommon.js'
-import center from './dxEventCenter.js'
-import std from './dxStd.js'
+import bus from './dxEventBus.js'
 import dxMap from './dxMap.js'
-import * as os from "os"
 const nfcObj = new nfcClass();
 const map = dxMap.get("default")
 const nfc = {}
 
 /**
- * NFC 初始化
- * @param {string} id 句柄id，非必填（若初始化多个实例需要传入唯一id）
+ * NFC initialization
+ * @param {number} useEid Not required, use EID 0, do not use 1
+ * @param {number} type Not required, NFC type 0 MCU 1 Chip
+ * @returns {null} 
  */
-nfc.init = function (id) {
-	let pointer = nfcObj.init()
+nfc.init = function (useEid = 0, type = 1) {
+	let pointer = nfcObj.init(useEid, type)
 	if (pointer === undefined || pointer === null) {
 		throw new Error("nfc.init: init failed")
 	}
-	dxCommon.handleId("nfc", id, pointer)
+	dxCommon.handleId("nfc", 'nfcid', pointer)
 }
 
 /**
- * NFC 普通卡注册回调
- * @param {string} id 句柄id，非必填（需保持和init中的id一致）
+ * NFC ordinary card registration callback
+ *  @returns {boolean} true/false
  */
-nfc.cbRegister = function (id) {
-	let pointer = dxCommon.handleId("nfc", id)
-	return nfcObj.cbRegister(pointer, "nfc_cb", 1)
+nfc.cbRegister = function (callback) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
+	return nfcObj.cbRegister(pointer, "nfc_cb", 1, callback)
 }
 
 /**
- * NFC PSAM卡注册回调
- * @param {string} id 句柄id，非必填（需保持和init中的id一致）
+ * NFC PSAM card registration callback
+ * @returns {boolean} true/false
  */
-nfc.psamCbRegister = function (id) {
-	let pointer = dxCommon.handleId("nfc", id)
-	return nfcObj.nfcPsamCheckVgcardCallback(pointer)
+nfc.psamCbRegister = function (callback) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
+	return nfcObj.nfcPsamCheckVgcardCallback(pointer, callback)
 }
 
 /**
- * NFC 取消初始化
- * @param {string} id 句柄id，非必填（需保持和init中的id一致）
+ * NFC Cancel Initialization
+ * @returns {boolean} true/false
  */
-nfc.deinit = function (id) {
-	let pointer = dxCommon.handleId("nfc", id)
+nfc.deinit = function () {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
 	let ret = nfcObj.cbUnregister(pointer, "nfc_cb")
 	if (ret === false) {
 		throw new Error("nfc.cbUnregister: cbUnregister failed")
@@ -55,11 +61,11 @@ nfc.deinit = function (id) {
 }
 
 /**
- * NFC 卡信息创建
- * @param {number} cardType 卡芯片类型(原厂定义)
- * @param {ArrayBuffer} cardId 卡号
- * @param {number} type 卡类型(我们自己定义的)
- * @returns cardInfo(pointer)
+ * NFC card information creation
+ * @param {number} cardType Card chip type (factory defined)
+ * @param {ArrayBuffer} cardId Card number
+ * @param {number} type Card type (defined by ourselves)
+ * @returns {number} cardInfo(pointer)
  */
 nfc.cardInfoCreate = function (cardType, cardId, type) {
 	if (!cardType) {
@@ -75,9 +81,9 @@ nfc.cardInfoCreate = function (cardType, cardId, type) {
 }
 
 /**
- * NFC 卡信息销毁
- * @param {pointer} cardInfo 卡信息
- * @returns 
+ * Destruction of NFC card information
+ * @param {pointer} cardInfo card information
+ * @returns {boolean} true/false
  */
 nfc.cardInfoDestory = function (cardInfo) {
 	if (!cardInfo) {
@@ -87,9 +93,9 @@ nfc.cardInfoDestory = function (cardInfo) {
 }
 
 /**
- * NFC 卡信息复制
- * @param {pointer} cardInfo 卡信息
- * @returns cardInfo(pointer)
+ * NFC card information copying
+ * @param {pointer} cardInfo card information
+ * @returns {number} cardInfo(pointer)
  */
 nfc.cardInfoCopy = function (cardInfo) {
 	if (cardInfo == null) {
@@ -99,110 +105,276 @@ nfc.cardInfoCopy = function (cardInfo) {
 }
 
 /**
- * NFC 判断是否有卡
- * @param {string} id 句柄id，非必填（需保持和init中的id一致）
- * @returns bool
+ * NFC determines if there is a card
+ * @returns {boolean} true/false
  */
-nfc.isCardIn = function (id) {
-	let pointer = dxCommon.handleId("nfc", id)
+nfc.isCardIn = function () {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
 	return nfcObj.isCardIn(pointer);
 }
 
 /**
- * NFC 读M1卡扇区
- * @param {number} taskFlg 任务标志：
- *                    0x00->AUTO 告知扫码器该指令可单独执行，无指令间的依赖关系。
- *                    0x01->START 告知扫码器开始对卡操作或对卡操作尚未结束，且指令间可能存在依赖关系。
- *                    0x02->FINISH 告知扫码器本条指令是操作卡的最后一条指令，将卡片操作环境恢复到默态。
- * @param {number} secNum 扇区号
- * @param {number} logicBlkNum 块号（在扇区内的逻辑号0~3)
- * @param {number} blkNums 块数
- * @param {array} key 密钥, 长度6bytes
- * @param {number} keyType 密钥类型: A:0x60 B:0x61
- * @param {string} id 句柄id，非必填（需保持和init中的id一致）
- * @returns Array 读取结果 undefined:失败
+ * NFC Reading M1 Card Sector
+ * @param {number} taskFlg Task Flag：
+ *                    0x00->AUTO informs the scanner that this instruction can be executed independently without any dependencies between instructions
+ *                    0x01->START Notify the scanner that the card operation has started or has not yet ended, and there may be dependencies between instructions.
+ *                    0x02->FINISH Notify the scanner that this instruction is the last instruction to operate the card, restoring the card operating environment to default.
+ * @param {number} secNum sector number
+ * @param {number} logicBlkNum Block number (logical numbers 0-3 within the sector)
+ * @param {number} blkNums Number of Blocks
+ * @param {array} key Key, length 6 bytes
+ * @param {number} keyType Key type: A: 0x60 B: 0x61
+ * @returns {ArrayBuffer} Read result undefined: failed
  */
-nfc.m1cardReadSector = function (taskFlg, secNum, logicBlkNum, blkNums, key, keyType, id) {
-	let pointer = dxCommon.handleId("nfc", id)
+nfc.m1cardReadSector = function (taskFlg, secNum, logicBlkNum, blkNums, key, keyType) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
 	_validate('m1cardReadSector', taskFlg, secNum, logicBlkNum, blkNums, key, keyType, ' ')
 	return nfcObj.m1cardReadSector(pointer, taskFlg, secNum, logicBlkNum, blkNums, key, keyType);
 }
 
 /**
- * NFC 读M1卡扇区
- * @param {number} taskFlg 任务标志：
- *                    0x00->AUTO 告知扫码器该指令可单独执行，无指令间的依赖关系。
- *                    0x01->START 告知扫码器开始对卡操作或对卡操作尚未结束，且指令间可能存在依赖关系。
- *                    0x02->FINISH 告知扫码器本条指令是操作卡的最后一条指令，将卡片操作环境恢复到默态。
- * @param {number} secNum 扇区号
- * @param {number} logicBlkNum 块号（在扇区内的逻辑号0~3)
- * @param {number} blkNums 块数
- * @param {array} key 密钥, 长度6bytes
- * @param {number} keyType 密钥类型: A:0x60 B:0x61
- * @param {array} data 写入数据
- * @param {string} id 句柄id，非必填（需保持和init中的id一致）
- * @returns int 写入长度 -1:错误
+ * NFC Writing M1 Card Sector
+ * @param {number} taskFlg Task Flag：
+ *                    0x00->AUTO informs the scanner that this instruction can be executed independently without any dependencies between instructions
+ *                    0x01->START Notify the scanner that the card operation has started or has not yet ended, and there may be dependencies between instructions.
+ *                    0x02->FINISH Notify the scanner that this instruction is the last instruction to operate the card, restoring the card operating environment to default.
+ * @param {number} secNum sector number
+ * @param {number} logicBlkNum Block number (logical numbers 0-3 within the sector)
+ * @param {number} blkNums Number of Blocks
+ * @param {array} key Key, length 6 bytes
+ * @param {number} keyType Key type: A: 0x60 B: 0x61
+ * @param {array} data Write data
+ * @returns {number} Write length -1: Error
  */
-nfc.m1cardWriteSector = function (taskFlg, secNum, logicBlkNum, blkNums, key, keyType, data, id) {
-	let pointer = dxCommon.handleId("nfc", id)
+nfc.m1cardWriteSector = function (taskFlg, secNum, logicBlkNum, blkNums, key, keyType, data) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
 	_validate('m1cardWriteSector', taskFlg, secNum, logicBlkNum, blkNums, key, keyType, data)
 	return nfcObj.m1cardWriteSector(pointer, taskFlg, secNum, logicBlkNum, blkNums, key, keyType, data);
 }
 
 /**
- * 
- * @param {number} taskFlg 任务标志：
- *                    0x00->AUTO 告知扫码器该指令可单独执行，无指令间的依赖关系。
- *                    0x01->START 告知扫码器开始对卡操作或对卡操作尚未结束，且指令间可能存在依赖关系。
- *                    0x02->FINISH 告知扫码器本条指令是操作卡的最后一条指令，将卡片操作环境恢复到默态。
- * @param {number} blkNums 块号
- * @param {array} key 密钥, 长度6bytes
- * @param {number} keyType 密钥类型: A:0x60 B:0x61
- * @param {string} id 句柄id，非必填（需保持和init中的id一致）
- * @returns Array 读取结果 undefined:失败
+ * NFC reading M1 block
+ * @param {number} taskFlg Task Flag：
+ *                    0x00->AUTO informs the scanner that this instruction can be executed independently without any dependencies between instructions
+ *                    0x01->START Notify the scanner that the card operation has started or has not yet ended, and there may be dependencies between instructions.
+ *                    0x02->FINISH Notify the scanner that this instruction is the last instruction to operate the card, restoring the card operating environment to default.
+ * @param {number} blkNums Block number
+ * @param {array} key Key, length 6 bytes
+ * @param {number} keyType Key type: A: 0x60 B: 0x61
+ * @returns {ArrayBuffer} Read result undefined: failed
  */
-nfc.m1cardReadBlk = function (taskFlg, blkNum, key, keyType, id) {
-	let pointer = dxCommon.handleId("nfc", id)
+nfc.m1cardReadBlk = function (taskFlg, blkNum, key, keyType) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
 	_validate('m1cardReadBlk', taskFlg, 1, 0, blkNum, key, keyType, ' ')
 	return nfcObj.m1cardReadBlk(pointer, taskFlg, blkNum, key, keyType);
 }
 
 /**
- * 
- * @param {number} taskFlg 任务标志：
- *                    0x00->AUTO 告知扫码器该指令可单独执行，无指令间的依赖关系。
- *                    0x01->START 告知扫码器开始对卡操作或对卡操作尚未结束，且指令间可能存在依赖关系。
- *                    0x02->FINISH 告知扫码器本条指令是操作卡的最后一条指令，将卡片操作环境恢复到默态。
- * @param {number} blkNums 块号
- * @param {array} key 密钥, 长度6bytes
- * @param {number} keyType 密钥类型: A:0x60 B:0x61
- * @param {array} data 写入数据
- * @param {string} id 句柄id，非必填（需保持和init中的id一致）
- * @returns int 写入长度 -1:错误
+ * NFC writing M1 block
+ * @param {number} taskFlg Task Flag：
+ *                    0x00->AUTO informs the scanner that this instruction can be executed independently without any dependencies between instructions
+ *                    0x01->START Notify the scanner that the card operation has started or has not yet ended, and there may be dependencies between instructions.
+ *                    0x02->FINISH Notify the scanner that this instruction is the last instruction to operate the card, restoring the card operating environment to default.
+ * @param {number} blkNums Block number
+ * @param {array} key Key, length 6 bytes
+ * @param {number} keyType Key type: A: 0x60 B: 0x61
+ * @param {array} data Write data
+ * @returns {number} Write length -1: Error
  */
-nfc.m1cardWriteBlk = function (taskFlg, blkNum, key, keyType, data, id) {
-	let pointer = dxCommon.handleId("nfc", id)
+nfc.m1cardWriteBlk = function (taskFlg, blkNum, key, keyType, data) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
 	_validate('m1cardWriteBlk', taskFlg, 1, 0, blkNum, key, keyType, data)
 	return nfcObj.m1cardWriteBlk(pointer, taskFlg, blkNum, key, keyType, data);
 }
 
 /**
- * 判断nfc消息队列是否为空
- * @param {string} id 句柄id，非必填（需保持和init中的id一致）
- * @returns bool
+ * Write values to the registers of the NFC module
+ * @param {number} taskFlg Task Flag：
+ *                    0x00->AUTO informs the scanner that this instruction can be executed independently without any dependencies between instructions
+ *                    0x01->START Notify the scanner that the card operation has started or has not yet ended, and there may be dependencies between instructions.
+ *                    0x02->FINISH Notify the scanner that this instruction is the last instruction to operate the card, restoring the card operating environment to default.
+ * @param {number} regAddr Register address to be written (please refer to the corresponding manual if necessary)
+ * @param {number} val The value to be written
+ * @returns {boolean} true/false
  */
-nfc.msgIsEmpty = function (id) {
-	let pointer = dxCommon.handleId("nfc", id)
+nfc.nfcRegWrite = function (taskFlg, regAddr, val) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
+	return nfcObj.nfcRegWrite(pointer, taskFlg, regAddr, val);
+}
+
+/**
+ * Read values from the registers of the NFC module
+ * @param {number} taskFlg Task Flag：
+ *                    0x00->AUTO informs the scanner that this instruction can be executed independently without any dependencies between instructions
+ *                    0x01->START Notify the scanner that the card operation has started or has not yet ended, and there may be dependencies between instructions.
+ *                    0x02->FINISH Notify the scanner that this instruction is the last instruction to operate the card, restoring the card operating environment to default.
+ * @param {number} regAddr Register address to be read (please refer to the corresponding manual if necessary)
+
+ * @returns {number} Read value/null
+ */
+nfc.nfcRegRead = function (taskFlg, regAddr) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
+	return nfcObj.nfcRegRead(pointer, taskFlg, regAddr);
+}
+
+/**
+ * ATS detection
+ * @returns {boolean} true/false
+ */
+nfc.iso14443TypeaGetAts = function () {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
+	return nfcObj.iso14443TypeaGetAts(pointer)
+}
+
+/**
+ * Send APDU command
+ * @param {number} taskFlg Task Flag：
+ *                    0x00->AUTO informs the scanner that this instruction can be executed independently without any dependencies between instructions
+ *                    0x01->START Notify the scanner that the card operation has started or has not yet ended, and there may be dependencies between instructions.
+ *                    0x02->FINISH Notify the scanner that this instruction is the last instruction to operate the card, restoring the card operating environment to default.
+ * @param {ArrayBuffer} buffer 	The data to be sent
+ * @param {number} bufferLen 	The length of the data to be sent
+ * @returns {ArrayBuffer} buffer
+ */
+nfc.iso14443Apdu = function (taskFlg, buffer, bufferLen) {
+	let pointer = dxCommon.handleId("nfc", "nfcid")
+	return nfcObj.iso14443Apdu(pointer, taskFlg, buffer, bufferLen);
+}
+
+/**
+ * PSAM card power failure
+ * @returns {boolean} true/false
+ */
+nfc.nfcPsamPowerDown = function () {
+	let pointer = dxCommon.handleId("nfc", "nfcid")
+	return nfcObj.nfcPsamPowerDown(pointer);
+}
+
+/**
+ * NFC changes state
+ * @returns {boolean} true/false
+ */
+nfc.nfcPsamChangeBaud = function () {
+	let pointer = dxCommon.handleId("nfc", "nfcid")
+	return nfcObj.nfcPsamChangeBaud(pointer);
+}
+
+/**
+ * PSAM card reset
+ * @returns {boolean} true/false
+ */
+nfc.nfcPsamCardReset = function (force) {
+	let pointer = dxCommon.handleId("nfc", "nfcid")
+	return nfcObj.nfcPsamCardReset(pointer, force);
+}
+
+/**
+ * Send PSAM APDU command
+ * @returns {ArrayBuffer} buffer
+ */
+nfc.nfcPsamCardApdu = function (buffer) {
+	let pointer = dxCommon.handleId("nfc", "nfcid")
+	return nfcObj.nfcPsamCardApdu(pointer, buffer);
+}
+
+/**
+ * EID updates cloud certificate configuration
+ * @param {object} eidConfig EID configuration	
+ * 		@param {string} eidConfig.appid 平台分配给应用的appid
+ * 		@param {number} eidConfig.read_len; Single card reading length, default 0x80
+ * 		@param {number} eidConfig.declevel; Do you want to read the photo? 1 means not read, 2 means read
+ * 		@param {number} eidConfig.loglevel; Log level, supports 0, 1, 2
+ * 		@param {number} eidConfig.model; Is it possible to directly check whether information 0 is 1 or not (i.e. 0 is the original return, returning identity information, 1 is forwarding, returning reqid)
+ * 		@param {number} eidConfig.type; Card type: 0 ID card 1 electronic license
+ * 		@param {number} eidConfig.pic_type; Photo decoding data type 0 wlt 1 jpg
+ * 		@param {number} eidConfig.envCode; Environmental identification code
+ * 		@param {string} eidConfig.sn[128]; Equipment serial number
+ * 		@param {string} eidConfig.device_model[128]; Equipment model
+ * 		@param {number} eidConfig.info_type; Information return type, 0 identity information structure, 1 original data char 
+ */
+nfc.eidUpdateConfig = function (eidConfig) {
+	if (eidConfig == null) {
+		throw new Error("eidUpdateConfig:eidConfig should not be null or empty")
+	}
+	return nfcObj.eidUpdateConfig(eidConfig);
+}
+
+/**
+ * Read NTAG version number
+ * @returns {string} NTAG version
+ */
+nfc.nfcNtagReadVersion = function () {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
+	return nfcObj.nfcNtagReadVersion(pointer);
+}
+
+/**
+ * Read NTAG page content with fixed reading of 4 pages totaling 16 bytes
+ * @param {number} pageNum  Starting page address：
+ *                              Read four pages at a time
+ *                             	If the address (Addr) is 04h, return the content of pages 04h, 05h, 06h, 07h
+ * 	@returns {ArrayBuffer} buffer
+ */
+nfc.nfcNtagReadPage = function (pageNum) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
+	if (pageNum == null) {
+		throw new Error("nfcNtagReadPage:pageNum should not be null or empty")
+	}
+	return nfcObj.nfcNtagReadPage(pointer, pageNum);
+}
+
+/**
+ * The buffer for reading data from multiple pages of NTAG, with a minimum of 4 pages; The length of the data to be read is 4 pages
+ * @param {number} start_addr Starting page address
+ * @param {number} end_addr End page address
+ * @returns {ArrayBuffer} buffer
+ */
+nfc.nfcNtagFastReadPage = function (start_page, end_page) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
+	if (start_page == null) {
+		throw new Error("nfcNtagFastReadPage:start_page should not be null or empty")
+	}
+	if (end_page == null) {
+		throw new Error("nfcNtagFastReadPage:end_page should not be null or empty")
+	}
+	return nfcObj.nfcNtagFastReadPage(pointer, start_page, end_page);
+}
+
+/**
+ * Write NTAG page content
+ * @param {number} pageNum Page number written: valid Addr parameter
+ *                              For NTAG213, page addresses 02h to 2Ch
+ *                              For NTAG215, page addresses 02h to 86h
+ *                              For NTAG216, page addresses 02h to E6h
+ * @param {ArrayBuffer} pageData    Write page content: four bytes
+ * @returns {boolean} ture/false
+ */
+nfc.nfcNtagWritePage = function (pageNum, pageData) {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
+	if (pageNum == null) {
+		throw new Error("nfcNtagWritePage:pageNum should not be null or empty")
+	}
+	if (!pageData) {
+		throw new Error("nfcNtagWritePage:pageData should not be null or empty")
+	}
+	return nfcObj.nfcNtagWritePage(pointer, pageNum, pageData);
+}
+
+/**
+ * Determine if the NFC message queue is empty
+ * @returns {boolean} true/false
+ */
+nfc.msgIsEmpty = function () {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
 	return nfcObj.msgIsEmpty(pointer)
 }
 
 /**
- * 从nfc消息队列中读取数据
- * @param {string} id 句柄id，非必填（需保持和init中的id一致）
- * @returns json消息对象
+ * Read data from the NFC message queue
+ * @returns {string} JSON message object
  */
-nfc.msgReceive = function (id) {
-	let pointer = dxCommon.handleId("nfc", id)
+nfc.msgReceive = function () {
+	let pointer = dxCommon.handleId("nfc", 'nfcid')
 	let msg = nfcObj.msgReceive(pointer)
 	return JSON.parse(msg);
 }
@@ -217,7 +389,7 @@ function _validate(fun, taskFlg, secNum, logicBlkNum, blkNums, key, keyType, dat
 	if (logicBlkNum == null || logicBlkNum == undefined || logicBlkNum < 0 || logicBlkNum > 3) {
 		throw new Error(fun, ":logicBlkNum error")
 	}
-	if (blkNums == null || blkNums == undefined || blkNums < 0 || blkNums > 4) {
+	if (blkNums == null || blkNums == undefined || blkNums < 0 || blkNums > 59) {
 		throw new Error(fun, ":blkNums error")
 	}
 	if (key == null || key === undefined || key.length < 0) {
@@ -234,59 +406,46 @@ function _validate(fun, taskFlg, secNum, logicBlkNum, blkNums, key, keyType, dat
 nfc.RECEIVE_MSG = '__nfc__MsgReceive'
 
 /**
- * 简化NFC组件的使用，无需轮询去获取网络状态，网络的状态会通过eventcenter发送出去
- * run 只会执行一次，执行之后网络基本配置不能修改
- * 如果需要实时获取刷卡数据，可以订阅 eventCenter的事件，事件的topic是nfc.CARD，事件的内容是类似
- * {id:'卡id',card_type:卡芯片类型,id_len:卡号长度,type：卡类型,timestamp:'刷卡时间戳',monotonic_timestamp:'相对开机的时间'}
+ * Simplify the use of NFC components, eliminating the need for polling to obtain network status. The network status will be sent out through the eventcenter
+ * Run will only be executed once, and after execution, the basic network configuration cannot be modified
+ * If you need real-time access to card swiping data, you can subscribe to the eventCenter's events. The topic of the event is nfc.CARD, and the content of the event is similar
+ * {id: 'card id', card_type: card chip type, id_1en: card length, type: card type, timestamp: 'card swipe timestamp', monotonic_timestamp: 'relative boot time'}
  * @param {*} options 
- * 		@param {boolean} options.m1 非必填，普通卡回调开关
- * 		@param {boolean} options.psam 非必填，psam卡回调开关
- *      @param {string} options.id  句柄id，非必填（若初始化多个实例需要传入唯一id）
+ * 		@param {boolean} options.m1 Not required, ordinary card callback switch
+ * 		@param {boolean} options.psam Not required, psam card callback switch
  */
 nfc.run = function (options) {
 	if (options === undefined || options.length === 0) {
 		throw new Error("dxnfc.run:'options' parameter should not be null or empty")
 	}
-	if (options.id === undefined || options.id === null || typeof options.id !== 'string') {
-		// 句柄id
-		options.id = ""
-	}
-	let oldfilepre = '/app/code/dxmodules/nfcWorker'
-	let content = std.loadFile(oldfilepre + '.js').replace("{{id}}", options.id)
-	let newfile = oldfilepre + options.id + '.js'
-	std.saveFile(newfile, content)
-	let init = map.get("__nfc__run_init" + options.id)
-	if (!init) {//确保只初始化一次
-		map.put("__nfc__run_init" + options.id, options)
-		new os.Worker(newfile)
+	let init = map.get("__nfc__run_init")
+	if (!init) { // Ensure to initialize only once
+		map.put("__nfc__run_init", options)
+		bus.newWorker("__nfc", '/app/code/dxmodules/nfcWorker.js')
 	}
 }
 
 /**
- * 如果nfc单独一个线程，可以直接使用run函数，会自动启动一个线程，
- * 如果想加入到其他已有的线程，可以使用以下封装的函数
+ * If NFC has a separate thread, you can directly use the run function, which will automatically start a thread
+ * If you want to join other existing threads, you can use the following encapsulated functions
  */
 nfc.worker = {
-	//在while循环前
+	// Before the while loop
 	beforeLoop: function (options) {
-		nfc.init(options.id)
-		// PSAM和普通卡回调
+		nfc.init(options.useEid)
+		// PSAM and regular card callback
 		if (options.m1) {
-			nfc.cbRegister(options.id)
+			nfc.cbRegister()
 		}
 		if (options.psam) {
-			nfc.psamCbRegister(options.id)
+			nfc.psamCbRegister()
 		}
 	},
-	//在while循环里
-	loop: function (options) {
-		if (!nfc.msgIsEmpty(options.id)) {
-			let res = nfc.msgReceive(options.id);
-			if (options.id === undefined || options.id === null || typeof options.id !== 'string') {
-				// 句柄id
-				options.id = ""
-			}
-			center.fire(nfc.RECEIVE_MSG + options.id, res)
+	// In the while loop
+	loop: function () {
+		if (!nfc.msgIsEmpty()) {
+			let res = nfc.msgReceive();
+			bus.fire(nfc.RECEIVE_MSG, res)
 		}
 	}
 }

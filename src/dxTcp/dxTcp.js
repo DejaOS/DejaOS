@@ -1,11 +1,12 @@
-//build: 20240528
+//build: 20240716
 //TCP Client
-//依赖组件:dxStd,dxLogger,dxMap,dxEventCenter,dxCommon,dxUart,dxNet
+//依赖组件:dxStd,dxLogger,dxMap,dxEventBus,dxCommon,dxUart,dxNet
 import { tcpClientClass } from './libvbar-m-dxtcp.so'
 import std from './dxStd.js'
 import * as os from "os"
 import dxMap from './dxMap.js'
 import dxCommon from './dxCommon.js'
+import bus from './dxEventBus.js'
 const map = dxMap.get("default")
 const tcpObj = new tcpClientClass();
 const tcp = {}
@@ -139,7 +140,6 @@ tcp.destory = function (id) {
 tcp.VG = {
     RECEIVE_MSG: '__tcpvg__MsgReceive',
     CONNECTED_CHANGED: '__tcp__Connect_changed',
-    CONNECTED_CURRENT: '__tcp__Connect_current'
 }
 /**
  * 简化微光通信协议的使用，
@@ -185,7 +185,7 @@ tcp.runvg = function (options) {
     let init = map.get("__vgtcp__run_init" + options.id)
     if (!init) {//确保只初始化一次
         map.put("__vgtcp__run_init" + options.id, options)
-        new os.Worker(newfile)
+        bus.newWorker(options.id || "__vgtcp", newfile)
     }
 }
 /**
@@ -194,6 +194,9 @@ tcp.runvg = function (options) {
  * @returns 'connected' 或者 'disconnected'
  */
 tcp.getConnected = function (id) {
-    return map.get(this.VG.CONNECTED_CURRENT + id)
+    if (id == undefined || id == null) {
+        id = ""
+    }
+    return tcp.isConnect(id) ? "connected" : "disconnected"
 }
 export default tcp;

@@ -6,7 +6,7 @@ let keyboard = {}
 
 keyboard.build = function (id, parent) {
     let temp = utils.validateBuild(keyboard.all, id, parent, 'keyboard')
-    let my = {}
+    let my = {type: 'keyboard'}
     my.obj = new utils.GG.NativeKeyboard({ uid: id }, temp)
 
     // 拼音输入法会获得一个新对象，与当前键盘绑定，以增强键盘功能，如9键等，用户使用时不用关心，只要操作最初创建的那个键盘对象
@@ -16,7 +16,6 @@ keyboard.build = function (id, parent) {
     my["__obj"] = Object.assign(pinyin, base)
     my.__mode = "K26"
 
-    keyboard.all[id] = my.obj
     my.id = id
     /**
      * 设置关联文本框，键盘输出的内容会显示在这里
@@ -97,6 +96,7 @@ keyboard.build = function (id, parent) {
         }
         my.obj.lvImePinyinGetCandPanel(my["__obj"].obj).lvObjAlignTo(my.obj, utils.ALIGN.OUT_TOP_MID, 0, 0)
     }
+    utils.setParent(this.all, comp, parent)
     return comp;
 }
 export default keyboard;

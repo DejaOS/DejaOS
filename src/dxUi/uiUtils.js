@@ -261,6 +261,25 @@ utils.anime = function (obj, start, end, cb, duration, backDuration, repeat, mod
     anim.lvAnimStart()
     return anim
 }
+//每个对象设置parent和children
+utils.setParent = function (all, child, parent) {
+    if (!all || parent == null || parent == undefined || !child) {
+        return
+    }
+    if((typeof parent)=='number'){
+
+    }
+    const parentId = ((typeof parent)=='number')?'' + parent:parent.id//把0，1，2转成字符串
+    if (!all[parentId]) {
+        all[parentId] = { id: parentId }//根节点0,1,2
+    }
+    if (!all[parentId].children) {
+        all[parentId].children = []
+    }
+    all[parentId].children.push(child.id)
+    child.parent = parentId
+    all[child.id] = child
+}
 function _valid(n, type, err) {
     if (n === undefined || n === null || (typeof n) != type) {
         if (err) {

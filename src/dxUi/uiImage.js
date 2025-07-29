@@ -6,9 +6,8 @@ let image = {}
 
 image.build = function (id, parent) {
     let temp = utils.validateBuild(image.all, id, parent, 'image')
-    let my = {}
+    let my = {type: 'image'}
     my.obj = new utils.GG.NativeImage({ uid: id }, temp)
-    image.all[id]=my.obj
     my.id = id
     /**
      * 设置image的来源或获取来源
@@ -22,6 +21,7 @@ image.build = function (id, parent) {
         }
     }
     let comp = Object.assign(my, base);
+    utils.setParent(this.all, comp, parent)
     return comp;
 }
 export default image;

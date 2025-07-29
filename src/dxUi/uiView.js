@@ -11,16 +11,16 @@ let view = {}
  */
 view.build = function (id, parent) {
     let temp = utils.validateBuild(view.all, id, parent, 'view')
-    let my = {}
+    let my = {type: 'view'}
     if (temp === 0 || temp === 1 || temp === 2) {
         my.obj = new utils.GG.NativeBasicComponent({ uid: id }, null, temp)
     }
     else {
         my.obj = new utils.GG.NativeBasicComponent({ uid: id }, temp)
     }
-    view.all[id] = my.obj
     my.id = id
     let comp = Object.assign(my, base);
+    utils.setParent(this.all,comp,parent)
     return comp;
 }
 
