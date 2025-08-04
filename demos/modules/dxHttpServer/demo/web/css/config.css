@@ -1,0 +1,64 @@
+.status-text {
+  color: #008000;  /* 失败#FF0000 成功#008000 */
+  font-size: 14px;
+  font-weight: bold;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 8px;
+  border-radius: 5px;
+  background-color: #f0f0f0;
+  display: none;
+}
+
+.status-dian {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #008000;
+  margin-right: 5px;
+}
+
+.form-group label span {
+  color: #FF0000;
+  margin-right: 5px;
+}
+
+#enterprise-id {
+  background-color: #f0f0f0;
+}
+
+.the-msg {
+  height: 24px;
+  line-height: 24px;
+}
+
+.the-msg span {
+  color: #FF0000;
+  /* padding: 10px 10px 0; */
+  font-weight: bold;
+  font-size: 12px;
+  display: none;
+}
+
+.config-container {
+  display: flex;
+  gap: 20px; /* 配置项之间的间距 */
+  padding: 20px;
+}
+
+.config-section {
+  flex: 1;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.mqtt-section {
+  margin-right: 10px;
+}
+
+.auth-section {
+  margin-left: 10px;
+}

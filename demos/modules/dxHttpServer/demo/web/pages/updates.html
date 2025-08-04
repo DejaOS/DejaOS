@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Device Remote Management System - Update Records</title>
+    <link rel="icon" href="../image/icon.png" />
+    <link rel="stylesheet" href="../css/common.css" />
+    <link rel="stylesheet" href="../css/updates.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/updates.js"></script>
+  </head>
+  <body>
+    <div class="app-container">
+      <div class="header">
+        <h1>Device Remote Management System</h1>
+        <div class="user-info">
+          <span id="username">admin</span>
+          <button id="logout">Logout</button>
+        </div>
+      </div>
+
+      <div class="main-container">
+        <div class="sidebar">
+          <a href="./config.html" class="nav-btn">System Configuration</a>
+          <a href="./devices.html" class="nav-btn">Device Management</a>
+          <a href="./packages.html" class="nav-btn">Package Management</a>
+          <a href="javascript:;" class="nav-btn active">Update Records</a>
+          <a href="./users.html" class="nav-btn">User Management</a>
+        </div>
+
+        <div class="content">
+          <div class="updates-section">
+            <div class="section-header">
+              <h2>Update Records</h2>
+              <div class="filter-group">
+                <input
+                  type="text"
+                  id="search-sn"
+                  placeholder="Search Device SN"
+                />
+                <select id="filter-status">
+                  <option value="">All Status</option>
+                  <option value="success">Update Success</option>
+                  <option value="failed">Update Failed</option>
+                  <option value="processing">Updating</option>
+                </select>
+                <button type="button" class="submit-btn" id="export-records">
+                  Export Records
+                </button>
+              </div>
+            </div>
+            <div class="updates-list">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Device SN</th>
+                    <th>Package</th>
+                    <th>Original Version</th>
+                    <th>Target Version</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="updates-table-body">
+                  <!-- Update records will be dynamically added via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination">
+              <button type="button" class="page-btn" id="prev-page" disabled>
+                &lt;
+              </button>
+              <span id="page-info">Page 1 of 1</span>
+              <button type="button" class="page-btn" id="next-page" disabled>
+                &gt;
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
