@@ -51,9 +51,9 @@ mainView.init = function () {
     networkSettingBox.flexFlow(dxui.Utils.FLEX_FLOW.ROW_WRAP)
     networkSettingBox.flexAlign(dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.START, dxui.Utils.FLEX_ALIGN.START)
     networkSettingBox.obj.lvObjSetStylePadGap(8, dxui.Utils.ENUM._LV_STYLE_STATE_CMP_SAME)
-    
+   
     mainView.networkSettingBox = networkSettingBox
-
+    log.info("1111")
     mainView.netInfo = [
         {
             title: 'type',
@@ -144,7 +144,7 @@ mainView.init = function () {
         title.textColor(0x374151) // 深灰色文字
         
         if (item.type === 'input') {
-            const input = viewUtils.input(networkSettingItem, item.title + 'input', undefined, undefined, 'mainView.input')
+            const input = viewUtils.input(mainView,networkSettingItem, item.title + 'input', undefined, undefined, 'mainView.input')
             input.align(dxui.Utils.ALIGN.RIGHT_MID, -15, 0)
             input.setSize(200, 35)
             // 美化输入框样式

@@ -13,18 +13,18 @@ const io = socketIo(server);
 
 // MQTT configuration
 const mqttConfig = {
-    mqttAddr: "tcp://101.200.139.97:51883",
-    clientId: "upgrade_demo_server_clientid",
-    username: "upgrade_demo_server",
-    password: "upgrade_demo_server_pwd",
-    prefix: "upgrade_demo/v1"
+    mqttAddr: "tcp://123.57.175.193:61613",
+    clientId: "AABBCCDDEEFF",
+    username: "admin",
+    password: "password",
+    prefix: "base_upgrade/v1"
 };
 
 // MQTT topics to subscribe
 const topics = [
-    "upgrade_demo/v1/event/offline",
-    "upgrade_demo/v1/event/heart",
-    "upgrade_demo/v1/cmd/upgrade_reply"
+    "base_upgrade/v1/event/offline",
+    "base_upgrade/v1/event/heart",
+    "base_upgrade/v1/cmd/upgrade_reply"
 ];
 
 // Store device status in memory
@@ -156,15 +156,15 @@ mqttClient.on('message', (topic, message) => {
 
         // Handle different message types based on topic
         switch (topic) {
-            case 'upgrade_demo/v1/event/heart':
+            case 'base_upgrade/v1/event/heart':
                 handleHeartbeatMessage(messageData);
                 break;
 
-            case 'upgrade_demo/v1/event/offline':
+            case 'base_upgrade/v1/event/offline':
                 handleOfflineMessage(messageData);
                 break;
 
-            case 'upgrade_demo/v1/cmd/upgrade_reply':
+            case 'base_upgrade/v1/cmd/upgrade_reply':
                 handleUpgradeReplyMessage(messageData);
                 break;
 
@@ -300,7 +300,7 @@ io.on('connection', (socket) => {
         };
 
         // Construct MQTT topic for specific device
-        const upgradeTopic = `upgrade_demo/v1/cmd/${uuid}/upgrade`;
+        const upgradeTopic = `base_upgrade/v1/cmd/${uuid}/upgrade`;
 
         // Publish upgrade command to MQTT
         mqttClient.publish(upgradeTopic, JSON.stringify(upgradeMessage), (err) => {

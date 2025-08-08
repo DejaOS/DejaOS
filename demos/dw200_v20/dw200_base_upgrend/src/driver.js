@@ -56,7 +56,7 @@ driver.net = {
         }
         logger.info("[driver.net] init with options:", options)
         net.worker.beforeLoop(options)
-        // net.netConnectWifiSsid(options.ssid, options.psk,"")        
+        net.netConnectWifiSsid(options.ssid, options.psk,"")        
     },
     getStatus: function () {
         let status = net.getStatus()

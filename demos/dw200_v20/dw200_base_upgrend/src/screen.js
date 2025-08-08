@@ -14,7 +14,7 @@ screen.fontPath = '/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf'
 
 screen.init = function () {
     dxui.init({ orientation: 1 }, context);
-    pinyin.init(480, 180)  // 调整为适合320x480屏幕的尺寸
+    pinyin.init(480, 150)  // 调整为适合320x480屏幕的尺寸
     pinyin.hide(true)
     mainView.init()
     dxui.loadMain(mainView.main)

@@ -1,6 +1,7 @@
 import dxui from '../../../dxmodules/dxUi.js'
 import pinyin from '../pinyin/pinyin.js'
 import screen from '../../screen.js'
+import log from '../../../dxmodules/dxLogger.js'
 
 const viewUtils = {}
 
@@ -88,7 +89,8 @@ viewUtils.createLabel = function (id, parent, text, fontSize) {
 }
 
 // 输入框
-viewUtils.input = function (parent, id, mode, enter = () => { }, dataI18n) {
+viewUtils.input = function (mainView,parent, id, mode, enter = () => { }, dataI18n) {
+   
     const input = dxui.Textarea.build(id + 'input', parent)
     viewUtils._clearStyle(input)
     input.align(dxui.Utils.ALIGN.TOP_MID, 0, 100)
@@ -117,8 +119,18 @@ viewUtils.input = function (parent, id, mode, enter = () => { }, dataI18n) {
     }
 
     input.on(dxui.Utils.EVENT.CLICK, () => {
+        log.info('键盘显示'+id)
+        
+        // 获取当前DHCP状态
+        const dhcpSelected = mainView.netInfo[3].dropdown.getSelected()
+        const isDhcpEnabled = (dhcpSelected === 1) // 1表示yes
+        
+        mainView.networkSettingBox.align(dxui.Utils.ALIGN.TOP_MID, 0, -65)
+        
         input.setBorderColor(0x3670f7)
+        
         pinyin.show(mode || pinyin.getMode(), (data) => {
+            
             if (typeof data == 'string') {
                 input.lvTextareaAddText(data)
             } else if (typeof data == 'object') {
@@ -126,6 +138,8 @@ viewUtils.input = function (parent, id, mode, enter = () => { }, dataI18n) {
                     case 'enter':
                         enter()
                         pinyin.hide()
+                        log.info('键盘隐藏')
+                        mainView.networkSettingBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 30)
                         break
                     case 'backspace':
                         input.lvTextareaDelChar()
@@ -148,6 +162,8 @@ viewUtils.input = function (parent, id, mode, enter = () => { }, dataI18n) {
     root.on(dxui.Utils.EVENT.CLICK, () => {
         input.setBorderColor(0xE7E7E7)
         pinyin.hide()
+        // 恢复网络设置框到原始位置
+        mainView.networkSettingBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 30)
     })
 
     root.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_UNLOADED, () => {
