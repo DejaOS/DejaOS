@@ -73,6 +73,6 @@ dejaOS 提供了丰富的 [JavaScript 库](./src/README_CN.md)支持，包含：
 
 🤝 服务
 -------
-
+更多资料参考https://dejaos.com
 如有任何问题，联系我们 service@dxiot.com ，告诉我们如何提供帮助.
 
