@@ -1,0 +1,38 @@
+{
+  "name": "mqtt-test-server",
+  "version": "1.0.0",
+  "description": "MQTT test server for testing MQTT client connections and message handling",
+  "main": "testserver.js",
+  "scripts": {
+    "start": "node testserver.js",
+    "dev": "nodemon testserver.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mqtt",
+    "server",
+    "test",
+    "iot",
+    "messaging"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "aedes": "^0.50.0",
+    "net": "^1.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "bugs": {
+    "url": ""
+  },
+  "homepage": ""
+}
