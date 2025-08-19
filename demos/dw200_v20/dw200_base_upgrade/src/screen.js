@@ -1,13 +1,13 @@
 import bus from '../dxmodules/dxEventBus.js'
 import dxui from '../dxmodules/dxUi.js'
 import mainView from './view/page/mainView.js'
-import net from '../dxmodules/dxNet.js'
-import mqtt from '../dxmodules/dxMqtt.js'
 import logger from '../dxmodules/dxLogger.js'
 import pinyin from './view/pinyin/pinyin.js'
+import  std from '../dxmodules/dxStd.js'
+import common from '../dxmodules/dxCommon.js'
 
 const screen = {}
-
+let mqttStatus = 0
 let context = {}
 
 screen.fontPath = '/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf'
@@ -22,18 +22,20 @@ screen.init = function () {
 }
 
 function subscribe() {
-    bus.on(net.STATUS_CHANGE, screen.netStatusChange)
-    bus.on(mqtt.CONNECTED_CHANGED, screen.mqttStatusChange)
+    bus.on("network_status_change", screen.netStatusChange)
+    bus.on("mqtt_connected", screen.mqttStatusChange)
 }
 
 screen.netStatusChange = function (data) {
     logger.info('net status change:' + JSON.stringify(data))
-    if (data.status >= 4) {
-        if(data.type == 1){
+    if (data.net_status >= 4) {
+        if(data.net_type == 1){
             mainView.ethItemImg.show()
         }else{ 
             mainView.wifiItemImg.show()
         }
+        //联网成功后，发送mqtt连接请求
+        bus.fire('mqtt_to_connect', 0)
     }else{ 
         mainView.ethItemImg.hide()
         mainView.wifiItemImg.hide()
@@ -42,10 +44,32 @@ screen.netStatusChange = function (data) {
 
 screen.mqttStatusChange = function (data) {
     logger.info('mqtt status change:' + JSON.stringify(data))
-    if (data == "connected") {
+    if (data == "0") {
         mainView.mqttShow.show()
+        mqttStatus = 1
+        run()
     }else{ 
-        mainView.mqttShow.hide()
+        mqttStatus = 0
+        mainView.mqttShow.hide()    
+    }
+}
+
+
+function run() {
+    std.setInterval(() => {
+        try {
+            mqttHeartBeat()
+        } catch (error) {
+            logger.error(error)
+        }
+    }, 10000)
+}
+
+function mqttHeartBeat() {
+    if(mqttStatus ==1){
+        let msg = { uuid: common.getSn(), timestamp: Math.floor(new Date().getTime() / 1000) }
+        logger.info('send heart beat:', msg)
+        bus.fire("mqtt_publish", { topic: "base_upgrade/v1/event/heart", payload: JSON.stringify(msg)})
     }
 }
 

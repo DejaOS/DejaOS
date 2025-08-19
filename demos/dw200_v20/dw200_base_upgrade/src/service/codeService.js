@@ -1,7 +1,26 @@
 import common from '../../dxmodules/dxCommon.js';
 import log from '../../dxmodules/dxLogger.js'
 import std from '../../dxmodules/dxStd.js';
+import dxbarcode from '../../dxmodules/dxBarcode.js';
 const codeService = {}
+
+
+initCode();
+
+function initCode(){
+    dxbarcode.init();
+}
+
+dxbarcode.setCallbacks({
+    onBarcodeDetected: function (data, type, quality, timestamp) {
+      // data is ArrayBuffer containing the barcode data
+      let str = common.utf8HexToStr(common.arrayBufferToHexString(data));
+      //处理二维码
+      codeService.code(str)
+    },
+  });
+  
+
 
 codeService.receiveMsg = function (data) {
     let str = common.utf8HexToStr(common.arrayBufferToHexString(data))
@@ -10,7 +29,7 @@ codeService.receiveMsg = function (data) {
 }
 
 codeService.code = function (data) {
-    // log.info('[codeService] code :' + data)
+     log.info('[codeService] code :' + data)
     //判断data是否为json格式
     let json = parseString(data)
     if (Object.keys(json).length <= 0) {
@@ -158,5 +177,14 @@ function updateConfigFile(configData) {
     }
 }
 
+
+
+  std.setInterval(() => {
+    try {
+        dxbarcode.loop();
+    } catch (e) {
+        logger.error(`net loop error: ${e}`)
+    }
+}, 100)
 
 export default codeService

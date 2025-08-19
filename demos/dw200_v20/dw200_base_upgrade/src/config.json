@@ -1,5 +1,5 @@
 {
-    "mqttAddr": "123.57.175.193:61613",
+    "mqttAddr": "101.200.139.97:51883",
     "username": "admin",
     "password": "password",
     "type": 1,
