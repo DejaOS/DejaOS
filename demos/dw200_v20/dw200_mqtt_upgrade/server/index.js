@@ -13,7 +13,7 @@ const io = socketIo(server);
 
 // MQTT configuration
 const mqttConfig = {
-    mqttAddr: "tcp://123.57.175.193:61613",
+    mqttAddr: "tcp://101.200.139.97:51883",
     clientId: "AABBCCDDEEFF",
     username: "admin",
     password: "password",
@@ -320,6 +320,98 @@ io.on('connection', (socket) => {
                     data: upgradeMessage
                 });
             }
+        });
+    });
+
+    // Handle batch upgrade request from client
+    socket.on('sendBatchUpgradeCommand', (data) => {
+        const { uuids, serverIp } = data;
+
+        if (!uuids || !Array.isArray(uuids) || uuids.length === 0) {
+            console.error('Batch upgrade command failed: missing or invalid device UUIDs');
+            socket.emit('batchUpgradeCommandResult', {
+                success: false,
+                message: 'Device UUIDs are required and must be an array'
+            });
+            return;
+        }
+
+        if (!serverIp) {
+            console.error('Batch upgrade command failed: missing server IP');
+            socket.emit('batchUpgradeCommandResult', {
+                success: false,
+                message: 'Server IP address is required'
+            });
+            return;
+        }
+
+        if (!upgradeMD5) {
+            console.error('Batch upgrade command failed: upgrade file MD5 not available');
+            socket.emit('batchUpgradeCommandResult', {
+                success: false,
+                message: 'Upgrade file not ready or MD5 calculation failed'
+            });
+            return;
+        }
+
+        console.log(`Starting batch upgrade for ${uuids.length} devices:`, uuids);
+
+        const results = [];
+        let completedCount = 0;
+        let successCount = 0;
+        let failureCount = 0;
+
+        // Process each device
+        uuids.forEach((uuid, index) => {
+            // Construct upgrade command message
+            const upgradeMessage = {
+                serialNo: generateRandomSerial(),
+                url: `http://${serverIp}:3000/ota/upgrade.dpk`,
+                md5: upgradeMD5,
+                timestamp: Math.floor(Date.now() / 1000).toString()
+            };
+
+            // Construct MQTT topic for specific device
+            const upgradeTopic = `base_upgrade/v1/cmd/${uuid}/upgrade`;
+
+            // Publish upgrade command to MQTT
+            mqttClient.publish(upgradeTopic, JSON.stringify(upgradeMessage), (err) => {
+                completedCount++;
+                
+                if (err) {
+                    console.error(`Failed to send upgrade command to device ${uuid}:`, err);
+                    failureCount++;
+                    results.push({
+                        uuid: uuid,
+                        success: false,
+                        error: err.message,
+                        topic: upgradeTopic
+                    });
+                } else {
+                    console.log(`Upgrade command sent to device ${uuid} via topic: ${upgradeTopic}`);
+                    successCount++;
+                    results.push({
+                        uuid: uuid,
+                        success: true,
+                        topic: upgradeTopic,
+                        data: upgradeMessage
+                    });
+                }
+
+                // Check if all devices have been processed
+                if (completedCount === uuids.length) {
+                    console.log(`Batch upgrade completed. Success: ${successCount}, Failed: ${failureCount}`);
+                    
+                    socket.emit('batchUpgradeCommandResult', {
+                        success: failureCount === 0,
+                        message: `Batch upgrade completed. Success: ${successCount}, Failed: ${failureCount}`,
+                        totalDevices: uuids.length,
+                        successCount: successCount,
+                        failureCount: failureCount,
+                        results: results
+                    });
+                }
+            });
         });
     });
 });

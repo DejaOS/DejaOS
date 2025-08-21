@@ -83,6 +83,9 @@
         margin-bottom: 20px;
         border-bottom: 2px solid #ecf0f1;
         padding-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
 
       .device-card {
@@ -118,6 +121,20 @@
 
       .device-info {
         flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .device-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .device-checkbox:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
       }
 
       .device-uuid {
@@ -205,6 +222,44 @@
 
       .refresh-button:hover {
         background-color: #2980b9;
+      }
+
+      .batch-upgrade-button {
+        background-color: #e67e22;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        margin-left: 10px;
+      }
+
+      .batch-upgrade-button:hover {
+        background-color: #d35400;
+      }
+
+      .batch-upgrade-button:disabled {
+        background-color: #95a5a6;
+        cursor: not-allowed;
+      }
+
+      .select-all-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .select-all-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .select-all-label {
+        font-size: 0.9rem;
+        color: #2c3e50;
+        font-weight: 500;
       }
 
       .server-config {
@@ -307,7 +362,16 @@
       </div>
 
       <div class="device-list">
-        <h2>Device List</h2>
+        <h2>
+          Device List
+          <div class="select-all-container">
+            <input type="checkbox" class="select-all-checkbox" id="selectAllCheckbox" />
+            <label class="select-all-label" for="selectAllCheckbox">Select All Online</label>
+            <button class="batch-upgrade-button" id="batchUpgradeButton" onclick="sendBatchUpgradeCommand()" disabled>
+              Batch Upgrade (0)
+            </button>
+          </div>
+        </h2>
         <div id="deviceContainer">
           <div class="no-devices">
             <i>📱</i>
@@ -341,6 +405,8 @@
       const upgradeLogContainer = document.getElementById(
         "upgradeLogContainer"
       );
+      const selectAllCheckbox = document.getElementById("selectAllCheckbox");
+      const batchUpgradeButton = document.getElementById("batchUpgradeButton");
 
       // Socket connection events
       socket.on("connect", () => {
@@ -390,6 +456,29 @@
         }
       });
 
+      // Handle batch upgrade command result
+      socket.on("batchUpgradeCommandResult", (result) => {
+        console.log("Batch upgrade command result:", result);
+        
+        if (result.success) {
+          alert(
+            `Batch upgrade completed successfully!\nTotal devices: ${result.totalDevices}\nSuccess: ${result.successCount}\nFailed: ${result.failureCount}`
+          );
+        } else {
+          let message = `Batch upgrade completed with errors:\nTotal devices: ${result.totalDevices}\nSuccess: ${result.successCount}\nFailed: ${result.failureCount}`;
+          
+          if (result.failureCount > 0) {
+            const failedDevices = result.results.filter(r => !r.success);
+            message += `\n\nFailed devices:\n${failedDevices.map(d => `${d.uuid}: ${d.error}`).join('\n')}`;
+          }
+          
+          alert(message);
+        }
+        
+        // Add batch upgrade log entry
+        addBatchUpgradeLogEntry(result);
+      });
+
       // Update device display
       function updateDeviceDisplay() {
         const deviceArray = Array.from(devices.values());
@@ -414,21 +503,24 @@
                 <div class="device-card ${device.status}">
                     <div class="device-header">
                         <div class="device-info">
-                            <div class="device-uuid">${device.uuid}</div>
-                            <div class="device-serial">Serial: ${
-                              device.serialNo
-                            }</div>
+                            <input type="checkbox" class="device-checkbox" value="${device.uuid}" ${device.status === 'offline' ? 'disabled' : ''} />
+                            <div>
+                                <div class="device-uuid">${device.uuid}</div>
+                                <div class="device-serial">Serial: ${
+                                  device.serialNo
+                                }</div>
+                            </div>
                         </div>
-                                                 <div class="device-status">
-                             <div class="status-badge ${device.status}">${
+                        <div class="device-status">
+                            <div class="status-badge ${device.status}">${
               device.status
             }</div>
-                             ${
-                               device.status === "online"
-                                 ? `<button class="upgrade-button" onclick="sendUpgradeCommand('${device.uuid}')">Upgrade</button>`
-                                 : ""
-                             }
-                         </div>
+                            ${
+                              device.status === "online"
+                                ? `<button class="upgrade-button" onclick="sendUpgradeCommand('${device.uuid}')">Upgrade</button>`
+                                : ""
+                            }
+                        </div>
                     </div>
                     <div class="device-details">
                         <div class="detail-item">
@@ -448,6 +540,10 @@
             `
           )
           .join("");
+
+        // Re-attach event listeners for checkboxes
+        attachCheckboxListeners();
+        updateBatchUpgradeButton();
       }
 
       // Add upgrade log entry
@@ -464,6 +560,49 @@
                 <div class="log-timestamp">Received: ${new Date(
                   upgradeData.receivedAt
                 ).toLocaleString()}</div>
+            `;
+
+        // Remove "no activities" message if present
+        if (
+          upgradeLogContainer.children.length === 1 &&
+          upgradeLogContainer.children[0].tagName === "P"
+        ) {
+          upgradeLogContainer.innerHTML = "";
+        }
+
+        // Add new entry at the top
+        upgradeLogContainer.insertBefore(
+          logEntry,
+          upgradeLogContainer.firstChild
+        );
+
+        // Keep only last 10 entries
+        while (upgradeLogContainer.children.length > 10) {
+          upgradeLogContainer.removeChild(upgradeLogContainer.lastChild);
+        }
+      }
+
+      // Add batch upgrade log entry
+      function addBatchUpgradeLogEntry(result) {
+        const logEntry = document.createElement("div");
+        logEntry.className = "log-entry";
+        
+        const statusClass = result.success ? "success" : "warning";
+        const statusText = result.success ? "SUCCESS" : "PARTIAL SUCCESS";
+        
+        let detailsHtml = `<div><strong>Batch Upgrade ${statusText}</strong></div>`;
+        detailsHtml += `<div><strong>Total Devices:</strong> ${result.totalDevices}</div>`;
+        detailsHtml += `<div><strong>Success:</strong> ${result.successCount}</div>`;
+        detailsHtml += `<div><strong>Failed:</strong> ${result.failureCount}</div>`;
+        
+        if (result.failureCount > 0) {
+          const failedDevices = result.results.filter(r => !r.success);
+          detailsHtml += `<div><strong>Failed Devices:</strong> ${failedDevices.map(d => d.uuid).join(', ')}</div>`;
+        }
+        
+        logEntry.innerHTML = `
+                ${detailsHtml}
+                <div class="log-timestamp">Completed: ${new Date().toLocaleString()}</div>
             `;
 
         // Remove "no activities" message if present
@@ -513,6 +652,62 @@
         socket.emit("requestDeviceList");
       }
 
+      // Attach event listeners for checkboxes
+      function attachCheckboxListeners() {
+        // Select all checkbox
+        selectAllCheckbox.addEventListener('change', function() {
+          const deviceCheckboxes = document.querySelectorAll('.device-checkbox:not(:disabled)');
+          deviceCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+          });
+          updateBatchUpgradeButton();
+        });
+
+        // Individual device checkboxes
+        const deviceCheckboxes = document.querySelectorAll('.device-checkbox');
+        deviceCheckboxes.forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+            updateBatchUpgradeButton();
+            updateSelectAllCheckbox();
+          });
+        });
+      }
+
+      // Update batch upgrade button state
+      function updateBatchUpgradeButton() {
+        const selectedDevices = getSelectedDevices();
+        const count = selectedDevices.length;
+        
+        batchUpgradeButton.disabled = count === 0;
+        batchUpgradeButton.textContent = `Batch Upgrade (${count})`;
+      }
+
+      // Update select all checkbox state
+      function updateSelectAllCheckbox() {
+        const deviceCheckboxes = document.querySelectorAll('.device-checkbox:not(:disabled)');
+        const checkedCheckboxes = document.querySelectorAll('.device-checkbox:not(:disabled):checked');
+        
+        if (deviceCheckboxes.length === 0) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes.length === 0) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes.length === deviceCheckboxes.length) {
+          selectAllCheckbox.checked = true;
+          selectAllCheckbox.indeterminate = false;
+        } else {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = true;
+        }
+      }
+
+      // Get selected device UUIDs
+      function getSelectedDevices() {
+        const selectedCheckboxes = document.querySelectorAll('.device-checkbox:checked');
+        return Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+      }
+
       // Send upgrade command to specific device
       function sendUpgradeCommand(uuid) {
         const serverIpInput = document.getElementById("serverIpInput");
@@ -549,6 +744,53 @@
         // Send upgrade command via socket
         socket.emit("sendUpgradeCommand", {
           uuid: uuid,
+          serverIp: serverIp,
+        });
+      }
+
+      // Send batch upgrade command to multiple devices
+      function sendBatchUpgradeCommand() {
+        const selectedDevices = getSelectedDevices();
+        
+        if (selectedDevices.length === 0) {
+          alert("Please select at least one device for batch upgrade");
+          return;
+        }
+
+        const serverIpInput = document.getElementById("serverIpInput");
+        const serverIp = serverIpInput.value.trim();
+
+        if (!serverIp) {
+          alert("Please enter server IP address");
+          serverIpInput.focus();
+          return;
+        }
+
+        // Validate IP format (basic validation)
+        const ipPattern =
+          /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        if (
+          !ipPattern.test(serverIp) &&
+          serverIp !== "localhost" &&
+          serverIp !== "127.0.0.1"
+        ) {
+          alert("Please enter a valid IP address (e.g., 192.168.1.100)");
+          serverIpInput.focus();
+          return;
+        }
+
+        const confirmMessage = `Send upgrade command to ${selectedDevices.length} selected devices?\nServer: http://${serverIp}:3000/ota/upgrade.dpk\n\nSelected devices:\n${selectedDevices.join('\n')}`;
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+
+        console.log(
+          `Sending batch upgrade command to ${selectedDevices.length} devices: ${selectedDevices.join(', ')}, server IP: ${serverIp}`
+        );
+
+        // Send batch upgrade command via socket
+        socket.emit("sendBatchUpgradeCommand", {
+          uuids: selectedDevices,
           serverIp: serverIp,
         });
       }
