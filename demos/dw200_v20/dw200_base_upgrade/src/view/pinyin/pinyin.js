@@ -19,15 +19,13 @@ pinyin.init = function (w, h) {
         return
     }
     pinyin.inited = true
-    // 全局字体
-    pinyin.font24 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 24, dxui.Utils.FONT_STYLE.NORMAL)
+ 
     let container = dxui.View.build('container', dxui.Utils.LAYER.TOP)
     pinyin.container = container
     clearStyle(container)
     container.obj.lvObjAddFlag(dxui.Utils.ENUM.LV_OBJ_FLAG_OVERFLOW_VISIBLE)
     container.setSize(width, height)
     container.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, 0)
-    container.textFont(pinyin.font24)
     // 容器初始化
     container.bgOpa(0)
     container.update()

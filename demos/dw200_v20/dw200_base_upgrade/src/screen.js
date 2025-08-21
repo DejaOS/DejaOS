@@ -5,16 +5,17 @@ import logger from '../dxmodules/dxLogger.js'
 import pinyin from './view/pinyin/pinyin.js'
 import std from '../dxmodules/dxStd.js'
 import common from '../dxmodules/dxCommon.js'
+import dxntp from '../dxmodules/dxNtp.js'
+import ntp from '../dxmodules/dxNtp.js'
 
 const screen = {}
 let mqttStatus = 0
 let context = {}
 
-screen.fontPath = '/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf'
 
 screen.init = function () {
     dxui.init({ orientation: 1 }, context);
-    pinyin.init(480, 150)  // 调整为适合320x480屏幕的尺寸
+    pinyin.init(480, 150)
     pinyin.hide(true)
     mainView.init()
     dxui.loadMain(mainView.main)
@@ -36,6 +37,10 @@ screen.netStatusChange = function (data) {
         }
         //联网成功后，发送mqtt连接请求
         bus.fire('mqtt_to_connect', 0)
+        //矫正时间
+        ntp.startSync()
+
+
     } else {
         mainView.ethItemImg.hide()
         mainView.wifiItemImg.hide()

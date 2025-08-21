@@ -30,6 +30,12 @@
 - QR code: write network/MQTT params; incremental update (only provided fields overwritten)
 - Manual: touchscreen input IP/gateway/DNS/MQTT and save to apply
 
+### Upgrade Application Server
+- Firmware management: upload, store, and version manage firmware files
+- Upgrade strategy: support single device and batch device upgrade strategy configuration
+- Upgrade monitoring: real-time monitoring of upgrade progress and status feedback
+- Rollback mechanism: automatic rollback to previous version on upgrade failure
+
 ## Directory Structure
 
 ```
@@ -43,9 +49,9 @@
 │   │   ├── mqttService.js       # MQTT communication service
 │   │   └── netService.js        # network service
 │   ├── main.js          # entry point
-│   ├── driver.js        # drivers and network initialization
 │   ├── screen.js        # display management
 │   └── config.json      # runtime configuration
+├── server/              # upgrade application server
 ├── resource/            # resource files (fonts, images)
 ├── dxmodules/           # DX framework modules
 ├── app.dxproj           # project configuration file
@@ -130,6 +136,42 @@ Topics between device and platform:
   ```json
   { "type": 1, "dhcp": 2, "ip": "192.168.1.100", "mask": "255.255.255.0", "gateway": "192.168.1.1", "dns": "8.8.8.8" }
   ```
+
+## Upgrade Server Usage
+
+### Requirements
+- Node.js 14.0 or higher
+- npm or yarn package manager
+- MQTT server (such as Mosquitto, EMQ X, etc.)
+
+### Server Configuration
+1. **Start Service**:
+   ```bash
+   cd server
+   npm install          # Install dependencies
+   node index.js        # Start server
+   ```
+2. **MQTT Configuration**: Configure MQTT server address and authentication
+3. **Firmware Preparation**: Place the upgrade firmware file named `upgrade.dpk` in the `server/` directory
+4. **Device Management**: Add and manage devices that need upgrading
+
+### Server Configuration Details
+- **Port Configuration**: Default listens on port 3000, can be modified via environment variable `PORT`
+- **MQTT Connection**: Configure MQTT server information in `server/mqttConfig.js`
+- **Firmware Storage**: Firmware files are stored directly in `server/` directory with filename `upgrade.dpk`
+- **Logging**: Log files are saved in `server/logs/` directory
+
+### Upgrade Process
+1. **Device Connection**: Devices send heartbeat via MQTT, server receives and displays on Web interface
+2. **Device Selection**: Select target devices for upgrade on Web interface
+3. **Send Upgrade Command**: Send upgrade commands to selected devices
+4. **Monitor Progress**: View device upgrade status and result feedback in real-time
+
+### Batch Upgrade
+- Support grouping by device type, region, version, etc.
+- Configurable upgrade time windows to avoid business impact
+- Support automatic retry mechanism for failed upgrades
+- Provide upgrade reports and statistics
 
 ## Scenarios
 

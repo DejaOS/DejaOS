@@ -2,12 +2,10 @@ import log from '../dxmodules/dxLogger.js'
 import std from '../dxmodules/dxStd.js'
 import bus from '../dxmodules/dxEventBus.js'
 import screen from './screen.js'
-import driver from './driver.js'
 
 
 
 (function () {
-    driver.config.init()
 
     screen.init()
 
@@ -16,6 +14,10 @@ import driver from './driver.js'
     bus.newWorker('netService', '/app/code/src/service/netService.js')
 
     bus.newWorker('codeService', '/app/code/src/service/codeService.js')
+
+    //打印一下config内容
+    let config = std.loadFile('/app/code/src/config.json')
+    log.info("[main.js] config:", config)
 
     log.info("=================== run success ====================")
 })();
