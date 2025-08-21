@@ -49,7 +49,6 @@
 ├── resource/            # 资源文件（字体、图片）
 ├── dxmodules/           # DX 框架模块
 ├── app.dxproj           # 项目配置文件
-├── CONFIG_CODE_README.md # 配置代码说明
 ├── README.md            # 英文说明文档
 └── README_CN.md         # 中文说明文档
 ```
