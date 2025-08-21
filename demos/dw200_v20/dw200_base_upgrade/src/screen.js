@@ -3,7 +3,7 @@ import dxui from '../dxmodules/dxUi.js'
 import mainView from './view/page/mainView.js'
 import logger from '../dxmodules/dxLogger.js'
 import pinyin from './view/pinyin/pinyin.js'
-import  std from '../dxmodules/dxStd.js'
+import std from '../dxmodules/dxStd.js'
 import common from '../dxmodules/dxCommon.js'
 
 const screen = {}
@@ -29,14 +29,14 @@ function subscribe() {
 screen.netStatusChange = function (data) {
     logger.info('net status change:' + JSON.stringify(data))
     if (data.net_status >= 4) {
-        if(data.net_type == 1){
+        if (data.net_type == 1) {
             mainView.ethItemImg.show()
-        }else{ 
+        } else {
             mainView.wifiItemImg.show()
         }
         //联网成功后，发送mqtt连接请求
         bus.fire('mqtt_to_connect', 0)
-    }else{ 
+    } else {
         mainView.ethItemImg.hide()
         mainView.wifiItemImg.hide()
     }
@@ -48,9 +48,9 @@ screen.mqttStatusChange = function (data) {
         mainView.mqttShow.show()
         mqttStatus = 1
         run()
-    }else{ 
+    } else {
         mqttStatus = 0
-        mainView.mqttShow.hide()    
+        mainView.mqttShow.hide()
     }
 }
 
@@ -66,10 +66,10 @@ function run() {
 }
 
 function mqttHeartBeat() {
-    if(mqttStatus ==1){
+    if (mqttStatus == 1) {
         let msg = { uuid: common.getSn(), timestamp: Math.floor(new Date().getTime() / 1000) }
         logger.info('send heart beat:', msg)
-        bus.fire("mqtt_publish", { topic: "base_upgrade/v1/event/heart", payload: JSON.stringify(msg)})
+        bus.fire("mqtt_publish", { topic: "base_upgrade/v1/event/heart", payload: JSON.stringify(msg) })
     }
 }
 

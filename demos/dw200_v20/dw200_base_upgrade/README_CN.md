@@ -36,19 +36,22 @@
 ├── src/
 │   ├── view/            # UI 视图组件
 │   │   ├── page/        # 主界面
-│   │   ├── pinyin/      # 输入法
+│   │   ├── pinyin/      # 输入法组件
 │   │   └── util/        # UI 工具
-│   ├── service/
-│   │   ├── codeService.js    # 二维码解析与配置写入
-│   │   └── mqttService.js    # MQTT 通信
+│   ├── service/         # 服务层
+│   │   ├── codeService.js       # 二维码解析与配置写入
+│   │   ├── mqttService.js       # MQTT 通信服务
+│   │   └── netService.js        # 网络服务
 │   ├── main.js          # 程序入口
 │   ├── driver.js        # 驱动与网络初始化
-│   ├── controller.js    # 主控制逻辑
 │   ├── screen.js        # 屏幕管理
-│   └── services.js      # 服务编排
-├── resource/            # 资源（图片/字体）
+│   └── config.json      # 运行配置
+├── resource/            # 资源文件（字体、图片）
 ├── dxmodules/           # DX 框架模块
-└── src/config.json      # 运行配置
+├── app.dxproj           # 项目配置文件
+├── CONFIG_CODE_README.md # 配置代码说明
+├── README.md            # 英文说明文档
+└── README_CN.md         # 中文说明文档
 ```
 
 ## 代码架构

@@ -3,16 +3,12 @@ import std from '../dxmodules/dxStd.js'
 import bus from '../dxmodules/dxEventBus.js'
 import screen from './screen.js'
 import driver from './driver.js'
-import dxCode from '../dxmodules/dxCode.js'
 
 
-function initController() {
-    // driver.code.init()
-}
 
 (function () {
     driver.config.init()
-    initController()
+
     screen.init()
 
     bus.newWorker('mqttService', '/app/code/src/service/mqttService.js')

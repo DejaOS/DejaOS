@@ -1,6 +1,5 @@
 import logger from '../dxmodules/dxLogger.js'
 import std from '../dxmodules/dxStd.js'
-import dxCode from '../dxmodules/dxCode.js'
 
 const driver = {}
 

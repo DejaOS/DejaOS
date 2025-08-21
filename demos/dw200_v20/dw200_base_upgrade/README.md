@@ -36,19 +36,21 @@
 ├── src/
 │   ├── view/            # UI views
 │   │   ├── page/        # main screens
-│   │   ├── pinyin/      # input method
+│   │   ├── pinyin/      # input method components
 │   │   └── util/        # UI utils
-│   ├── service/
-│   │   ├── codeService.js    # QR parsing and config
-│   │   └── mqttService.js    # MQTT communication
-│   ├── main.js          # entry
-│   ├── driver.js        # drivers and network init
-│   ├── controller.js    # main control logic
+│   ├── service/         # service layer
+│   │   ├── codeService.js       # QR parsing and config writing
+│   │   ├── mqttService.js       # MQTT communication service
+│   │   └── netService.js        # network service
+│   ├── main.js          # entry point
+│   ├── driver.js        # drivers and network initialization
 │   ├── screen.js        # display management
-│   └── services.js      # service orchestration
-├── resource/            # images/fonts
+│   └── config.json      # runtime configuration
+├── resource/            # resource files (fonts, images)
 ├── dxmodules/           # DX framework modules
-└── src/config.json      # runtime config
+├── app.dxproj           # project configuration file
+├── README.md            # English documentation
+└── README_CN.md         # Chinese documentation
 ```
 
 ## Architecture
