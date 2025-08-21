@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MQTT Device Monitor</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 2rem;
+      }
+
+      .status-bar {
+        background-color: #34495e;
+        color: white;
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .connection-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #27ae60;
+        animation: pulse 2s infinite;
+      }
+
+      .connection-dot.disconnected {
+        background-color: #e74c3c;
+        animation: none;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .device-list {
+        padding: 20px;
+      }
+
+      .device-list h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #ecf0f1;
+        padding-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .device-card {
+        border: 1px solid #ecf0f1;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        padding: 15px;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .device-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .device-card.online {
+        border-left: 4px solid #27ae60;
+        background-color: #f8fff8;
+      }
+
+      .device-card.offline {
+        border-left: 4px solid #e74c3c;
+        background-color: #fff8f8;
+      }
+
+      .device-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .device-info {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .device-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .device-checkbox:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      .device-uuid {
+        font-weight: bold;
+        color: #2c3e50;
+        font-size: 1.1rem;
+      }
+
+      .device-serial {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-top: 2px;
+      }
+
+      .device-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .status-badge.online {
+        background-color: #27ae60;
+        color: white;
+      }
+
+      .status-badge.offline {
+        background-color: #e74c3c;
+        color: white;
+      }
+
+      .device-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #ecf0f1;
+      }
+
+      .detail-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .detail-label {
+        font-size: 0.8rem;
+        color: #7f8c8d;
+        margin-bottom: 2px;
+      }
+
+      .detail-value {
+        font-weight: 500;
+        color: #2c3e50;
+      }
+
+      .no-devices {
+        text-align: center;
+        padding: 40px;
+        color: #7f8c8d;
+      }
+
+      .no-devices i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        display: block;
+      }
+
+      .refresh-button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .refresh-button:hover {
+        background-color: #2980b9;
+      }
+
+      .batch-upgrade-button {
+        background-color: #e67e22;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        margin-left: 10px;
+      }
+
+      .batch-upgrade-button:hover {
+        background-color: #d35400;
+      }
+
+      .batch-upgrade-button:disabled {
+        background-color: #95a5a6;
+        cursor: not-allowed;
+      }
+
+      .select-all-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .select-all-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .select-all-label {
+        font-size: 0.9rem;
+        color: #2c3e50;
+        font-weight: 500;
+      }
+
+      .server-config {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .server-config label {
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      .server-config input {
+        padding: 4px 8px;
+        border: 1px solid #bdc3c7;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        width: 120px;
+      }
+
+      .server-config input:focus {
+        outline: none;
+        border-color: #3498db;
+      }
+
+      .upgrade-button {
+        background-color: #e67e22;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        margin-left: 10px;
+      }
+
+      .upgrade-button:hover {
+        background-color: #d35400;
+      }
+
+      .upgrade-button:disabled {
+        background-color: #95a5a6;
+        cursor: not-allowed;
+      }
+
+      .upgrade-log {
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+      }
+
+      .upgrade-log h3 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+      }
+
+      .log-entry {
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: white;
+        border-radius: 4px;
+        border-left: 3px solid #3498db;
+      }
+
+      .log-timestamp {
+        font-size: 0.8rem;
+        color: #7f8c8d;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>MQTT Device Monitor</h1>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-indicator">
+          <div class="connection-dot" id="connectionDot"></div>
+          <span id="connectionStatus">Connecting...</span>
+        </div>
+        <div class="server-config">
+          <label for="serverIpInput">Server IP:</label>
+          <input
+            type="text"
+            id="serverIpInput"
+            placeholder="192.168.1.100"
+            value="127.0.0.1"
+          />
+        </div>
+        <div>
+          <span>Total Devices: </span>
+          <span id="deviceCount">0</span>
+          <button class="refresh-button" onclick="refreshDeviceList()">
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="device-list">
+        <h2>
+          Device List
+          <div class="select-all-container">
+            <input type="checkbox" class="select-all-checkbox" id="selectAllCheckbox" />
+            <label class="select-all-label" for="selectAllCheckbox">Select All Online</label>
+            <button class="batch-upgrade-button" id="batchUpgradeButton" onclick="sendBatchUpgradeCommand()" disabled>
+              Batch Upgrade (0)
+            </button>
+          </div>
+        </h2>
+        <div id="deviceContainer">
+          <div class="no-devices">
+            <i>📱</i>
+            <p>No devices detected yet. Waiting for device heartbeats...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="upgrade-log">
+        <h3>Upgrade Activity Log</h3>
+        <div id="upgradeLogContainer">
+          <p style="color: #7f8c8d; text-align: center">
+            No upgrade activities yet...
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize Socket.IO connection
+      const socket = io();
+
+      // Store device data
+      let devices = new Map();
+
+      // DOM elements
+      const connectionDot = document.getElementById("connectionDot");
+      const connectionStatus = document.getElementById("connectionStatus");
+      const deviceCount = document.getElementById("deviceCount");
+      const deviceContainer = document.getElementById("deviceContainer");
+      const upgradeLogContainer = document.getElementById(
+        "upgradeLogContainer"
+      );
+      const selectAllCheckbox = document.getElementById("selectAllCheckbox");
+      const batchUpgradeButton = document.getElementById("batchUpgradeButton");
+
+      // Socket connection events
+      socket.on("connect", () => {
+        console.log("Connected to server");
+        connectionDot.classList.remove("disconnected");
+        connectionStatus.textContent = "Connected";
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Disconnected from server");
+        connectionDot.classList.add("disconnected");
+        connectionStatus.textContent = "Disconnected";
+      });
+
+      // Handle initial device list
+      socket.on("initialDeviceList", (deviceList) => {
+        console.log("Received initial device list:", deviceList);
+        devices.clear();
+        deviceList.forEach((device) => {
+          devices.set(device.uuid, device);
+        });
+        updateDeviceDisplay();
+      });
+
+      // Handle device updates
+      socket.on("deviceUpdate", (device) => {
+        console.log("Device update received:", device);
+        devices.set(device.uuid, device);
+        updateDeviceDisplay();
+      });
+
+      // Handle upgrade replies
+      socket.on("upgradeReply", (upgradeData) => {
+        console.log("Upgrade reply received:", upgradeData);
+        addUpgradeLogEntry(upgradeData);
+      });
+
+      // Handle upgrade command result
+      socket.on("upgradeCommandResult", (result) => {
+        console.log("Upgrade command result:", result);
+        if (result.success) {
+          alert(
+            `Upgrade command sent successfully!\nTopic: ${result.topic}\nSerial: ${result.data.serialNo}`
+          );
+        } else {
+          alert(`Failed to send upgrade command: ${result.message}`);
+        }
+      });
+
+      // Handle batch upgrade command result
+      socket.on("batchUpgradeCommandResult", (result) => {
+        console.log("Batch upgrade command result:", result);
+        
+        if (result.success) {
+          alert(
+            `Batch upgrade completed successfully!\nTotal devices: ${result.totalDevices}\nSuccess: ${result.successCount}\nFailed: ${result.failureCount}`
+          );
+        } else {
+          let message = `Batch upgrade completed with errors:\nTotal devices: ${result.totalDevices}\nSuccess: ${result.successCount}\nFailed: ${result.failureCount}`;
+          
+          if (result.failureCount > 0) {
+            const failedDevices = result.results.filter(r => !r.success);
+            message += `\n\nFailed devices:\n${failedDevices.map(d => `${d.uuid}: ${d.error}`).join('\n')}`;
+          }
+          
+          alert(message);
+        }
+        
+        // Add batch upgrade log entry
+        addBatchUpgradeLogEntry(result);
+      });
+
+      // Update device display
+      function updateDeviceDisplay() {
+        const deviceArray = Array.from(devices.values());
+        deviceCount.textContent = deviceArray.length;
+
+        if (deviceArray.length === 0) {
+          deviceContainer.innerHTML = `
+                    <div class="no-devices">
+                        <i>📱</i>
+                        <p>No devices detected yet. Waiting for device heartbeats...</p>
+                    </div>
+                `;
+          return;
+        }
+
+        // Sort devices by last seen time (most recent first)
+        deviceArray.sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen));
+
+        deviceContainer.innerHTML = deviceArray
+          .map(
+            (device) => `
+                <div class="device-card ${device.status}">
+                    <div class="device-header">
+                        <div class="device-info">
+                            <input type="checkbox" class="device-checkbox" value="${device.uuid}" ${device.status === 'offline' ? 'disabled' : ''} />
+                            <div>
+                                <div class="device-uuid">${device.uuid}</div>
+                                <div class="device-serial">Serial: ${
+                                  device.serialNo
+                                }</div>
+                            </div>
+                        </div>
+                        <div class="device-status">
+                            <div class="status-badge ${device.status}">${
+              device.status
+            }</div>
+                            ${
+                              device.status === "online"
+                                ? `<button class="upgrade-button" onclick="sendUpgradeCommand('${device.uuid}')">Upgrade</button>`
+                                : ""
+                            }
+                        </div>
+                    </div>
+                    <div class="device-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Last Heartbeat</span>
+                            <span class="detail-value">${formatTimestamp(
+                              device.lastHeartbeat
+                            )}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Last Seen</span>
+                            <span class="detail-value">${formatLastSeen(
+                              device.lastSeen
+                            )}</span>
+                        </div>
+                    </div>
+                </div>
+            `
+          )
+          .join("");
+
+        // Re-attach event listeners for checkboxes
+        attachCheckboxListeners();
+        updateBatchUpgradeButton();
+      }
+
+      // Add upgrade log entry
+      function addUpgradeLogEntry(upgradeData) {
+        const logEntry = document.createElement("div");
+        logEntry.className = "log-entry";
+        logEntry.innerHTML = `
+                <div><strong>Device:</strong> ${upgradeData.uuid} (${
+          upgradeData.serialNo
+        })</div>
+                <div><strong>Data:</strong> ${JSON.stringify(
+                  upgradeData.data
+                )}</div>
+                <div class="log-timestamp">Received: ${new Date(
+                  upgradeData.receivedAt
+                ).toLocaleString()}</div>
+            `;
+
+        // Remove "no activities" message if present
+        if (
+          upgradeLogContainer.children.length === 1 &&
+          upgradeLogContainer.children[0].tagName === "P"
+        ) {
+          upgradeLogContainer.innerHTML = "";
+        }
+
+        // Add new entry at the top
+        upgradeLogContainer.insertBefore(
+          logEntry,
+          upgradeLogContainer.firstChild
+        );
+
+        // Keep only last 10 entries
+        while (upgradeLogContainer.children.length > 10) {
+          upgradeLogContainer.removeChild(upgradeLogContainer.lastChild);
+        }
+      }
+
+      // Add batch upgrade log entry
+      function addBatchUpgradeLogEntry(result) {
+        const logEntry = document.createElement("div");
+        logEntry.className = "log-entry";
+        
+        const statusClass = result.success ? "success" : "warning";
+        const statusText = result.success ? "SUCCESS" : "PARTIAL SUCCESS";
+        
+        let detailsHtml = `<div><strong>Batch Upgrade ${statusText}</strong></div>`;
+        detailsHtml += `<div><strong>Total Devices:</strong> ${result.totalDevices}</div>`;
+        detailsHtml += `<div><strong>Success:</strong> ${result.successCount}</div>`;
+        detailsHtml += `<div><strong>Failed:</strong> ${result.failureCount}</div>`;
+        
+        if (result.failureCount > 0) {
+          const failedDevices = result.results.filter(r => !r.success);
+          detailsHtml += `<div><strong>Failed Devices:</strong> ${failedDevices.map(d => d.uuid).join(', ')}</div>`;
+        }
+        
+        logEntry.innerHTML = `
+                ${detailsHtml}
+                <div class="log-timestamp">Completed: ${new Date().toLocaleString()}</div>
+            `;
+
+        // Remove "no activities" message if present
+        if (
+          upgradeLogContainer.children.length === 1 &&
+          upgradeLogContainer.children[0].tagName === "P"
+        ) {
+          upgradeLogContainer.innerHTML = "";
+        }
+
+        // Add new entry at the top
+        upgradeLogContainer.insertBefore(
+          logEntry,
+          upgradeLogContainer.firstChild
+        );
+
+        // Keep only last 10 entries
+        while (upgradeLogContainer.children.length > 10) {
+          upgradeLogContainer.removeChild(upgradeLogContainer.lastChild);
+        }
+      }
+
+      // Format timestamp
+      function formatTimestamp(timestamp) {
+        if (!timestamp) return "N/A";
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleString();
+      }
+
+      // Format last seen time
+      function formatLastSeen(lastSeen) {
+        if (!lastSeen) return "N/A";
+        const date = new Date(lastSeen);
+        const now = new Date();
+        const diffSeconds = Math.floor((now - date) / 1000);
+
+        if (diffSeconds < 60) return `${diffSeconds} seconds ago`;
+        if (diffSeconds < 3600)
+          return `${Math.floor(diffSeconds / 60)} minutes ago`;
+        if (diffSeconds < 86400)
+          return `${Math.floor(diffSeconds / 3600)} hours ago`;
+        return date.toLocaleString();
+      }
+
+      // Refresh device list
+      function refreshDeviceList() {
+        socket.emit("requestDeviceList");
+      }
+
+      // Attach event listeners for checkboxes
+      function attachCheckboxListeners() {
+        // Select all checkbox
+        selectAllCheckbox.addEventListener('change', function() {
+          const deviceCheckboxes = document.querySelectorAll('.device-checkbox:not(:disabled)');
+          deviceCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+          });
+          updateBatchUpgradeButton();
+        });
+
+        // Individual device checkboxes
+        const deviceCheckboxes = document.querySelectorAll('.device-checkbox');
+        deviceCheckboxes.forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+            updateBatchUpgradeButton();
+            updateSelectAllCheckbox();
+          });
+        });
+      }
+
+      // Update batch upgrade button state
+      function updateBatchUpgradeButton() {
+        const selectedDevices = getSelectedDevices();
+        const count = selectedDevices.length;
+        
+        batchUpgradeButton.disabled = count === 0;
+        batchUpgradeButton.textContent = `Batch Upgrade (${count})`;
+      }
+
+      // Update select all checkbox state
+      function updateSelectAllCheckbox() {
+        const deviceCheckboxes = document.querySelectorAll('.device-checkbox:not(:disabled)');
+        const checkedCheckboxes = document.querySelectorAll('.device-checkbox:not(:disabled):checked');
+        
+        if (deviceCheckboxes.length === 0) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes.length === 0) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+        } else if (checkedCheckboxes.length === deviceCheckboxes.length) {
+          selectAllCheckbox.checked = true;
+          selectAllCheckbox.indeterminate = false;
+        } else {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = true;
+        }
+      }
+
+      // Get selected device UUIDs
+      function getSelectedDevices() {
+        const selectedCheckboxes = document.querySelectorAll('.device-checkbox:checked');
+        return Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+      }
+
+      // Send upgrade command to specific device
+      function sendUpgradeCommand(uuid) {
+        const serverIpInput = document.getElementById("serverIpInput");
+        const serverIp = serverIpInput.value.trim();
+
+        if (!serverIp) {
+          alert("Please enter server IP address");
+          serverIpInput.focus();
+          return;
+        }
+
+        // Validate IP format (basic validation)
+        const ipPattern =
+          /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        if (
+          !ipPattern.test(serverIp) &&
+          serverIp !== "localhost" &&
+          serverIp !== "127.0.0.1"
+        ) {
+          alert("Please enter a valid IP address (e.g., 192.168.1.100)");
+          serverIpInput.focus();
+          return;
+        }
+
+        const confirmMessage = `Send upgrade command to device ${uuid}?\nServer: http://${serverIp}:3000/ota/upgrade.dpk`;
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+
+        console.log(
+          `Sending upgrade command to device: ${uuid}, server IP: ${serverIp}`
+        );
+
+        // Send upgrade command via socket
+        socket.emit("sendUpgradeCommand", {
+          uuid: uuid,
+          serverIp: serverIp,
+        });
+      }
+
+      // Send batch upgrade command to multiple devices
+      function sendBatchUpgradeCommand() {
+        const selectedDevices = getSelectedDevices();
+        
+        if (selectedDevices.length === 0) {
+          alert("Please select at least one device for batch upgrade");
+          return;
+        }
+
+        const serverIpInput = document.getElementById("serverIpInput");
+        const serverIp = serverIpInput.value.trim();
+
+        if (!serverIp) {
+          alert("Please enter server IP address");
+          serverIpInput.focus();
+          return;
+        }
+
+        // Validate IP format (basic validation)
+        const ipPattern =
+          /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        if (
+          !ipPattern.test(serverIp) &&
+          serverIp !== "localhost" &&
+          serverIp !== "127.0.0.1"
+        ) {
+          alert("Please enter a valid IP address (e.g., 192.168.1.100)");
+          serverIpInput.focus();
+          return;
+        }
+
+        const confirmMessage = `Send upgrade command to ${selectedDevices.length} selected devices?\nServer: http://${serverIp}:3000/ota/upgrade.dpk\n\nSelected devices:\n${selectedDevices.join('\n')}`;
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+
+        console.log(
+          `Sending batch upgrade command to ${selectedDevices.length} devices: ${selectedDevices.join(', ')}, server IP: ${serverIp}`
+        );
+
+        // Send batch upgrade command via socket
+        socket.emit("sendBatchUpgradeCommand", {
+          uuids: selectedDevices,
+          serverIp: serverIp,
+        });
+      }
+
+      // Auto refresh every 30 seconds
+      setInterval(() => {
+        updateDeviceDisplay(); // Refresh the display to update "last seen" times
+      }, 30000);
+    </script>
+  </body>
+</html>
