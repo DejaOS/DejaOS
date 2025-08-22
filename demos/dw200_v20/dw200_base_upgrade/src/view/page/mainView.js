@@ -53,7 +53,7 @@ mainView.init = function () {
     networkSettingBox.obj.lvObjSetStylePadGap(8, dxui.Utils.ENUM._LV_STYLE_STATE_CMP_SAME)
    
     mainView.networkSettingBox = networkSettingBox
-    log.info("1111")
+    
     mainView.netInfo = [
         {
             title: 'type',

@@ -1,7 +1,7 @@
 // MQTT Configuration
 const mqttConfig = {
     // MQTT broker connection settings
-    mqttAddr: "tcp://101.200.139.97:51883",
+    mqttAddr: "tcp://123.57.175.193:61613",
     clientId: "AABBCCDDEEFF",
     username: "admin",
     password: "password",

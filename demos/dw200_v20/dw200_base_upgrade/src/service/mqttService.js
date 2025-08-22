@@ -116,8 +116,13 @@ function handleMsg(topic, message) {
         logger.info('升级消息:' + JSON.stringify(message))
         let data = JSON.parse(message)
         if(data.url && data.md5){
+            //ui显示升级中
+            bus.fire('show_upgrade_dialog', { url: data.url, md5: data.md5 })
+            
             let httpOpts = {verifyPeer: 0, verifyHost : 0}
             ota.updateHttp(data.url, data.md5, 60, null, httpOpts)
+            //隐藏升级对话框
+            bus.fire('hide_upgrade_dialog')
             //发送升级成功消息
             bus.fire("mqtt_publish", { topic: "base_upgrade/v1/cmd/upgrade_reply", payload: JSON.stringify({ uuid: common.getSn(), timestamp: Math.floor(new Date().getTime() / 1000)})})
             common.asyncReboot(2)
@@ -133,12 +138,5 @@ std.setInterval(() => {
         logger.error(`loop error: ${e}`)
     }
 }, 100)
-
-
-
-
-
-
-
 
 export default mqttService
