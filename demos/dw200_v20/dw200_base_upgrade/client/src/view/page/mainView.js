@@ -12,10 +12,9 @@ mainView.init = function () {
     mainView.main.scroll(false)
     mainView.main.setPos(480, 100)
     mainView.main.setSize(480, 360)
-    // 使用更现代的深蓝色背景
     mainView.main.bgColor(0x1e40af)
 
-    // 美化图标布局 - 增加间距和位置
+    // Beautify icon layout - increase spacing and position
     const wifiItemImg = dxui.Image.build('wifiIcon', mainView.main)
     wifiItemImg.align(dxui.Utils.ALIGN.TOP_LEFT, 60, 0)
     wifiItemImg.source('/app/code/resource/image/wifi.png')
@@ -37,12 +36,12 @@ mainView.init = function () {
     mqttShow.hide()
     mainView.mqttShow = mqttShow
 
-    // 美化网络设置容器 - 使用现代化卡片样式
+    // Beautify network setting container - use modern card style
     const networkSettingBox = dxui.View.build('networkSettingBox', mainView.main)
     viewUtils._clearStyle(networkSettingBox)
 
     networkSettingBox.setSize(460, 240)
-    // 使用白色背景和蓝色边框的卡片样式
+    // Use white background and blue border card style
     networkSettingBox.bgColor(0xffffff)
     networkSettingBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 30)
     networkSettingBox.borderWidth(2)
@@ -130,7 +129,6 @@ mainView.init = function () {
         viewUtils._clearStyle(networkSettingItem)
         item.obj = networkSettingItem
         networkSettingItem.setSize(440, 45)
-        // 使用现代化的卡片样式
         networkSettingItem.bgColor(0xf8fafc)
         networkSettingItem.borderWidth(1)
         networkSettingItem.setBorderColor(0xe2e8f0)
@@ -141,13 +139,14 @@ mainView.init = function () {
         title.align(dxui.Utils.ALIGN.LEFT_MID, 15, 0)
         title.dataI18n = item.title
         title.text(item.title)
-        title.textColor(0x374151) // 深灰色文字
+        // Dark gray text
+        title.textColor(0x374151) 
         
         if (item.type === 'input') {
             const input = viewUtils.input(mainView,networkSettingItem, item.title + 'input', undefined, undefined, 'mainView.input')
             input.align(dxui.Utils.ALIGN.RIGHT_MID, -15, 0)
             input.setSize(200, 35)
-            // 美化输入框样式
+            // Beautify input box style
             input.bgColor(0xffffff)
             input.borderWidth(1)
             input.setBorderColor(0xd1d5db)
@@ -169,7 +168,7 @@ mainView.init = function () {
             dropdown.getList().textFont(viewUtils.font(16))
             dropdown.setSymbol('/app/code/resource/image/down.png')
             dropdown.setOptions(item.value)
-            // 美化下拉框样式
+            // Beautify dropdown style
             dropdown.bgColor(0xffffff)
             dropdown.borderWidth(1)
             dropdown.setBorderColor(0xd1d5db)
@@ -181,14 +180,15 @@ mainView.init = function () {
             label.textFont(viewUtils.font(16))
             label.align(dxui.Utils.ALIGN.RIGHT_MID, -15, 0)
             label.text(item.value)
-            label.textColor(0x6b7280) // 中灰色文字
+            // Medium gray text
+            label.textColor(0x6b7280) 
             item.label = label
         }
 
     })
 
 
-    // 从JSON配置文件读取配置数据
+    // Read configuration data from JSON config file
     let type = 1
     let dhcp = 1
     let ssid = ""
@@ -204,7 +204,7 @@ mainView.init = function () {
     try {
         if (std.exist('/app/code/src/config.json')) {
             const configData = JSON.parse(std.loadFile('/app/code/src/config.json'))
-            log.info("[mainView] 读取配置文件:", configData)
+            log.info("[mainView] Reading config file:", configData)
             type = configData.type || 1
             dhcp = configData.dhcp || 2
             ssid = configData.ssid || ""
@@ -218,7 +218,7 @@ mainView.init = function () {
             dns = configData.dns || ""
         }
     } catch (error) {
-        log.error("[mainView] 读取配置文件失败:", error)
+        log.error("[mainView] Failed to read config file:", error)
     }
     
     mainView.netInfo[0].dropdown.setSelected(type - 1)
@@ -233,7 +233,7 @@ mainView.init = function () {
     mainView.netInfo[9].input.text(gateway)
     mainView.netInfo[10].input.text(dns)
     
-    // 添加type下拉框变化事件监听
+    // Add type dropdown change event listener
     mainView.netInfo[0].dropdown.on(dxui.Utils.EVENT.VALUE_CHANGED, () => {
         const selectedType = mainView.netInfo[0].dropdown.getSelected()
         const wifiNameItem = mainView.netInfo[1].obj
@@ -248,7 +248,7 @@ mainView.init = function () {
         }
     })
     
-    // 添加dhcp下拉框变化事件监听
+    // Add dhcp dropdown change event listener
     mainView.netInfo[3].dropdown.on(dxui.Utils.EVENT.VALUE_CHANGED, () => {
         const selectedDhcp = mainView.netInfo[3].dropdown.getSelected()
         const ipItem = mainView.netInfo[7].obj
@@ -256,12 +256,12 @@ mainView.init = function () {
         const gatewayItem = mainView.netInfo[9].obj
         const dnsItem = mainView.netInfo[10].obj
         
-        if (selectedDhcp === 1) { // yes (DHCP自动获取)
+        if (selectedDhcp === 1) { // yes (DHCP auto get)
             ipItem.hide()
             maskItem.hide()
             gatewayItem.hide()
             dnsItem.hide()
-        } else { // no (静态IP)
+        } else { // no (Static IP)
             ipItem.show()
             maskItem.show()
             gatewayItem.show()
@@ -269,7 +269,7 @@ mainView.init = function () {
         }
     })
     
-    // 初始化时根据当前选择设置显示状态
+    // Set display state based on current selection during initialization
     const currentType = mainView.netInfo[0].dropdown.getSelected()
     const wifiNameItem = mainView.netInfo[1].obj
     const wifiPwdItem = mainView.netInfo[2].obj
@@ -282,19 +282,19 @@ mainView.init = function () {
         wifiPwdItem.show()
     }
     
-    // 初始化时根据dhcp选择设置显示状态
+    // Set display state based on dhcp selection during initialization
     const currentDhcp = mainView.netInfo[3].dropdown.getSelected()
     const ipItem = mainView.netInfo[7].obj
     const maskItem = mainView.netInfo[8].obj
     const gatewayItem = mainView.netInfo[9].obj
     const dnsItem = mainView.netInfo[10].obj
     
-    if (currentDhcp === 1) { // yes (DHCP自动获取)
+    if (currentDhcp === 1) { // yes (DHCP auto get)
         ipItem.hide()
         maskItem.hide()
         gatewayItem.hide()
         dnsItem.hide()
-    } else { // no (静态IP)
+    } else { // no (Static IP)
         ipItem.show()
         maskItem.show()
         gatewayItem.show()
@@ -322,9 +322,9 @@ mainView.init = function () {
         std.saveFile("/app/code/src/config.json", JSON.stringify(saveConfigData))
         common.asyncReboot(2)
 
-    }, '0x10b981') // 使用绿色主题
+    }, '0x10b981') // Use green theme
     saveBtn.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, 0)
-    // 调整按钮大小
+    // Adjust button size
     saveBtn.setSize(120, 40)
 
 }

@@ -15,7 +15,6 @@ import screen from './screen.js'
 
     bus.newWorker('codeService', '/app/code/src/service/codeService.js')
 
-    //打印一下config内容
     let config = std.loadFile('/app/code/src/config.json')
     log.info("[main.js] config:", config)
 

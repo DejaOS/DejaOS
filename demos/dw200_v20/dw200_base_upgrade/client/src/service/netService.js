@@ -19,10 +19,10 @@ function netInit() {
     let netmask = ""
     let dns = ""
 
-    // 从JSON配置文件读取网络配置
+    // Read network configuration from JSON config file
     try {
         if (std.exist('/app/code/src/config.json')) {
-            logger.info("[driver.net] 从配置文件读取网络配置" + std.loadFile('/app/code/src/config.json'))
+            logger.info("[driver.net] Reading network configuration from config file" + std.loadFile('/app/code/src/config.json'))
             const configData = JSON.parse(std.loadFile('/app/code/src/config.json'))
             type = configData.type || 1
             dhcp = configData.dhcp || 2
@@ -32,10 +32,10 @@ function netInit() {
             gateway = configData.gateway || ""
             netmask = configData.netmask || ""
             dns = configData.dns || ""
-            logger.info("[driver.net] 从配置文件读取网络配置:", { type, dhcp, ssid, psk })
+            logger.info("[driver.net] Network configuration read from config file:", { type, dhcp, ssid, psk })
         }
     } catch (error) {
-        logger.error("[driver.net] 读取配置文件失败:", error)
+        logger.error("[driver.net] Failed to read config file:", error)
     }
 
     logger.info("[driver.net] init with options:", { type, dhcp, ssid, psk, ip, gateway, netmask, dns })
@@ -43,7 +43,7 @@ function netInit() {
         net.connectWifiWithDHCP(ssid, psk);
     } else if (type == 1) {
         if (dhcp == 2) {
-            //以太网动态
+            // Ethernet DHCP
             net.connectEthWithDHCP()
         } else {
             let netOption = {
@@ -52,7 +52,7 @@ function netInit() {
                 netmask: netmask,
                 dns: dns
             }
-            //以太网静态
+            // Ethernet static
             net.connectEth(netOption)
         }
     }

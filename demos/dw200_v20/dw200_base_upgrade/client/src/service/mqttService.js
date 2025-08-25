@@ -10,42 +10,41 @@ const mqttService = {}
 initMqtt();
 
 function initMqtt() {
-    //判断是否配置了mqtt地址
     let mqttAddr = ""
-    // 从JSON配置文件读取MQTT配置
+    // Read MQTT configuration from JSON config file
     try {
         if (std.exist('/app/code/src/config.json')) {
             const configData = JSON.parse(std.loadFile('/app/code/src/config.json'))
             mqttAddr = configData.mqttAddr || ""
-            logger.info("[driver.mqtt] 从配置文件读取MQTT配置:", { mqttAddr })
+            logger.info("[driver.mqtt] MQTT configuration read from config file:", { mqttAddr })
         }
     } catch (error) {
-        logger.error("[driver.mqtt] 读取配置文件失败:", error)
+        logger.error("[driver.mqtt] Failed to read config file:", error)
     }
 
-    // 如果mqttAddr为空，使用默认地址
+    // If mqttAddr is empty, use default address
     if (!mqttAddr || mqttAddr.trim() === "") {
         mqttAddr = "mqtt://123.57.175.193:61613"
-        logger.info("[driver.mqtt] 使用默认MQTT地址:", mqttAddr)
+        logger.info("[driver.mqtt] Using default MQTT address:", mqttAddr)
     }
 
-    logger.info("[driver.mqtt] 初始化MQTT客户端:", 'tcp://' + mqttAddr, common.getSn())
+    logger.info("[driver.mqtt] Initializing MQTT client:", 'tcp://' + mqttAddr, common.getSn())
     mqttclient.init('tcp://' + mqttAddr, common.getSn())
 
 }
 
-//订阅base_upgrade/v1/cmd/${common.getSn()}/#
+// Subscribe to base_upgrade/v1/cmd/${common.getSn()}/#
 mqttclient.setCallbacks({
     onConnectSuccess: () => {
         logger.info("MQTT connected");
         mqttclient.subscribe(`base_upgrade/v1/cmd/${common.getSn()}/upgrade`);
-        //连接成功后，发送连接成功事件,界面显示图标
-        logger.info("[driver.mqtt] 发送连接成功事件,界面显示图标")
+        // After connection success, send connection success event, UI shows icon
+        logger.info("[driver.mqtt] Sending connection success event, UI shows icon")
         bus.fire('mqtt_connected', 0)
     },
     onMessage: (topic, message, qos, retained) => {
         logger.info(`MQTT message received: topic=${topic}, message=${message}`);
-        //处理消息
+        // Handle message
         handleMsg(topic, message)
     },
     onDelivery: (messageId) => {
@@ -54,7 +53,7 @@ mqttclient.setCallbacks({
     },
     onConnectionLost: (reason) => {
         logger.info(`MQTT connection lost: reason=${reason}`);
-        //连接失败后，发送连接失败事件,界面隐藏图标
+        // After connection failure, send connection failure event, UI hides icon
         bus.fire('mqtt_connected', 1)
         autoconnect()
     }
@@ -81,13 +80,13 @@ function connectMqtt() {
             const configData = JSON.parse(std.loadFile('/app/code/src/config.json'))
             username = configData.username || ""
             password = configData.password || ""
-            logger.info("[driver.mqtt] 从配置文件读取MQTT配置:", { username, password })
+            logger.info("[driver.mqtt] MQTT configuration read from config file:", { username, password })
         }
     } catch (error) {
-        logger.error("[driver.mqtt] 读取配置文件失败:", error)
+        logger.error("[driver.mqtt] Failed to read config file:", error)
     }
 
-    //设置连接参数
+    // Set connection parameters
     let options = {
         username: username,
         password: password,
@@ -111,19 +110,19 @@ function autoconnect() {
 
 function handleMsg(topic, message) {
     logger.info(`MQTT handleMsg: topic=${topic}, message=${message}`)
-    //判断topic是否包含upgrade
+    // Check if topic contains upgrade
     if(topic.includes("upgrade")){
-        logger.info('升级消息:' + JSON.stringify(message))
+        logger.info('Upgrade message:' + JSON.stringify(message))
         let data = JSON.parse(message)
         if(data.url && data.md5){
-            //ui显示升级中
+            // UI shows upgrading
             bus.fire('show_upgrade_dialog', { url: data.url, md5: data.md5 })
             
             let httpOpts = {verifyPeer: 0, verifyHost : 0}
             ota.updateHttp(data.url, data.md5, 60, null, httpOpts)
-            //隐藏升级对话框
+            // Hide upgrade dialog
             bus.fire('hide_upgrade_dialog')
-            //发送升级成功消息
+            // Send upgrade success message
             bus.fire("mqtt_publish", { topic: "base_upgrade/v1/cmd/upgrade_reply", payload: JSON.stringify({ uuid: common.getSn(), timestamp: Math.floor(new Date().getTime() / 1000)})})
             common.asyncReboot(2)
         }
