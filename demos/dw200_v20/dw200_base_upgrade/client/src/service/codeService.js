@@ -82,9 +82,7 @@ function buildConfigData(json) {
     if (json.psk !== undefined) {
         configData.psk = json.psk
     }
-    log.info("[codeService] buildConfigData: ip_mode ", json.ip_mode)
     if (json.ip_mode !== undefined) {
-        log.info("[codeService] buildConfigData: dhcp ", json.ip_mode == 0 ? 2 : 1)
         configData.dhcp = json.ip_mode == 0 ? 2 : 1
     }
     if (json.mqttAddr !== undefined) {

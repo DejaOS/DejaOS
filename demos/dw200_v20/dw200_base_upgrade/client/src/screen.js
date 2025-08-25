@@ -5,7 +5,6 @@ import logger from '../dxmodules/dxLogger.js'
 import pinyin from './view/pinyin/pinyin.js'
 import std from '../dxmodules/dxStd.js'
 import common from '../dxmodules/dxCommon.js'
-import dxntp from '../dxmodules/dxNtp.js'
 import ntp from '../dxmodules/dxNtp.js'
 
 const screen = {}

@@ -152,20 +152,30 @@ Topics between device and platform:
    node index.js        # Start server
    ```
 2. **MQTT Configuration**: Configure MQTT server address and authentication
-3. **Firmware Preparation**: Place the upgrade firmware file named `upgrade.dpk` in the `server/` directory
+3. **Firmware Preparation**: Place the upgrade firmware file in any accessible location, filename can be customized
 4. **Device Management**: Add and manage devices that need upgrading
 
 ### Server Configuration Details
 - **Port Configuration**: Default listens on port 3000, can be modified via environment variable `PORT`
 - **MQTT Connection**: Configure MQTT server information in `server/mqttConfig.js`
-- **Firmware Storage**: Firmware files are stored directly in `server/` directory with filename `upgrade.dpk`
+- **Firmware Storage**: Firmware files can be stored in any location, supporting local storage or remote servers
+  - **Local Storage**: Place in `server/` directory, filename can be customized
+  - **Remote Storage**: Place on any HTTP-accessible server, accessed via Download IP and Download Path configuration
+- **Auto IP Detection**: Server automatically detects and displays local IP address for device firmware download
+- **Download Path Configuration**: Supports custom firmware download path, as long as Download IP and Download Path can correctly access the firmware file
+- **Web Interface Configuration**:
+  - **Download IP**: Shows current server IP address, can be manually modified to any firmware server address
+  - **Download Path**: Firmware download path, format is `/ota/filename`, e.g., `/ota/upgrade.dpk`
 - **Logging**: Log files are saved in `server/logs/` directory
 
 ### Upgrade Process
 1. **Device Connection**: Devices send heartbeat via MQTT, server receives and displays on Web interface
-2. **Device Selection**: Select target devices for upgrade on Web interface
-3. **Send Upgrade Command**: Send upgrade commands to selected devices
-4. **Monitor Progress**: View device upgrade status and result feedback in real-time
+2. **Server Configuration**: Configure Download IP and Download Path in Web interface
+   - **Download IP**: Server automatically detects local IP, can also be manually modified to any firmware server address
+   - **Download Path**: Firmware download path, format is `/ota/filename`, e.g., `/ota/upgrade.dpk`
+3. **Device Selection**: Select target devices for upgrade on Web interface
+4. **Send Upgrade Command**: Send upgrade commands to selected devices (including configured IP and path)
+5. **Monitor Progress**: View device upgrade status and result feedback in real-time
 
 ### Batch Upgrade
 - Support grouping by device type, region, version, etc.

@@ -279,6 +279,7 @@
         border-radius: 4px;
         font-size: 0.9rem;
         width: 120px;
+        margin-right: 10px;
       }
 
       .server-config input:focus {
@@ -344,12 +345,19 @@
           <span id="connectionStatus">Connecting...</span>
         </div>
         <div class="server-config">
-          <label for="serverIpInput">Server IP:</label>
+          <label for="serverIpInput">Download IP:</label>
           <input
             type="text"
             id="serverIpInput"
             placeholder="192.168.1.100"
             value="127.0.0.1"
+          />
+          <label for="downloadPathInput">Download Path:</label>
+          <input
+            type="text"
+            id="downloadPathInput"
+            placeholder="/ota/upgrade.dpk"
+            value="/ota/upgrade.dpk"
           />
         </div>
         <div>
@@ -396,6 +404,26 @@
 
       // Store device data
       let devices = new Map();
+
+      // Function to get download IP address
+      async function getServerIP() {
+          try {
+              const response = await fetch('/api/server-ip');
+              const data = await response.json();
+              return data.ip;
+          } catch (error) {
+              console.error('Failed to get download IP:', error);
+              return '127.0.0.1'; // Fallback to localhost
+          }
+      }
+
+      // Function to initialize download IP
+      async function initializeServerIP() {
+          const serverIpInput = document.getElementById("serverIpInput");
+          const localIP = await getServerIP();
+          serverIpInput.value = localIP;
+          console.log('Download IP initialized to:', localIP);
+      }
 
       // DOM elements
       const connectionDot = document.getElementById("connectionDot");
@@ -711,11 +739,19 @@
       // Send upgrade command to specific device
       function sendUpgradeCommand(uuid) {
         const serverIpInput = document.getElementById("serverIpInput");
+        const downloadPathInput = document.getElementById("downloadPathInput");
         const serverIp = serverIpInput.value.trim();
+        const downloadPath = downloadPathInput.value.trim();
 
         if (!serverIp) {
-          alert("Please enter server IP address");
+          alert("Please enter download IP address");
           serverIpInput.focus();
+          return;
+        }
+
+        if (!downloadPath) {
+          alert("Please enter download path");
+          downloadPathInput.focus();
           return;
         }
 
@@ -727,24 +763,25 @@
           serverIp !== "localhost" &&
           serverIp !== "127.0.0.1"
         ) {
-          alert("Please enter a valid IP address (e.g., 192.168.1.100)");
+          alert("Please enter a valid download IP address (e.g., 192.168.1.100)");
           serverIpInput.focus();
           return;
         }
 
-        const confirmMessage = `Send upgrade command to device ${uuid}?\nServer: http://${serverIp}:3000/ota/upgrade.dpk`;
+        const confirmMessage = `Send upgrade command to device ${uuid}?\nServer: http://${serverIp}:3000${downloadPath}`;
         if (!confirm(confirmMessage)) {
           return;
         }
 
         console.log(
-          `Sending upgrade command to device: ${uuid}, server IP: ${serverIp}`
+          `Sending upgrade command to device: ${uuid}, download IP: ${serverIp}, download path: ${downloadPath}`
         );
 
         // Send upgrade command via socket
         socket.emit("sendUpgradeCommand", {
           uuid: uuid,
           serverIp: serverIp,
+          downloadPath: downloadPath,
         });
       }
 
@@ -758,11 +795,19 @@
         }
 
         const serverIpInput = document.getElementById("serverIpInput");
+        const downloadPathInput = document.getElementById("downloadPathInput");
         const serverIp = serverIpInput.value.trim();
+        const downloadPath = downloadPathInput.value.trim();
 
         if (!serverIp) {
-          alert("Please enter server IP address");
+          alert("Please enter download IP address");
           serverIpInput.focus();
+          return;
+        }
+
+        if (!downloadPath) {
+          alert("Please enter download path");
+          downloadPathInput.focus();
           return;
         }
 
@@ -774,26 +819,32 @@
           serverIp !== "localhost" &&
           serverIp !== "127.0.0.1"
         ) {
-          alert("Please enter a valid IP address (e.g., 192.168.1.100)");
+          alert("Please enter a valid download IP address (e.g., 192.168.1.100)");
           serverIpInput.focus();
           return;
         }
 
-        const confirmMessage = `Send upgrade command to ${selectedDevices.length} selected devices?\nServer: http://${serverIp}:3000/ota/upgrade.dpk\n\nSelected devices:\n${selectedDevices.join('\n')}`;
+        const confirmMessage = `Send upgrade command to ${selectedDevices.length} selected devices?\nServer: http://${serverIp}:3000${downloadPath}\n\nSelected devices:\n${selectedDevices.join('\n')}`;
         if (!confirm(confirmMessage)) {
           return;
         }
 
         console.log(
-          `Sending batch upgrade command to ${selectedDevices.length} devices: ${selectedDevices.join(', ')}, server IP: ${serverIp}`
+          `Sending batch upgrade command to ${selectedDevices.length} devices: ${selectedDevices.join(', ')}, download IP: ${serverIp}, download path: ${downloadPath}`
         );
 
         // Send batch upgrade command via socket
         socket.emit("sendBatchUpgradeCommand", {
           uuids: selectedDevices,
           serverIp: serverIp,
+          downloadPath: downloadPath,
         });
       }
+
+      // Initialize download IP when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+          initializeServerIP();
+      });
 
       // Auto refresh every 30 seconds
       setInterval(() => {

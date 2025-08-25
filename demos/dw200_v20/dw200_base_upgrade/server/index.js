@@ -5,6 +5,7 @@ const mqtt = require('mqtt');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const os = require('os');
 const mqttConfig = require('./mqttConfig');
 
 // Initialize Express app and create HTTP server
@@ -19,23 +20,24 @@ const deviceStatus = new Map();
 let upgradeMD5 = null;
 
 // Function to calculate MD5 hash of upgrade file
-function calculateUpgradeMD5() {
-    const upgradePath = path.join(__dirname, 'upgrade.dpk');
+function calculateUpgradeMD5(filename = 'upgrade.dpk') {
+    const upgradePath = path.join(__dirname, filename);
 
     try {
         if (fs.existsSync(upgradePath)) {
             const fileBuffer = fs.readFileSync(upgradePath);
             const hashSum = crypto.createHash('md5');
             hashSum.update(fileBuffer);
-            upgradeMD5 = hashSum.digest('hex');
-            console.log(`Upgrade file MD5 calculated: ${upgradeMD5}`);
+            const md5 = hashSum.digest('hex');
+            console.log(`Upgrade file ${filename} MD5 calculated: ${md5}`);
+            return md5;
         } else {
-            console.warn('upgrade.dpk file not found, MD5 calculation skipped');
-            upgradeMD5 = null;
+            console.warn(`${filename} file not found, MD5 calculation skipped`);
+            return null;
         }
     } catch (error) {
-        console.error('Error calculating upgrade file MD5:', error);
-        upgradeMD5 = null;
+        console.error(`Error calculating upgrade file ${filename} MD5:`, error);
+        return null;
     }
 }
 
@@ -44,8 +46,26 @@ function generateRandomSerial() {
     return crypto.randomBytes(8).toString('hex').toUpperCase();
 }
 
-// Calculate upgrade file MD5 on startup
-calculateUpgradeMD5();
+// Function to get local IP address
+function getLocalIPAddress() {
+    const interfaces = os.networkInterfaces();
+    
+    // Look for the first non-internal IPv4 address
+    for (const interfaceName in interfaces) {
+        const interface = interfaces[interfaceName];
+        for (const alias of interface) {
+            // Skip internal (loopback) and non-IPv4 addresses
+            if (alias.family === 'IPv4' && !alias.internal) {
+                return alias.address;
+            }
+        }
+    }
+    
+    // Fallback to localhost if no external IP found
+    return '127.0.0.1';
+}
+
+// Note: MD5 is now calculated dynamically based on the download path
 
 // Serve static files from current directory
 app.use(express.static(__dirname));
@@ -55,37 +75,54 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Route to download upgrade.dpk file
-app.get('/ota/upgrade.dpk', (req, res) => {
-    const filePath = path.join(__dirname, 'upgrade.dpk');
+// Route to get server IP address
+app.get('/api/server-ip', (req, res) => {
+    const localIP = getLocalIPAddress();
+    res.json({ ip: localIP });
+});
 
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-        console.error('upgrade.dpk file not found');
-        return res.status(404).json({
-            error: 'Upgrade file not found',
-            message: 'upgrade.dpk file does not exist in the server directory'
+// Route to download upgrade files dynamically
+app.get('/ota/*', (req, res) => {
+    // Extract the filename from the URL path
+    const urlPath = req.path;
+    const filename = urlPath.replace('/ota/', '');
+    
+    if (!filename) {
+        return res.status(400).json({
+            error: 'Invalid file path',
+            message: 'No filename specified in the URL'
         });
     }
 
-    console.log(`Serving upgrade.dpk file download request from ${req.ip}`);
+    const filePath = path.join(__dirname, filename);
+
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+        console.error(`File not found: ${filename}`);
+        return res.status(404).json({
+            error: 'Upgrade file not found',
+            message: `${filename} does not exist in the server directory`
+        });
+    }
+
+    console.log(`Serving ${filename} file download request from ${req.ip}`);
 
     // Set appropriate headers for file download
     res.setHeader('Content-Type', 'application/octet-stream');
-    res.setHeader('Content-Disposition', 'attachment; filename="upgrade.dpk"');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
     // Send file for download
-    res.download(filePath, 'upgrade.dpk', (err) => {
+    res.download(filePath, filename, (err) => {
         if (err) {
-            console.error('Error downloading upgrade.dpk:', err);
+            console.error(`Error downloading ${filename}:`, err);
             if (!res.headersSent) {
                 res.status(500).json({
                     error: 'Download failed',
-                    message: 'Failed to download upgrade.dpk file'
+                    message: `Failed to download ${filename} file`
                 });
             }
         } else {
-            console.log('upgrade.dpk file downloaded successfully');
+            console.log(`${filename} file downloaded successfully`);
         }
     });
 });
@@ -245,7 +282,7 @@ io.on('connection', (socket) => {
 
     // Handle upgrade request from client
     socket.on('sendUpgradeCommand', (data) => {
-        const { uuid, serverIp } = data;
+        const { uuid, serverIp, downloadPath } = data;
 
         if (!uuid) {
             console.error('Upgrade command failed: missing device UUID');
@@ -265,11 +302,33 @@ io.on('connection', (socket) => {
             return;
         }
 
-        if (!upgradeMD5) {
-            console.error('Upgrade command failed: upgrade file MD5 not available');
+        if (!downloadPath) {
+            console.error('Upgrade command failed: missing download path');
             socket.emit('upgradeCommandResult', {
                 success: false,
-                message: 'Upgrade file not ready or MD5 calculation failed'
+                message: 'Download path is required'
+            });
+            return;
+        }
+
+        // Extract filename from download path
+        const filename = downloadPath.replace('/ota/', '');
+        if (!filename) {
+            console.error('Upgrade command failed: invalid download path');
+            socket.emit('upgradeCommandResult', {
+                success: false,
+                message: 'Invalid download path format'
+            });
+            return;
+        }
+
+        // Calculate MD5 for the specific file
+        const fileMD5 = calculateUpgradeMD5(filename);
+        if (!fileMD5) {
+            console.error(`Upgrade command failed: upgrade file ${filename} MD5 not available`);
+            socket.emit('upgradeCommandResult', {
+                success: false,
+                message: `Upgrade file ${filename} not ready or MD5 calculation failed`
             });
             return;
         }
@@ -277,8 +336,8 @@ io.on('connection', (socket) => {
         // Construct upgrade command message
         const upgradeMessage = {
             serialNo: generateRandomSerial(),
-            url: `http://${serverIp}:3000/ota/upgrade.dpk`,
-            md5: upgradeMD5,
+            url: `http://${serverIp}:3000${downloadPath}`,
+            md5: fileMD5,
             timestamp: Math.floor(Date.now() / 1000).toString()
         };
 
@@ -308,7 +367,7 @@ io.on('connection', (socket) => {
 
     // Handle batch upgrade request from client
     socket.on('sendBatchUpgradeCommand', (data) => {
-        const { uuids, serverIp } = data;
+        const { uuids, serverIp, downloadPath } = data;
 
         if (!uuids || !Array.isArray(uuids) || uuids.length === 0) {
             console.error('Batch upgrade command failed: missing or invalid device UUIDs');
@@ -328,11 +387,33 @@ io.on('connection', (socket) => {
             return;
         }
 
-        if (!upgradeMD5) {
-            console.error('Batch upgrade command failed: upgrade file MD5 not available');
+        if (!downloadPath) {
+            console.error('Batch upgrade command failed: missing download path');
             socket.emit('batchUpgradeCommandResult', {
                 success: false,
-                message: 'Upgrade file not ready or MD5 calculation failed'
+                message: 'Download path is required'
+            });
+            return;
+        }
+
+        // Extract filename from download path
+        const filename = downloadPath.replace('/ota/', '');
+        if (!filename) {
+            console.error('Batch upgrade command failed: invalid download path');
+            socket.emit('batchUpgradeCommandResult', {
+                success: false,
+                message: 'Invalid download path format'
+            });
+            return;
+        }
+
+        // Calculate MD5 for the specific file
+        const fileMD5 = calculateUpgradeMD5(filename);
+        if (!fileMD5) {
+            console.error(`Batch upgrade command failed: upgrade file ${filename} MD5 not available`);
+            socket.emit('batchUpgradeCommandResult', {
+                success: false,
+                message: `Upgrade file ${filename} not ready or MD5 calculation failed`
             });
             return;
         }
@@ -349,8 +430,8 @@ io.on('connection', (socket) => {
             // Construct upgrade command message
             const upgradeMessage = {
                 serialNo: generateRandomSerial(),
-                url: `http://${serverIp}:3000/ota/upgrade.dpk`,
-                md5: upgradeMD5,
+                url: `http://${serverIp}:3000${downloadPath}`,
+                md5: fileMD5,
                 timestamp: Math.floor(Date.now() / 1000).toString()
             };
 
