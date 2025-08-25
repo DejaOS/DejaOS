@@ -30,24 +30,17 @@ codeService.receiveMsg = function (data) {
 
 codeService.code = function (data) {
      log.info('[codeService] code :' + data)
-    //判断data是否为json格式
+    //判断data是否为配置码格式
     let json = parseString(data)
     if (Object.keys(json).length <= 0) {
-        log.error("[codeService] code: 非json格式")
+        log.error("[codeService] code: 非配置码格式")
         return
     }
-    configCode(data)
+    configCode(json)
 }
 
 // 配置码处理
 function configCode(code) {
-    if (Object.keys(code).length <= 0) {
-        try {
-            code = JSON.parse(code.slice(code.indexOf("{"), code.lastIndexOf("}") + 1))
-        } catch (error) {
-            log.error(error)
-        }
-    }
     log.info("[codeService] configCode: 解析配置码 ", JSON.stringify(code))
 
     // 保存配置到文件
@@ -89,8 +82,10 @@ function buildConfigData(json) {
     if (json.psk !== undefined) {
         configData.psk = json.psk
     }
+    log.info("[codeService] buildConfigData: ip_mode ", json.ip_mode)
     if (json.ip_mode !== undefined) {
-        configData.dhcp = json.dhcp == 0 ? 2 : 1
+        log.info("[codeService] buildConfigData: dhcp ", json.ip_mode == 0 ? 2 : 1)
+        configData.dhcp = json.ip_mode == 0 ? 2 : 1
     }
     if (json.mqttAddr !== undefined) {
         configData.mqttAddr = json.mqttAddr
