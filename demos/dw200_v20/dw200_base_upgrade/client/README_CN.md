@@ -165,14 +165,14 @@
 - **下载路径配置**：支持自定义固件下载路径，只要Download IP和Download Path能正确访问到固件文件即可
 - **Web界面配置**：
   - **Download IP**：显示当前服务器IP地址，可手动修改为任意固件服务器地址
-  - **Download Path**：固件下载路径，格式为 `/ota/文件名`，如 `/ota/firmware_v2.1.bin`
+  - **Download Path**：固件下载路径，格式为 `/ota/文件名`，如 `/ota/upgrade.dpk`
 - **日志记录**：日志文件保存在 `server/logs/` 目录下
 
 ### 升级流程
 1. **设备连接**：设备通过MQTT发送心跳，服务器接收并展示在Web界面
 2. **服务器配置**：在Web界面配置Download IP和Download Path
    - **Download IP**：服务器自动检测本机IP，也可手动修改为任意固件服务器地址
-   - **Download Path**：固件下载路径，格式为 `/ota/文件名`，如 `/ota/firmware_v2.1.bin`
+   - **Download Path**：固件下载路径，格式为 `/ota/文件名`，如 `/ota/upgrade.dpk`
 3. **设备选择**：在Web界面中选择需要升级的目标设备
 4. **发送升级指令**：向选中的设备发送升级命令（包含配置的IP和路径）
 5. **监控进度**：实时查看设备升级状态和结果反馈
