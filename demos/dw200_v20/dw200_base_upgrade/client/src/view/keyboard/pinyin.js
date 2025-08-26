@@ -1,3 +1,4 @@
+import logger from '../../../dxmodules/dxLogger.js'
 import dxui from '../../../dxmodules/dxUi.js'
 import dict from './dict.js'
 const pinyin = {}
@@ -285,12 +286,8 @@ function createEnglish() {
                     pinyin.cb(" ")
                     break;
                 case 35:
-                    if (isLock || !enablePinyin) {
-                        break;
-                    }
-                    // Switch to pinyin keyboard
-                    pinyin.pinyinPanel.show()
-                    pinyin.englishPanel.hide()
+                    // EN button disabled - cannot switch to pinyin keyboard
+                    logger.info("[pinyin] EN button clicked but disabled - cannot switch to pinyin keyboard")
                     break;
                 case 36:
                     // Enter
