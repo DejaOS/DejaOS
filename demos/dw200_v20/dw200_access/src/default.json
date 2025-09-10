@@ -1,0 +1,126 @@
+{
+  // mqtt connection identifier
+  "mqttInfo.clientId": "",
+  // mqtt service address
+  "mqttInfo.mqttAddr": "mqtt://101.200.139.97:1883",
+  "mqttInfo.qos": 1,
+  "mqttInfo.mqttName": "admin",
+  "mqttInfo.password": "password",
+  "mqttInfo.prefix": "",
+  "mqttInfo.cleanSession": 0,
+  // ntp switch
+  "netInfo.ntp": 2,
+  // ntp service ip
+  "netInfo.ntpAddr": "182.92.12.11",
+  // time synchronization hour
+  "netInfo.ntpHour": 14,
+  // system time zone
+  "netInfo.ntpLocaltime": 8,
+  // network type (1:ethernet 2:wifi 4:4g)
+  "netInfo.type": 2,
+  // whether it is dhcp (1:dynamic, 0:static), the c version of the configuration tool is the opposite, and the corresponding processing has been done for the scan code configuration
+  "netInfo.dhcp": 1,
+  "netInfo.ip": "",
+  "netInfo.gateway": "",
+  "netInfo.dns": "",
+  "netInfo.subnetMask": "",
+  "netInfo.netMac": "",
+  "netInfo.ssid": "Vguang_YJ",
+  "netInfo.psk": "vguangyj_o0",
+  // 0: default mac 2: custom mac
+  "netInfo.fixed_macaddr_enable": 0,
+  // ip/sn display/hide
+  "uiInfo.sn_show": 1,
+  "uiInfo.ip_show": 1,
+  // status bar display/hide
+  "uiInfo.statusBar": 1,
+  // password button display and hide
+  "uiInfo.show_unlocking": 1,
+  "uiInfo.buttonText": "密码",
+  // modify system font
+  "uiInfo.fontPath": "/app/code/resource/font/PangMenZhengDaoBiaoTiTi-1.ttf",
+  "uiInfo.rotation0BgImage": "/app/code/resource/image/background.png",
+  "uiInfo.rotation1BgImage": "/app/code/resource/image/background_90.png",
+  "uiInfo.rotation2BgImage": "/app/code/resource/image/background.png",
+  "uiInfo.rotation3BgImage": "/app/code/resource/image/background_90.png",
+  // base64 image format
+  "uiInfo.horBgImage": "",
+  "uiInfo.verBgImage": "",
+  "uiInfo.rotation": 1,
+  // door opening mode, 0-normal, 1-normally open mode, 2-normally closed mode, 3-test mode (not currently supported)
+  "doorInfo.openMode": 0,
+  // door opening duration, ms
+  "doorInfo.openTime": 2000,
+  // door opening timeout duration, s
+  "doorInfo.openTimeout": 10,
+  // 0: no online verification, 1: online verification is performed when offline verification fails
+  "doorInfo.onlinecheck": 0,
+  // online verification timeout duration
+  "doorInfo.timeout": 2000,
+  // maximum number of offline access records stored in the database, default is 2000
+  "doorInfo.offlineAccessNum": 2000,
+  // voice volume 0-60
+  "sysInfo.volume": 60,
+  // key volume 0-100
+  "sysInfo.volume2": 100,
+  // beep prompt volume 0-100
+  "sysInfo.volume3": 100,
+  // heartbeat switch
+  "sysInfo.heart_en": 1,
+  // heartbeat interval, seconds
+  "sysInfo.heart_time": 60,
+  // heartbeat data
+  "sysInfo.heart_data": "",
+  // mac address
+  "sysInfo.mac": "",
+  "sysInfo.uuid": "",
+  "sysInfo.sn": "",
+  // device status, 0-inactive, 1-normal, 2-disabled
+  "sysInfo.status": 1,
+  // application version number
+  "sysInfo.appVersion": "dw200_v20_access_2.0.0",
+  // version display/hide
+  "sysInfo.version_show": 0,
+  // application release date
+  "sysInfo.createTime": "2024-08-23 10:49:00",
+  // device name
+  "sysInfo.deviceName": "欢迎使用",
+  // device number
+  "sysInfo.deviceNum": 0,
+  // ui language, 0 chinese 1 english
+  "sysInfo.language": 0,
+  // set system time, in seconds
+  "sysInfo.time": "",
+  // configuration code password verification
+  "sysInfo.com_passwd": "1234567887654321",
+  // access record reporting, batch processing quantity, default is 50
+  "sysInfo.reportCount": 50,
+  // access record reporting time interval, default is 5 seconds
+  "sysInfo.reportInterval": 5000,
+  // cloud certificate switch 3: get cloud certificate 1: physical card number
+  "sysInfo.nfc_identity_card_enable": 1,
+  //1 on 0 off
+  "sysInfo.nfc": 1,
+  // date format 1 year/month/day 2 day/month/year
+  "sysInfo.dateFormat": 1,
+  // time format 1 24-hour system 2 12-hour system
+  "sysInfo.timeFormat": 1,
+  // -1 turn off automatic restart 0-23 restart on the hour
+  "sysInfo.autoRestart": 3,
+  // code system
+  "scanInfo.de_type": 64511,
+  // scan code mode 0 is interval 1 is single time
+  "scanInfo.sMode": 0,
+  // scan code interval mode interval time
+  "scanInfo.interval": 1000,
+  // card reading method 1: read physical card number 2: fixed sector 3: one card one secret
+  "nfcInfo.nfcType": 1,
+  // read card sector number
+  "nfcInfo.sectorNumber": 0,
+  // read card block number
+  "nfcInfo.blockNumber": 0,
+  // key type 1:0x60 2:0x61
+  "nfcInfo.secretkeyType": 1,
+  // key
+  "nfcInfo.secretkey": "FFFFFFFFFFFF"
+}
