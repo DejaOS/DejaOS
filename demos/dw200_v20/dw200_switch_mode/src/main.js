@@ -5,6 +5,7 @@ import common from '../dxmodules/dxCommon.js'
 import std from '../dxmodules/dxStd.js'
 import dxui from '../dxmodules/dxUi.js'
 import label from '../dxmodules/uiLabel.js'
+import dxos from '../dxmodules/dxOs.js'
 logger.info("start...")
 center.newWorker('code', '/app/code/src/codeservice.js')
 center.on(code.RECEIVE_MSG, function (data) {
@@ -13,10 +14,10 @@ center.on(code.RECEIVE_MSG, function (data) {
     logger.info(str)
     if (str == 'prod') {
         logger.info('switch app mode')
-        common.setMode("prod")
+        dxos.setMode("prod")
     } else if (str == 'dev') {
         logger.info('switch debug mode')
-        common.setMode("dev")
+        dxos.setMode("dev")
     }
 })
 dxui.init({ orientation: 1 }, {});
@@ -28,7 +29,7 @@ main.setSize(480, 320)
 let label = dxui.Label.build('label', main)
 label.setPos(5,120)
 label.setSize(300, 30)
-label.text('hello,test switch mode')
+label.text('hello,switch mode demo,scan QR code to switch mode,now mode is "' + dxos.getMode()+'"')
 
 dxui.loadMain(main)
 std.setInterval(() => {
