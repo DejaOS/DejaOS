@@ -10,7 +10,7 @@ import dxNet from '../dxmodules/dxNet.js'
 const driver = {}
 
 driver.gpio = {
-    RELAY1: 105,
+    RELAY1: 35,
     init: function () {
         gpio.init()
         gpio.request(this.RELAY1)
