@@ -15,16 +15,6 @@ mainView.init = function () {
   screenMain.scroll(false)
   screenMain.bgOpa(0)
 
-  // const background = dxUi.Image.build('background', screenMain)
-  // background.source('/app/code/resource/image/background.png')
-  // background.moveBackground()
-
-  // const cameraOuter = dxUi.Image.build('cameraOuter', screenMain)
-  // mainView.cameraOuter = cameraOuter
-  // cameraOuter.source('/app/code/resource/image/background_2.png')
-  // cameraOuter.setSize(750, 620)
-  // cameraOuter.align(dxUi.Utils.ALIGN.TOP_LEFT, 24, 60)
-
   screenMain.on(dxUi.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
     topView.changeTheme(false)
 
