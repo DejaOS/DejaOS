@@ -1,10 +1,10 @@
 import ui from "../dxmodules/dxUi.js";
 import std from "../dxmodules/dxStd.js"
 
-// ui上下文
+// UI context
 let context = {}
 
-// ui初始化
+// UI initialization
 ui.init({ orientation: 0 }, context);
 
 const screenMain = ui.View.build('mainView', ui.Utils.LAYER.MAIN)
@@ -20,10 +20,10 @@ bottomSnBtn.on(ui.Utils.EVENT.CLICK, () => {
     print("passwordView")
 })
 
-// 加载屏幕
+// Load screen
 ui.loadMain(screenMain)
 
-// 刷新ui
+// Refresh UI
 let timer = std.setInterval(() => {
     if (ui.handler() < 0) {
         std.clearInterval(timer)

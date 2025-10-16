@@ -1,4 +1,4 @@
-import dxui from "../../../dxmodules/dxUi.js"
+import dxUi from "../../../dxmodules/dxUi.js"
 import config from "../../../dxmodules/dxConfig.js"
 import viewUtils from "../viewUtils.js"
 import topView from "../topView.js"
@@ -16,12 +16,12 @@ import voiceBroadcastView from "./menu/voiceBroadcastView.js"
 import screen from '../../screen.js'
 const configView = {}
 configView.init = function () {
-    /**************************************************创建屏幕*****************************************************/
-    const screenMain = dxui.View.build('configView', dxui.Utils.LAYER.MAIN)
+    /************************************************** Create Screen *****************************************************/
+    const screenMain = dxUi.View.build('configView', dxUi.Utils.LAYER.MAIN)
     configView.screenMain = screenMain
     screenMain.scroll(false)
     screenMain.bgColor(0xffffff)
-    screenMain.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
+    screenMain.on(dxUi.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
         topView.changeTheme(true)
     })
 
@@ -31,100 +31,100 @@ configView.init = function () {
 
     const titleBox = viewUtils.title(screenMain, undefined, 'configViewTitle', 'configView.title', () => {
         viewUtils.confirmOpen('configView.confirmExit', 'configView.confirmExitContent', () => {
-            dxui.loadMain(mainView.screenMain)
+            dxUi.loadMain(mainView.screenMain)
         }, () => { })
     })
-    titleBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 70)
+    titleBox.align(dxUi.Utils.ALIGN.TOP_MID, 0, 70)
 
 
-    const menuBox = dxui.View.build('menuBox', screenMain)
+    const menuBox = dxUi.View.build('menuBox', screenMain)
     viewUtils._clearStyle(menuBox)
     menuBox.setSize(screen.screenSize.width, 800)
     menuBox.bgOpa(0)
-    menuBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 178)
-    menuBox.flexFlow(dxui.Utils.FLEX_FLOW.ROW_WRAP)
-    menuBox.flexAlign(dxui.Utils.FLEX_ALIGN.START, dxui.Utils.FLEX_ALIGN.START, dxui.Utils.FLEX_ALIGN.START)
-    menuBox.obj.lvObjSetStylePadGap(0, dxui.Utils.ENUM._LV_STYLE_STATE_CMP_SAME)
+    menuBox.align(dxUi.Utils.ALIGN.TOP_MID, 0, 178)
+    menuBox.flexFlow(dxUi.Utils.FLEX_FLOW.ROW_WRAP)
+    menuBox.flexAlign(dxUi.Utils.FLEX_ALIGN.START, dxUi.Utils.FLEX_ALIGN.START, dxUi.Utils.FLEX_ALIGN.START)
+    menuBox.obj.lvObjSetStylePadGap(0, dxUi.Utils.ENUM._LV_STYLE_STATE_CMP_SAME)
 
     configView.menuBtn('localUser', menuBox, screen.screenSize.width / 4, screen.screenSize.width / 4, '/app/code/resource/image/localUser.png', 'configView.localUser', () => {
-        dxui.loadMain(localUserView.screenMain)
+        dxUi.loadMain(localUserView.screenMain)
     })
 
     configView.menuBtn('networkSetting', menuBox, screen.screenSize.width / 4, screen.screenSize.width / 4, '/app/code/resource/image/networkSetting.png', 'configView.networkSetting', () => {
-        dxui.loadMain(networkSettingView.screenMain)
+        dxUi.loadMain(networkSettingView.screenMain)
     })
 
     configView.menuBtn('doorControl', menuBox, screen.screenSize.width / 4, screen.screenSize.width / 4, '/app/code/resource/image/doorControl.png', 'configView.doorControl', () => {
-        dxui.loadMain(doorControlView.screenMain)
+        dxUi.loadMain(doorControlView.screenMain)
     })
 
     configView.menuBtn('systemSetting', menuBox, screen.screenSize.width / 4, screen.screenSize.width / 4, '/app/code/resource/image/systemSetting.png', 'configView.systemSetting', () => {
-        dxui.loadMain(systemSettingView.screenMain)
+        dxUi.loadMain(systemSettingView.screenMain)
     })
 
     configView.menuBtn('deviceInfo', menuBox, screen.screenSize.width / 4, screen.screenSize.width / 4, '/app/code/resource/image/deviceInfo.png', 'configView.deviceInfo', () => {
-        dxui.loadMain(deviceInfoView.screenMain)
+        dxUi.loadMain(deviceInfoView.screenMain)
     })
 
     configView.menuBtn('recordQuery', menuBox, screen.screenSize.width / 4, screen.screenSize.width / 4, '/app/code/resource/image/recordQuery.png', 'configView.recordQuery', () => {
-        dxui.loadMain(recordQueryView.screenMain)
+        dxUi.loadMain(recordQueryView.screenMain)
     })
 
     configView.menuBtn('voiceBroadcast', menuBox, screen.screenSize.width / 4, screen.screenSize.width / 4, '/app/code/resource/image/voiceBroadcast.png', 'configView.voiceBroadcast', () => {
-        dxui.loadMain(voiceBroadcastView.screenMain)
+        dxUi.loadMain(voiceBroadcastView.screenMain)
     })
 
     if (config.get("base.showIdentityCard") == 1) {
         configView.menuBtn('cloudCert', menuBox, screen.screenSize.width / 4, screen.screenSize.width / 4, '/app/code/resource/image/cloudCert.png', 'configView.cloudCert', () => {
-            dxui.loadMain(cloudCertView.screenMain)
+            dxUi.loadMain(cloudCertView.screenMain)
         })
     }
 
     configView.menuBtn('help', menuBox, screen.screenSize.width / 4, screen.screenSize.width / 4, '/app/code/resource/image/help.png', 'configView.help', () => {
-        dxui.loadMain(helpView.screenMain)
+        dxUi.loadMain(helpView.screenMain)
     })
 }
 
 configView.menuBtn = function (id, parent, width, height, src, dataI18n, callback = () => { }) {
-    const box = dxui.View.build(id, parent)
+    const box = dxUi.View.build(id, parent)
     viewUtils._clearStyle(box)
     box.setSize(width, height)
     box.bgOpa(0)
 
     const zoom = 1.02
 
-    const bg = dxui.View.build(id + 'bg', box)
+    const bg = dxUi.View.build(id + 'bg', box)
     viewUtils._clearStyle(bg)
     bg.setSize(140, 140)
     bg.bgColor(0xf6f6f6)
     bg.radius(30)
-    bg.align(dxui.Utils.ALIGN.TOP_MID, 0, 10)
+    bg.align(dxUi.Utils.ALIGN.TOP_MID, 0, 10)
 
-    const image = dxui.Image.build(id + 'image', bg)
+    const image = dxUi.Image.build(id + 'image', bg)
     image.source(src)
-    image.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+    image.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
 
-    bg.on(dxui.Utils.ENUM.LV_EVENT_PRESSED, () => {
+    bg.on(dxUi.Utils.ENUM.LV_EVENT_PRESSED, () => {
         bg.setSize(140 * zoom, 140 * zoom)
         image.obj.lvImgSetZoom(256 * zoom)
     })
-    bg.on(dxui.Utils.ENUM.LV_EVENT_RELEASED, () => {
+    bg.on(dxUi.Utils.ENUM.LV_EVENT_RELEASED, () => {
         bg.setSize(140, 140)
         image.obj.lvImgSetZoom(256)
     })
 
-    bg.on(dxui.Utils.EVENT.CLICK, () => {
+    bg.on(dxUi.Utils.EVENT.CLICK, () => {
         callback()
     })
 
-    const textLbl = dxui.Label.build(id + 'text', box)
+    const textLbl = dxUi.Label.build(id + 'text', box)
     textLbl.textFont(viewUtils.font(22))
     textLbl.textColor(0x767676)
     textLbl.dataI18n = dataI18n
-    textLbl.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, -10)
+    textLbl.align(dxUi.Utils.ALIGN.BOTTOM_MID, 0, -10)
     textLbl.width(width)
-    textLbl.textAlign(dxui.Utils.TEXT_ALIGN.CENTER)
-    textLbl.longMode(dxui.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
+    textLbl.textAlign(dxUi.Utils.TEXT_ALIGN.CENTER)
+    textLbl.longMode(dxUi.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
 
 
 }

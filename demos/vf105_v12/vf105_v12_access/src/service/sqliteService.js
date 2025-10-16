@@ -4,14 +4,14 @@ import sqlite from '../../dxmodules/dxSqlite.js'
 //-------------------------variable-------------------------
 const sqliteService = {}
 //-------------------------public-------------------------
-//初始化数据库
+// Initialize database
 sqliteService.init = function (path) {
     if (!path) {
         throw new Error("path should not be null or empty")
     }
-    // 创建数据库
+    // Create database
     sqlite.init(path)
-    // 创建表
+    // Create tables
     createTables()
 }
 let entities = {
@@ -70,7 +70,7 @@ let sqlType2jsType = (sqlType) => {
     }
 }
 
-// 创建表
+// Create tables
 function createTables() {
     for (const tableName in entities) {
         const table = entities[tableName];
@@ -87,7 +87,7 @@ function createTables() {
         }
     }
 }
-// 创建JPA自动生成增删改查方法
+// Create JPA auto-generated CRUD methods
 let handler = {
     get: function (target, prop, receiver) {
         return (...args) => {
@@ -101,33 +101,33 @@ sqliteService.d1_security = new Proxy({ tableName: "d1_security" }, handler);
 sqliteService.d1_voucher = new Proxy({ tableName: "d1_voucher" }, handler);
 sqliteService.d1_person = new Proxy({ tableName: "d1_person" }, handler);
 
-// 开始事务，事务不提交数据库重启后，数据会还原，所以transaction后一定要commit，但是如果在一个事务尚未提交或回滚的情况下执行另一个 BEGIN TRANSACTION，SQLite 会自动将新的事务嵌套在之前的事务内部，而不是覆盖之前的事务。
+// Begin transaction, if transaction is not committed, data will be restored after database restart, so commit must be called after transaction, but if another BEGIN TRANSACTION is executed while a transaction has not yet been committed or rolled back, SQLite will automatically nest the new transaction inside the previous transaction instead of overwriting it.
 sqliteService.transaction = function () {
     sqlite.exec("BEGIN TRANSACTION;")
 }
 
-// 回滚事务
+// Rollback transaction
 sqliteService.rollback = function () {
     sqlite.exec("ROLLBACK;")
 }
 
-// 提交事务，并无法回滚，数据无法还原
+// Commit transaction, cannot be rolled back, data cannot be restored
 sqliteService.commit = function () {
     sqlite.exec("COMMIT;")
 }
 
 /**
- * 自动创建jpa常用增删改查sql方法，
- * 支持的规则：findByAAndBAndC,findAll,findAllOrderByADescBAsc,deleteByAAndBAndC,deleteAll,deleteInBatch,deleteByIdInBatch,updateAByBAndCAndD,save,saveAll,count,countBy
- * 条件分页查询，eg：findByAAndBAndC(x,x,x,{ page: 0, size: 200, 其他条件, id:"123456" })
- * 批量删除，eg：deleteInBatch([{ a: 1, b: 2, c: "3" }, { a: 2 }])
- * 条件删除，eg：deleteAll({ a: 1, b: 2, c: "3" })
- * 单条件批量删除，eg：deleteByIdInBatch([1,2,3,4,5,6])
- * 更多示例可参考下面测试方法
- * @param {string} methodName 方法名
- * @param {string} tableName 表名
- * @param  {...any} nums 方法参数
- * @returns sqlite执行结果
+ * Automatically create common JPA CRUD SQL methods,
+ * Supported rules: findByAAndBAndC,findAll,findAllOrderByADescBAsc,deleteByAAndBAndC,deleteAll,deleteInBatch,deleteByIdInBatch,updateAByBAndCAndD,save,saveAll,count,countBy
+ * Conditional pagination query, eg: findByAAndBAndC(x,x,x,{ page: 0, size: 200, other conditions, id:"123456" })
+ * Batch delete, eg: deleteInBatch([{ a: 1, b: 2, c: "3" }, { a: 2 }])
+ * Conditional delete, eg: deleteAll({ a: 1, b: 2, c: "3" })
+ * Single condition batch delete, eg: deleteByIdInBatch([1,2,3,4,5,6])
+ * More examples can be found in the test method below
+ * @param {string} methodName Method name
+ * @param {string} tableName Table name
+ * @param  {...any} nums Method parameters
+ * @returns SQLite execution result
  */
 function createJPA(methodName, tableName, ...nums) {
     let sql
@@ -136,9 +136,9 @@ function createJPA(methodName, tableName, ...nums) {
     let noPageable = false
     let hasOrderBy = false
     if (methodName.startsWith("save")) {
-        // 增
+        // Create
         if (methodName.startsWith("saveAll")) {
-            // 批量
+            // Batch
             nums = nums[0]
             sql = `INSERT INTO ${tableName} VALUES `
             for (let i = 0; i < nums.length; i++) {
@@ -159,7 +159,7 @@ function createJPA(methodName, tableName, ...nums) {
                 }
             }
         } else {
-            // 单条
+            // Single record
             let record = nums[0]
             sql = `INSERT INTO ${tableName} VALUES (`
             for (const column in entities[tableName]) {
@@ -176,14 +176,14 @@ function createJPA(methodName, tableName, ...nums) {
         methodName = ""
         noPageable = true
     } else if (methodName.startsWith("delete")) {
-        // 删
+        // Delete
         if (methodName.startsWith("deleteAll")) {
-            // 清空表
+            // Clear table
             sql = `DELETE FROM ${tableName} `
             methodName = ""
         } else if (methodName.endsWith("InBatch")) {
             if (nums.length != 1) {
-                log.error("[JPA]:", "缺少参数")
+                log.error("[JPA]:", "Missing parameter")
                 return
             }
             sql = `DELETE FROM ${tableName} WHERE `
@@ -230,11 +230,11 @@ function createJPA(methodName, tableName, ...nums) {
             methodName = methodName.substring("delete".length)
         }
     } else if (methodName.startsWith("update")) {
-        // 改
+        // Update
         sql = `UPDATE ${tableName} SET`
         methodName = methodName.substring("update".length)
     } else if (methodName.startsWith("find")) {
-        // 查
+        // Query
         isFind = true
         sql = `SELECT * FROM ${tableName} `
         if (methodName.startsWith("findAll")) {
@@ -248,16 +248,16 @@ function createJPA(methodName, tableName, ...nums) {
             methodName = methodName.substring(0, index)
         }
     } else if (methodName.startsWith("count")) {
-        // 统计
+        // Count
         isFind = true
         isCount = true
         sql = `SELECT COUNT(*) FROM ${tableName} `
         methodName = methodName.substring("count".length)
     } else {
-        log.error("[JPA]:", "不支持的方法")
+        log.error("[JPA]:", "Unsupported method")
         return
     }
-    // where条件构建
+    // Build where condition
     let index = methodName.indexOf("By")
     let whereClauses = ""
     if (index > -1) {
@@ -266,7 +266,7 @@ function createJPA(methodName, tableName, ...nums) {
         if (conditionsPart.indexOf("And") > -1) {
             conditionsPart = conditionsPart.split("And")
             if (nums.length < conditionsPart.length) {
-                log.error("[JPA]:", "缺少参数")
+                log.error("[JPA]:", "Missing parameter")
                 return
             }
             for (let i = 0; i < conditionsPart.length; i++) {
@@ -284,7 +284,7 @@ function createJPA(methodName, tableName, ...nums) {
         } else if (conditionsPart.indexOf("Or") > -1) {
             conditionsPart = conditionsPart.split("Or")
             if (nums.length < conditionsPart.length) {
-                log.error("[JPA]:", "缺少参数")
+                log.error("[JPA]:", "Missing parameter")
                 return
             }
             for (let i = 0; i < conditionsPart.length; i++) {
@@ -301,7 +301,7 @@ function createJPA(methodName, tableName, ...nums) {
             }
         } else {
             if (nums.length < 1) {
-                log.error("[JPA]:", "缺少参数")
+                log.error("[JPA]:", "Missing parameter")
                 return
             }
             if (typeof nums[0] == 'string') {
@@ -311,13 +311,13 @@ function createJPA(methodName, tableName, ...nums) {
             }
         }
         count++
-        // update的set项构建
+        // Build update set items
         let setClauses = ""
         let prefix = methodName.substring(0, index);
         if (prefix.length > 0) {
             prefix = prefix.split("And")
             if ((nums.length - count) < prefix.length) {
-                log.error("[JPA]:", "缺少参数")
+                log.error("[JPA]:", "Missing parameter")
                 return
             }
             for (let i = 0; i < prefix.length; i++) {
@@ -333,7 +333,7 @@ function createJPA(methodName, tableName, ...nums) {
         }
         sql += `WHERE ${whereClauses} `
     }
-    // order排序
+    // Order sorting
     let orderByClauses = ""
     if (hasOrderBy) {
         orderByClauses = "ORDER BY "
@@ -351,7 +351,7 @@ function createJPA(methodName, tableName, ...nums) {
         }
         orderByClauses = orderByClauses.slice(0, -1)
     }
-    // 判断分页条件查询
+    // Check pagination condition query
     let pageable = nums[nums.length - 1]
     if (typeof pageable == 'object' && !noPageable) {
         let clauses = ""
@@ -400,18 +400,18 @@ function createJPA(methodName, tableName, ...nums) {
     return ret
 }
 
-// 判空
+// Check if empty
 function isEmpty(value) {
     return value === undefined || value === null
 }
 
-// 首字母小写
+// First letter lowercase
 function firstLower(str) {
     return str.charAt(0).toLowerCase() + str.slice(1);
 }
-// JPA测试
+// JPA test
 sqliteService.testJPA = function () {
-    // 查询
+    // Query
     // SELECT * FROM d1_pass_record ;
     sqliteService.d1_pass_record.find()
     // SELECT * FROM d1_pass_record WHERE a = 1 AND b = 2 ;
@@ -442,7 +442,7 @@ sqliteService.testJPA = function () {
     sqliteService.d1_pass_record.findAllByAAndBAndC(1, 2, 3, { a: 1, b: 2, page: 1, size: 1 })
     // SELECT * FROM d1_pass_record WHERE a = 1 AND b = 2 AND c = 3 AND a = 1 AND b = 2 ORDER BY a DESC,b ASC,c ASC LIMIT 1 OFFSET 1 ;
     sqliteService.d1_pass_record.findAllByAAndBAndCOrderByADescBAscCAsc(1, 2, 3, { a: 1, b: 2, page: 1, size: 1 })
-    // 删除
+    // Delete
     // DELETE FROM d1_pass_record ;
     sqliteService.d1_pass_record.delete()
     // DELETE FROM d1_pass_record WHERE a = 1 AND b = 2 ;
@@ -475,17 +475,17 @@ sqliteService.testJPA = function () {
     sqliteService.d1_pass_record.deleteInBatch([{ a: 1, b: 2 }, { a: 1, b: 2, page: 1 }, { a: 1, b: 2, page: 1, size: 1 }])
     // DELETE FROM d1_pass_record WHERE id IN (1 ,2 ,3 );
     sqliteService.d1_pass_record.deleteByIdInBatch([1, 2, 3])
-    // 更新
+    // Update
     // UPDATE d1_pass_record SET a = 4 WHERE b = 1 AND c = 2 AND d = 3 ;
     sqliteService.d1_pass_record.updateAByBAndCAndD(1, 2, 3, 4)
     // UPDATE d1_pass_record SET a = 4,b = 5,c = 6 WHERE d = 1 AND e = 2 AND f = 3 ;
     sqliteService.d1_pass_record.updateAAndBAndCByDAndEAndF(1, 2, 3, 4, 5, 6)
-    // 添加
+    // Add
     // INSERT INTO d1_pass_record VALUES (,,,,,,,0,0,,);
     sqliteService.d1_pass_record.save({ a: 1, b: 2 })
     // INSERT INTO d1_pass_record VALUES (,,,,,,,0,0,,), (,,,,,,,0,0,,);
     sqliteService.d1_pass_record.saveAll([{ a: 1, b: 2 }, { a: 1, b: 2 }])
-    // 聚合
+    // Aggregate
     // SELECT COUNT(*) FROM d1_pass_record ;
     sqliteService.d1_pass_record.count();
     // SELECT COUNT(*) FROM d1_pass_record WHERE a = 1 AND b = 2 AND c = 3 ;

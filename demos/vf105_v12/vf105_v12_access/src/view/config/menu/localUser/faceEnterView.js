@@ -1,4 +1,4 @@
-import dxui from '../../../../../dxmodules/dxUi.js'
+import dxUi from '../../../../../dxmodules/dxUi.js'
 import std from '../../../../../dxmodules/dxStd.js'
 import viewUtils from "../../../viewUtils.js"
 import topView from "../../../topView.js"
@@ -7,31 +7,31 @@ import localUserAddView from './localUserAddView.js'
 import screen from '../../../../screen.js'
 const faceEnterView = {}
 faceEnterView.init = function () {
-    /**************************************************创建屏幕*****************************************************/
-    const screenMain = dxui.View.build('faceEnterView', dxui.Utils.LAYER.MAIN)
+    /************************************************** Create Screen *****************************************************/
+    const screenMain = dxUi.View.build('faceEnterView', dxUi.Utils.LAYER.MAIN)
     faceEnterView.screenMain = screenMain
     screenMain.scroll(false)
     screenMain.bgOpa(0)
-    screenMain.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
+    screenMain.on(dxUi.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
         topView.changeTheme(false)
         screen.faceEnterStart(localUserAddView.nowUser.id)
 
         faceEnterView.statusPanel.success("faceEnterView.faceAdd")
         // faceEnterView.faceAdd.show()
         // faceEnterView.faceError.hide()
-        // 注册10秒超时
+        // Registration timeout 10 seconds
         faceEnterView.backTimer = std.setTimeout(() => {
             if (!faceEnterView.successFlag) {
                 faceEnterView.statusPanel.fail("faceEnterView.faceError")
                 std.setTimeout(() => {
                     faceEnterView.backCb()
-                    dxui.loadMain(localUserAddView.screenMain)
+                    dxUi.loadMain(localUserAddView.screenMain)
                 }, 500);
             }
         }, 10000);
     })
 
-    screenMain.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_UNLOADED, () => {
+    screenMain.on(dxUi.Utils.ENUM.LV_EVENT_SCREEN_UNLOADED, () => {
         faceEnterView.successFlag = false
         screen.faceEnterEnd()
         if (faceEnterView.backTimer) {
@@ -40,17 +40,17 @@ faceEnterView.init = function () {
         }
     })
 
-    const titleBoxBg = dxui.View.build(screenMain.id + 'titleBoxBg', screenMain)
+    const titleBoxBg = dxUi.View.build(screenMain.id + 'titleBoxBg', screenMain)
     viewUtils._clearStyle(titleBoxBg)
     titleBoxBg.setSize(screen.screenSize.width, 70)
-    titleBoxBg.align(dxui.Utils.ALIGN.TOP_MID, 0, 0)
+    titleBoxBg.align(dxUi.Utils.ALIGN.TOP_MID, 0, 0)
     titleBoxBg.bgColor(0xffffff)
 
     const titleBox = viewUtils.title(screenMain, localUserAddView.screenMain, 'faceEnterViewTitle', 'faceEnterView.title', faceEnterView.backCb)
-    titleBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 70)
+    titleBox.align(dxUi.Utils.ALIGN.TOP_MID, 0, 70)
 
-    const faceRec2 = dxui.Image.build('faceRec2', screenMain)
-    faceRec2.align(dxui.Utils.ALIGN.TOP_MID, 0, -111)
+    const faceRec2 = dxUi.Image.build('faceRec2', screenMain)
+    faceRec2.align(dxUi.Utils.ALIGN.TOP_MID, 0, -111)
     faceRec2.source('/app/code/resource/image/faceRec2.png')
 
     // const faceAdd = dxui.Image.build('faceAdd', screenMain)
