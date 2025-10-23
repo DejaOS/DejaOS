@@ -36,7 +36,7 @@ pool.callback((data) => {
             break;
         case "switchNetworkType":
             config.setAndSave("net.type", msg)
-            console.log("切换网络", msg);
+            console.log("Switch network", msg);
             driver.net.changeNetType()
             break;
         case "setConfig":
@@ -54,7 +54,7 @@ pool.callback((data) => {
             break;
         case mqtt.CONNECTED_CHANGED:
             bus.fire("mqttStatus", msg)
-            // mqtt连接上报
+            // MQTT connection report
             if (msg == "connected") {
                 mqttService.report()
             }

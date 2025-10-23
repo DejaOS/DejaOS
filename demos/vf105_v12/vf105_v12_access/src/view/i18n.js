@@ -1,16 +1,16 @@
 import dxMap from '../../dxmodules/dxMap.js'
-import dxui from '../../dxmodules/dxUi.js'
-// 语言包
+import dxUi from '../../dxmodules/dxUi.js'
+// Language pack
 import messages from '../../resource/langPack.js'
 
 class I18n {
     constructor() {
         const i18nMap = dxMap.get("i18n")
-        this.locale = i18nMap.get("language") || 'EN'
+        this.locale = i18nMap.get("language") || 'CN'
         this.fallbackLocale = 'CN'
     }
 
-    // 获取翻译文本
+    // Get translated text
     t(key) {
         const keys = key.split('.')
         let result = messages[this.locale]
@@ -19,7 +19,7 @@ class I18n {
             if (result && result[k]) {
                 result = result[k]
             } else {
-                // 如果当前语言没有找到翻译，使用备用语言
+                // If translation not found in current language, use fallback language
                 result = this._getFallbackText(key)
                 break
             }
@@ -28,7 +28,7 @@ class I18n {
         return result || key
     }
 
-    // 获取备用语言的翻译
+    // Get fallback language translation
     _getFallbackText(key) {
         const keys = key.split('.')
         let result = messages[this.fallbackLocale]
@@ -44,31 +44,31 @@ class I18n {
         return result
     }
 
-    // 刷新
+    // Refresh
     refresh() {
-        for (const key in dxui.all) {
-            const obj = dxui.all[key]
+        for (const key in dxUi.all) {
+            const obj = dxUi.all[key]
             if (obj.dataI18n) {
                 obj.text(this.t(obj.dataI18n))
             }
         }
     }
 
-    // 刷新指定对象
+    // Refresh specified object
     refreshObj(obj) {
         if (obj.dataI18n) {
             obj.text(this.t(obj.dataI18n))
         }
     }
 
-    // 切换语言
+    // Switch language
     setLanguage(lang) {
         if (messages[lang]) {
             this.locale = lang
             dxMap.get("i18n").put("language", lang)
-            // 触发自定义事件，通知语言变化
-            for (const key in dxui.all) {
-                const obj = dxui.all[key]
+            // Trigger custom event to notify language change
+            for (const key in dxUi.all) {
+                const obj = dxUi.all[key]
                 if (obj.dataI18n) {
                     obj.text(this.t(obj.dataI18n))
                 }
@@ -77,6 +77,6 @@ class I18n {
     }
 }
 
-// 创建单例
+// Create singleton
 const i18n = new I18n()
 export default i18n

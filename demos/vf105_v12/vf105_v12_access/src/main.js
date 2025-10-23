@@ -12,12 +12,27 @@ import dxNfc from '../dxmodules/dxNfc.js'
 import dxUart from '../dxmodules/dxUart.js'
 import dxGpioKey from '../dxmodules/dxGpioKey.js'
 
-let topics = ["getCode", face.RECEIVE_MSG, dxGpioKey.RECEIVE_MSG, "netGetWifiSsidList", "switchNetworkType", "access", "setConfig", dxNfc.RECEIVE_MSG, net.STATUS_CHANGE, mqtt.CONNECTED_CHANGED, mqtt.RECEIVE_MSG, dxUart.VG.RECEIVE_MSG + driver.uart485.id, dxUart.VG.RECEIVE_MSG + driver.uartCode.id]
+let topics = [
+    "getCode",
+    face.RECEIVE_MSG,
+    dxGpioKey.RECEIVE_MSG,
+    "netGetWifiSsidList",
+    "switchNetworkType",
+    "access",
+    "setConfig",
+    dxNfc.RECEIVE_MSG,
+    net.STATUS_CHANGE,
+    mqtt.CONNECTED_CHANGED,
+    mqtt.RECEIVE_MSG,
+    dxUart.VG.RECEIVE_MSG + driver.uart485.id,
+    dxUart.VG.RECEIVE_MSG + driver.uartCode.id
+]
 
 function initController() {
     driver.gpio.init()
     driver.watchdog.init()
     driver.config.init()
+    driver.pwm.init()
     driver.gpiokey.init()
     driver.net.init()
     driver.sqlite.init()
@@ -30,7 +45,6 @@ function initController() {
     std.sleep(100)
     driver.face.init()
     std.sleep(100)
-    driver.pwm.init()
     std.sleep(100)
     driver.mqtt.init()
     driver.autoRestart.init()

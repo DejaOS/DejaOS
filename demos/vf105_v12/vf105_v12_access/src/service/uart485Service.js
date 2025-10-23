@@ -13,7 +13,7 @@ function decimalToLittleEndianHex (decimalNumber, byteSize) {
   const littleEndianBytes = [];
   for (let i = 0; i < byteSize; i++) {
     littleEndianBytes.push(decimalNumber & 0xFF);
-    decimalNumber >>= 8;//相当于除以256
+    decimalNumber >>= 8; // Equivalent to dividing by 256
   }
   const littleEndianHex = littleEndianBytes
     .map((byte) => byte.toString(16).padStart(2, '0'))
@@ -47,50 +47,50 @@ uart485Service.receive = function (data, type) {
   }
   if (type == 'instruction') {
     if (data.cmd == "0a") {
-      // 获取设备SN
+      // Get device SN
       if (data.length > 0) {
-        console.log('---0A写入--');
+        console.log('---0A write--');
         
         let newSn = common.hexToString(data.data)
-        //修改 sn 号改成传入参数
+        // Modify SN number to passed parameter
         try {
           let wgetApp = common.systemWithRes(`test -e "/etc/.sn" && echo "OK" || echo "NO"`, 2)
           if (!wgetApp.includes('OK')) {
-            //没有创建一下
+            // Create if not exists
             common.systemBrief("touch /etc/.sn")
           }
           std.saveFile('/etc/.sn', newSn)
           common.systemWithRes(`rm -rf /app/data/config/config.json`, 2)
         } catch (error) {
-          log.info('0A写入 sn 失败原因:', error.stack)
+          log.info('0A write sn failure reason:', error.stack)
           let pack1 = { "cmd": '0A', "result": '90', 'data': '' }
           driver.uart485.sendVg(pack2str(pack1))
           return
         }
-        //返回串口
+        // Return to serial port
         let pack1 = { "cmd": '0A', "result": '00', 'data': common.stringToHex(newSn) }
         driver.uart485.sendVg(pack2str(pack1))
         common.asyncReboot(2)
       } else {
-        log.info('-----0A查询-----', common.getSn());
+        log.info('-----0A query-----', common.getSn());
         let pack1 = { "cmd": '0A', "result": '00', "data": common.stringToHex(common.getSn()) }
         // log.info(pack2str(pack1));
         driver.uart485.sendVg(pack2str(pack1))
       }
     } else if (data.cmd == "b0") {
         log.info("----b0---")
-      // 查询/修改设备配置
+      // Query/modify device configuration
       let str = data.data
       if (!str) {
         return
       }
-      //数据域第一个字节表示修改还是查询   00 查询 01 修改	
+      // First byte of data field indicates modify or query   00 query 01 modify	
       if (parseInt(str.substring(0, 2)) == 0) {
-        //查询配置
+        // Query configuration
         let pack1 = { "cmd": 'B0', "result": '00', "data": common.stringToHex(common.getSn()) }
         driver.uart485.sendVg(pack2str(pack1))
       } else {
-        //修改配置
+        // Modify configuration
         if (data.dlen <= 1) {
           return
         }
@@ -98,22 +98,22 @@ uart485Service.receive = function (data, type) {
         let toString = common.hexToString(str.substring(2))
         let content = parseString(toString)
         if (content.sn) {
-          //修改 sn 号改成传入参数
+          // Modify SN number to passed parameter
           try {
             let wgetApp = common.systemWithRes(`test -e "/etc/.sn" && echo "OK" || echo "NO"`, 2)
             if (!wgetApp.includes('OK')) {
-              //没有创建一下
+              // Create if not exists
               common.systemBrief("touch /etc/.sn")
             }
             std.saveFile('/etc/.sn', content.sn)
             common.systemWithRes(`rm -rf /app/data/config/config.json`, 2)
           } catch (error) {
-            log.info('写入/etc/.sn文件失败,原因:', error.stack)
+            log.info('Write /etc/.sn file failed, reason:', error.stack)
             let pack1 = { "cmd": 'B0', "result": '90', "data": common.stringToHex(common.getSn()) }
             driver.uart485.sendVg(pack2str(pack1))
             return
           }
-          //返回串口
+          // Return to serial port
           let pack1 = { "cmd": 'B0', "result": '00', "data": common.stringToHex(content.sn) }
           driver.uart485.sendVg(pack2str(pack1))
           common.asyncReboot(2)
@@ -122,21 +122,21 @@ uart485Service.receive = function (data, type) {
       }
     } else if (data.cmd == "0c") {
         log.info("----0c--")
-      // 获取主控chipID
+      // Get master control chipID
       let pack = { "cmd": '0C', "result": '00', "data": common.stringToHex(common.getUuid()) }
       driver.uart485.sendVg(pack2str(pack))
     } 
   }
 }
 /**
- * 解析字符串改为 json，注意value内不能有"号
+ * Parse string to JSON, note that value cannot contain " character
  * @param {string} inputString 
  * @returns 
  */
 utils.parseString = function (inputString) {
-    // 获取{}及其之间的内容
+    // Get {} and content between them
     inputString = inputString.slice(inputString.indexOf("{"), inputString.lastIndexOf("}") + 1)
-    // key=value正则，key是\w+（字母数字下划线，区别大小写），=两边可有空格，value是\w+或相邻两个"之间的内容（包含"）
+    // key=value regex, key is \w+ (letters, numbers, underscores, case-sensitive), spaces allowed on both sides of =, value is \w+ or content between two adjacent " (including ")
     const keyValueRegex = /(\w+)\s*=\s*("[^"]*"|\w+)/g;
     let jsonObject = {};
     let match;
@@ -145,17 +145,17 @@ utils.parseString = function (inputString) {
         let value = match[2]
 
         if (/^\d+$/.test(value)) {
-            // 数字
+            // Number
             value = parseInt(value)
         } else if (/^\d+\.\d+$/.test(value)) {
-            // 小数
+            // Decimal
             value = parseFloat(value)
         } else if (value == 'true') {
             value = true
         } else if (value == 'false') {
             value = false
         } else {
-            // 字符串
+            // String
             value = value.replace(/"/g, '').trim()
         }
         jsonObject[key] = value;

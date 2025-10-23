@@ -17,13 +17,13 @@ mqttService.receiveMsg = function (data) {
     if (typeof mqttService[data.topic.match(/[^/]+$/)[0]] == 'function') {
         mqttService[data.topic.match(/[^/]+$/)[0]](data)
     } else {
-        logger.error("未实现的topic", data.topic)
+        logger.error("Unimplemented topic", data.topic)
     }
 }
 
-// =================================权限增删改查=================================
+// =================================Permission CRUD=================================
 /**
- * 添加权限
+ * Add permission
  */
 mqttService.insertPermission = function (event) {
     let payload = JSON.parse(event.payload)
@@ -35,7 +35,7 @@ mqttService.insertPermission = function (event) {
     return reply(event)
 }
 
-// 添加权限通用协议格式
+// Add permission universal protocol format
 mqttService.insertPermissionAgreement = function (data) {
     let permissions = []
     for (let i = 0; i < data.length; i++) {
@@ -78,7 +78,7 @@ mqttService.insertPermissionAgreement = function (data) {
 }
 
 /**
- * 查询权限
+ * Query permission
  */
 mqttService.getPermission = function (event) {
     let payload = JSON.parse(event.payload)
@@ -87,13 +87,13 @@ mqttService.getPermission = function (event) {
     return reply(event, res)
 }
 
-// 查询权限通用协议格式
+// Query permission universal protocol format
 mqttService.getPermissionAgreement = function (data) {
     data.page = isEmpty(data.page) ? 0 : data.page
     data.size = isEmpty(data.size) ? 10 : data.size
     let totalCount = sqliteService.d1_permission.count(data)
     let permissions = sqliteService.d1_permission.findAll(data)
-    // 构建返回结果
+    // Build return result
     let content = permissions.map(permission => ({
         permissionId: permission.permissionId,
         userId: permission.userId,
@@ -117,7 +117,7 @@ mqttService.getPermissionAgreement = function (data) {
 }
 
 /**
- * 删除权限
+ * Delete permission
  */
 mqttService.delPermission = function (event) {
     let payload = JSON.parse(event.payload)
@@ -129,7 +129,7 @@ mqttService.delPermission = function (event) {
     return reply(event)
 }
 
-// 删除权限通用协议格式
+// Delete permission universal protocol format
 mqttService.delPermissionAgreement = function (data) {
     if (data.permissionIds && data.permissionIds.length > 0) {
         let ret = sqliteService.d1_permission.deleteByPermissionIdInBatch(data.permissionIds)
@@ -147,7 +147,7 @@ mqttService.delPermissionAgreement = function (data) {
 }
 
 /**
- * 清空权限
+ * Clear permissions
  */
 mqttService.clearPermission = function (event) {
     let ret = sqliteService.d1_permission.deleteAll()
@@ -159,9 +159,9 @@ mqttService.clearPermission = function (event) {
 }
 
 
-// =================================人员增删改查=================================
+// =================================Person CRUD=================================
 /**
- * 添加人员
+ * Add person
  */
 mqttService.insertUser = function (event) {
     let payload = JSON.parse(event.payload)
@@ -173,7 +173,7 @@ mqttService.insertUser = function (event) {
     return reply(event)
 }
 
-// 添加人员通用协议格式
+// Add person universal protocol format
 mqttService.insertUserAgreement = function (data) {
     let persons = []
     for (let i = 0; i < data.length; i++) {
@@ -189,10 +189,10 @@ mqttService.insertUserAgreement = function (data) {
     }
     let ret = sqliteService.d1_person.saveAll(persons)
     if (ret != 0) {
-        //失败了 把这些人全都删除后在新增一下
+        // Failed, delete all these people and add them again
         let userIds = persons.map(obj => obj.userId);
         sqliteService.d1_person.deleteByUserIdInBatch(userIds)
-        //重新新增
+        // Re-add
         let ret = sqliteService.d1_person.saveAll(persons)
         if (ret != 0) {
             return "sql error ret:" + ret
@@ -203,7 +203,7 @@ mqttService.insertUserAgreement = function (data) {
 }
 
 /**
- * 查询人员
+ * Query person
  */
 mqttService.getUser = function (event) {
     let payload = JSON.parse(event.payload)
@@ -212,7 +212,7 @@ mqttService.getUser = function (event) {
     return reply(event, res)
 }
 
-// 查询人员通用协议格式
+// Query person universal protocol format
 mqttService.getUserAgreement = function (data) {
     data.page = isEmpty(data.page) ? 0 : data.page
     data.size = isEmpty(data.size) ? 10 : data.size
@@ -229,7 +229,7 @@ mqttService.getUserAgreement = function (data) {
 }
 
 /**
- * 删除人员
+ * Delete person
  */
 mqttService.delUser = function (event) {
     let payload = JSON.parse(event.payload)
@@ -241,7 +241,7 @@ mqttService.delUser = function (event) {
     return reply(event)
 }
 
-// 删除人员通用协议格式
+// Delete person universal protocol format
 mqttService.delUserAgreement = function (data) {
     if (data && data.length > 0) {
         sqliteService.transaction()
@@ -262,7 +262,7 @@ mqttService.delUserAgreement = function (data) {
 
 
 /**
- * 清空人员
+ * Clear persons
  */
 mqttService.clearUser = function (event) {
     let persons = sqliteService.d1_person.findAll()
@@ -279,9 +279,9 @@ mqttService.clearUser = function (event) {
     }
 }
 
-// =================================凭证增删改查=================================
+// =================================Voucher CRUD=================================
 /**
- * 添加凭证
+ * Add voucher
  */
 mqttService.insertKey = function (event) {
     let payload = JSON.parse(event.payload)
@@ -293,7 +293,7 @@ mqttService.insertKey = function (event) {
     return reply(event)
 }
 
-// 添加凭证通用协议格式
+// Add voucher universal protocol format
 mqttService.insertKeyAgreement = function (data) {
     let vouchers = []
     for (let i = 0; i < data.length; i++) {
@@ -302,7 +302,7 @@ mqttService.insertKeyAgreement = function (data) {
             return "keyId or type or code  or userId cannot be empty"
         }
 
-        // 凭证重复
+        // Duplicate voucher
         let ret = sqliteService.d1_voucher.findAllBycode(voucher.code)
         if (ret.length != 0) {
             return "Duplicate vouchers"
@@ -328,20 +328,20 @@ mqttService.insertKeyAgreement = function (data) {
         if (voucher.type == "300") {
             if (voucher.extra.faceType == 0) {
                 record.code = `/app/data/user/${voucher.userId}/register.jpg`
-                // 保存base64图片
+                // Save base64 image
                 std.ensurePathExists(record.code)
                 common.base64_2binfile(record.code, voucher.code)
-                // 注册人脸
+                // Register face
                 let weq = driver.face.registerFaceByPicFile(voucher.userId, record.code)
                 if (weq == 0) {
-                    logger.info("注册人脸成功")
+                    logger.info("Face registration successful")
                 } else {
-                    logger.info("第一次人脸注册失败")
-                    //删除重新注册
+                    logger.info("First face registration failed")
+                    // Delete and re-register
                     driver.face.delete(voucher.userId)
                     let res = driver.face.registerFaceByPicFile(voucher.userId, record.code)
                     if (res == 0) {
-                        logger.info("第二次注册人脸成功")
+                        logger.info("Second face registration successful")
                         sqliteService.d1_voucher.deleteByKeyId(record.keyId)
                     } else {
                         return "Face registration failed"
@@ -349,7 +349,7 @@ mqttService.insertKeyAgreement = function (data) {
                 }
             } else {
                 record.code = voucher.code
-                //特征值注册
+                // Feature value registration
                 let res = driver.face.reg(voucher.userId, voucher.code)
                 if (res != 0) {
                     return "Face registration failed"
@@ -376,7 +376,7 @@ mqttService.insertKeyAgreement = function (data) {
 }
 
 /**
- * 查询凭证
+ * Query voucher
  */
 mqttService.getKey = function (event) {
     let payload = JSON.parse(event.payload)
@@ -388,7 +388,7 @@ mqttService.getKey = function (event) {
     return reply(event, res)
 }
 
-// 查询凭证通用协议格式
+// Query voucher universal protocol format
 mqttService.getKeyAgreement = function (data) {
     if (!data.type) {
         return "type is required"
@@ -403,7 +403,7 @@ mqttService.getKeyAgreement = function (data) {
     let vouchers = sqliteService.d1_voucher.findAll(data)
     vouchers.forEach(element => {
         if (element.type == 300 && element.extra && JSON.parse(element.extra).faceType == 0) {
-            //人脸特殊处理一下 
+            // Special handling for face 
             element.code = driver.face.fileToBase64(element.code)
         }
     });
@@ -418,7 +418,7 @@ mqttService.getKeyAgreement = function (data) {
 }
 
 /**
- * 删除凭证
+ * Delete voucher
  */
 mqttService.delKey = function (event) {
     let payload = JSON.parse(event.payload)
@@ -430,7 +430,7 @@ mqttService.delKey = function (event) {
     return reply(event)
 }
 
-// 删除凭证通用协议格式
+// Delete voucher universal protocol format
 mqttService.delKeyAgreement = function (data) {
     if (data.keyIds && data.keyIds.length > 0) {
         let userIds = []
@@ -465,7 +465,7 @@ mqttService.delKeyAgreement = function (data) {
 }
 
 /**
- * 清空凭证
+ * Clear vouchers
  */
 mqttService.clearKey = function (event) {
     let res = sqliteService.d1_voucher.findAll()
@@ -486,9 +486,9 @@ mqttService.clearKey = function (event) {
     }
 }
 
-// =================================密钥增删改查=================================
+// =================================Secret CRUD=================================
 /**
- * 添加密钥
+ * Add secret
  */
 mqttService.insertSecurity = function (event) {
     let payload = JSON.parse(event.payload)
@@ -500,7 +500,7 @@ mqttService.insertSecurity = function (event) {
     return reply(event)
 }
 
-// 添加密钥通用协议格式
+// Add secret universal protocol format
 mqttService.insertSecurityAgreement = function (data) {
     let securities = []
     for (let i = 0; i < data.length; i++) {
@@ -523,7 +523,7 @@ mqttService.insertSecurityAgreement = function (data) {
 }
 
 /**
- * 查询密钥
+ * Query secret
  */
 mqttService.getSecurity = function (event) {
     let payload = JSON.parse(event.payload)
@@ -532,7 +532,7 @@ mqttService.getSecurity = function (event) {
     return reply(event, res)
 }
 
-// 查询密钥通用协议格式
+// Query secret universal protocol format
 mqttService.getSecurityAgreement = function (data) {
     data.page = isEmpty(data.page) ? 0 : data.page
     data.size = isEmpty(data.size) ? 10 : data.size
@@ -549,7 +549,7 @@ mqttService.getSecurityAgreement = function (data) {
 }
 
 /**
- * 删除密钥
+ * Delete secret
  */
 mqttService.delSecurity = function (event) {
     let payload = JSON.parse(event.payload)
@@ -561,7 +561,7 @@ mqttService.delSecurity = function (event) {
     return reply(event)
 }
 
-// 删除密钥通用协议格式
+// Delete secret universal protocol format
 mqttService.delSecurityAgreement = function (data) {
     if (data.length > 0) {
         let ret = sqliteService.d1_security.deleteBySecurityIdInBatch(data)
@@ -573,7 +573,7 @@ mqttService.delSecurityAgreement = function (data) {
 }
 
 /**
- * 清空密钥
+ * Clear secrets
  */
 mqttService.clearSecurity = function (event) {
     let ret = sqliteService.d1_security.deleteAll()
@@ -585,23 +585,23 @@ mqttService.clearSecurity = function (event) {
 }
 
 /**
- * 远程控制
+ * Remote control
  */
 mqttService.control = function (event) {
     let payload = JSON.parse(event.payload)
     let data = payload.data
     switch (data.command) {
         case 0:
-            //重启
+            // Reboot
             reply(event)
             common.asyncReboot(2)
             return
         case 1:
-            //远程开门
+            // Remote open door
             driver.gpio.open()
             break
         case 4:
-            //重置
+            // Reset
             common.systemBrief("rm -rf /app/data/config/*")
             common.systemBrief("rm -rf /app/data/db/*")
             common.systemBrief("rm -rf /app/data/user/*")
@@ -611,7 +611,7 @@ mqttService.control = function (event) {
             common.asyncReboot(2)
             return
         case 5:
-            //播放语音
+            // Play audio
             if (data.extra) {
                 let res = common.systemWithRes(`test -e "/app/code/resource/wav/${data.extra.wav}.wav" && echo "OK" || echo "NO"`, 2)
                 if (res.includes('OK')) {
@@ -620,16 +620,16 @@ mqttService.control = function (event) {
             }
             break
         case 6:
-            // 6：屏幕展示图片
+            // 6: Display image on screen
             // TODO
             break
         case 7:
-            // 7：屏幕展示文字
+            // 7: Display text on screen
             // TODO
             break
         case 10:
             if (!isEmpty(data.extra.qrCodeBase64) && typeof data.extra.qrCodeBase64 == 'string') {
-                //base64转图片保存
+                // Convert base64 to image and save
                 let src = `/app/code/resource/image/app_qrcode.png`
                 std.ensurePathExists(src)
                 common.base64_2binfile(src, data.extra.qrCodeBase64)
@@ -642,13 +642,13 @@ mqttService.control = function (event) {
     return reply(event)
 }
 
-//查询配置
+// Query configuration
 mqttService.getConfig = function (event) {
     let payload = JSON.parse(event.payload)
     let data = payload.data
     let configAll = config.getAll()
     let res = {}
-    // 配置分组
+    // Configuration grouping
     for (const key in configAll) {
         const value = configAll[key];
         const keys = key.split(".")
@@ -662,7 +662,7 @@ mqttService.getConfig = function (event) {
         }
     }
     res.sys = {
-        // 保留原有的 sysInfo 中的其他值
+        // Keep other values in original sysInfo
         ...res.sys,
         totalmem: common.getTotalmem(),
         freemem: common.getFreemem(),
@@ -671,10 +671,10 @@ mqttService.getConfig = function (event) {
         freecpu: common.getFreecpu()
     };
     if (isEmpty(data) || typeof data != "string" || data == "") {
-        // 查询全部
+        // Query all
         return reply(event, res)
     }
-    // 单条件查询"data": "mqttInfo.clientId"
+    // Single condition query "data": "mqttInfo.clientId"
     let keys = data.split(".")
     let search = {}
     if (keys.length == 2) {
@@ -688,7 +688,7 @@ mqttService.getConfig = function (event) {
     return reply(event, search)
 }
 
-// 修改配置
+// Modify configuration
 mqttService.setConfig = function (event) {
     let payload = JSON.parse(event.payload)
     let data = payload.data
@@ -697,7 +697,7 @@ mqttService.setConfig = function (event) {
     }
     let res = configService.configVerifyAndSave(data)
     if (typeof res != 'boolean') {
-        // 返回错误信息
+        // Return error message
         return reply(event, res, CODE.E_100)
     }
     if (res) {
@@ -708,7 +708,7 @@ mqttService.setConfig = function (event) {
 }
 
 /**
- * 升级固件
+ * Upgrade firmware
  */
 mqttService.upgradeFirmware = function (event) {
     let payload = JSON.parse(event.payload)
@@ -733,14 +733,14 @@ mqttService.upgradeFirmware = function (event) {
 
     return reply(event, "upgrade failure", CODE.E_100)
 }
-//查询识别记录
+// Query recognition records
 mqttService.getRecords = function (event) {
     let payload = JSON.parse(event.payload)
     let data = payload.data
     let res = this.getRecordsAgreement(data)
     return reply(event, res)
 }
-// 查询密钥通用协议格式
+// Query secret universal protocol format
 mqttService.getRecordsAgreement = function (data) {
     data.page = isEmpty(data.page) ? 0 : data.page
     data.size = isEmpty(data.size) ? 10 : data.size
@@ -756,7 +756,7 @@ mqttService.getRecordsAgreement = function (data) {
     }
 }
 /**
- * 删除记录
+ * Delete records
  */
 mqttService.delRecords = function (event) {
     let payload = JSON.parse(event.payload)
@@ -768,7 +768,7 @@ mqttService.delRecords = function (event) {
     return reply(event)
 }
 
-// 删除记录通用协议格式
+// Delete records universal protocol format
 mqttService.deldelRecordsAgreement = function (data) {
     if (data.ids && data.ids.length > 0) {
         let ret = sqliteService.d1_pass_record.deleteByIdInBatch(data.ids)
@@ -784,7 +784,7 @@ mqttService.deldelRecordsAgreement = function (data) {
     }
     return true
 }
-// 通行上报回复
+// Access report reply
 mqttService.access_reply = function (event) {
     let payload = JSON.parse(event.payload)
     let serialNo = map.get(payload.serialNo)
@@ -795,7 +795,7 @@ mqttService.access_reply = function (event) {
     sqliteService.d1_pass_record.deleteAll()
 }
 
-// 在线验证回复
+// Online verification reply
 mqttService.access_online_reply = function (raw) {
     let payload = JSON.parse(raw.payload)
     let map = dxMap.get("VERIFY")
@@ -807,25 +807,25 @@ mqttService.access_online_reply = function (raw) {
 }
 
 const CODE = {
-    // 成功
+    // Success
     S_000: "000000",
-    // 未知错误
+    // Unknown error
     E_100: "100000",
-    // 设备已被禁用	
+    // Device has been disabled	
     E_101: "100001",
-    // 设备正忙，请稍后再试	
+    // Device is busy, please try again later	
     E_102: "100002",
-    // 签名检验失败	
+    // Signature verification failed	
     E_103: "100003",
-    // 超时错误
+    // Timeout error
     E_104: "100004",
-    // 设备离线	
+    // Device offline	
     E_105: "100005",
 }
 mqttService.CODE = CODE
 
 mqttService.report = function () {
-    // 在线上报
+    // Online report
     let payloadReply = mqttReply(std.genRandomStr(10), {
         mac: config.get("sys.mac") || '',
         version: config.get("sys.version"),
@@ -835,14 +835,14 @@ mqttService.report = function () {
     }, CODE.S_000)
     driver.mqtt.send("access_device/v2/event/connect", JSON.stringify(payloadReply))
 
-    //通行记录上报
+    // Access record report
     let res = sqliteService.d1_pass_record.findAll()
     if (res.length <= 0) {
         return
     }
-    // 筛选出 type === 300 的对象
+    // Filter objects where type === 300
     let faceArray = res.filter(item => item.type == 300);
-    // 筛选出 type !== 300 的对象
+    // Filter objects where type !== 300
     let recordArray = res.filter(item => item.type != 300);
     if (recordArray.length > 0) {
         driver.mqtt.send("access_device/v2/event/access", JSON.stringify(mqttReply(std.genRandomStr(10), recordArray, CODE.S_000)))
@@ -851,7 +851,7 @@ mqttService.report = function () {
         let index = 0
         let timer = std.setInterval(() => {
             let serialNo = std.genRandomStr(10)
-            //缓存放入要删除的人脸照片 src
+            // Cache the face photo src to delete
             map.del(serialNo)
             map.put(serialNo, faceArray[index].code)
             faceArray[index].code = driver.face.fileToBase64(faceArray[index].code)
@@ -862,7 +862,7 @@ mqttService.report = function () {
                 std.clearInterval(timer)
             }
         }, 1000)
-        // 每隔500ms检查一次mqtt连接状态，如果断开，则停止上报
+        // Check MQTT connection status every 500ms, stop reporting if disconnected
         let saveTimer = std.setInterval(() => {
             if (!driver.mqtt.getStatus()) {
                 std.clearInterval(saveTimer)
@@ -875,7 +875,7 @@ mqttService.report = function () {
 
 }
 
-// mqtt请求统一回复
+// MQTT request unified reply
 function reply(event, data, code) {
     let topic = getReplyTopic(event)
     let reply = JSON.stringify(mqttReply(JSON.parse(event.payload).serialNo, data, isEmpty(code) ? CODE.S_000 : code))
@@ -883,13 +883,13 @@ function reply(event, data, code) {
 }
 
 /**
- * 获取回复主题
+ * Get reply topic
  */
 function getReplyTopic(data) {
     return data.topic.replace("/" + config.get("sys.sn"), '') + "_reply";
 }
 
-// mqtt回复格式构建
+// MQTT reply format construction
 function mqttReply(serialNo, data, code) {
     return {
         serialNo: serialNo,
@@ -903,7 +903,7 @@ function mqttReply(serialNo, data, code) {
 mqttService.mqttReply = mqttReply
 
 mqttService.getTopics = function () {
-    // 获取所有订阅的topic
+    // Get all subscribed topics
     let sn = config.get("mqtt.clientId")
     const topics = [
         "control", "getConfig", "setConfig", "upgradeFirmware", "test",
@@ -919,7 +919,7 @@ mqttService.getTopics = function () {
     return topics.map(item => flag + item).concat(eventReplies.map(item => eventFlag + item));
 }
 
-// 判空
+// Check if empty
 function isEmpty(value) {
     return value === undefined || value === null || value === ""
 }
