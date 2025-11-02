@@ -8,20 +8,20 @@ const nfcService = {}
 nfcService.receiveMsg = function (data) {
     // log.info('[nfcService] receiveMsg :' + JSON.stringify(data))
 
-    // 首先判断是否是身份证卡
+    // First check if it's an ID card
     if (data.card_type && data.id) {
         if (dxMap.get("UI").get("getCardStart")) {
             driver.screen.getCard(data.id)
             return
         }
-        // 身份证物理卡号/普通卡
+        // ID card physical card number / regular card
         accessService.access({ type: "200", code: data.id })
     } else if (data.name && data.sex && data.idCardNo) {
         if (dxMap.get("UI").get("getCardStart")) {
             driver.screen.getCard(data.idCardNo)
             return
         }
-        // 云证
+        // Cloud certificate
         accessService.access({ type: "200", code: data.idCardNo });
     }
 

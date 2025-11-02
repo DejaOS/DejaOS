@@ -7,6 +7,8 @@ import driver from "../driver.js"
 import mqttService from "./mqttService.js"
 import sqliteService from "./sqliteService.js"
 import utils from '../common/utils/utils.js'
+import { getCurrentLanguage } from '../common/utils/i18n.js'
+
 const accessService = {}
 
 
@@ -14,7 +16,7 @@ function decimalToLittleEndianHex(decimalNumber, byteSize) {
     const littleEndianBytes = [];
     for (let i = 0; i < byteSize; i++) {
         littleEndianBytes.push(decimalNumber & 0xFF);
-        decimalNumber >>= 8;//相当于除以256
+        decimalNumber >>= 8; // Equivalent to dividing by 256
     }
     const littleEndianHex = littleEndianBytes
         .map((byte) => byte.toString(16).padStart(2, '0'))
@@ -29,51 +31,51 @@ function pack2str(pack) {
     return str + crc.toString(16).padStart(2, '0')
 }
 /**
- * 人脸/密码白名单校验
- * @param {object} data {type:码制(string),code:码内容(string)}
- * @returns number:-1（参数错误），0（通行成功），1（在线验证），string:校验失败的原因
+ * Face/password whitelist verification
+ * @param {object} data {type:code type(string),code:code content(string)}
+ * @returns number:-1(parameter error), 0(access successful), 1(online verification), string:reason for verification failure
  */
 accessService.access = function (data, fileName, similarity) {
     // logger.info('[accessService] access :' + JSON.stringify(data))
-    // 通行加锁
+    // Access lock
     let lockMap = map.get("access_lock")
     if (lockMap.get("access_lock")) {
-        logger.error("[access]: 通行加锁，请稍后再试")
+        logger.error("[access]: Access locked, please try again later")
         return false
     }
     lockMap.put("access_lock", true)
 
     try {
         data.time = Math.floor(Date.parse(new Date()) / 1000)
-        // 先根据code查询凭证
+        // First query credentials by code
         let res
         if (data.type == "300") {
             res = sqliteService.d1_voucher.findByUserIdAndType(data.code, data.type)
         } else {
             res = sqliteService.d1_voucher.findByCodeAndType(data.code, data.type)
         }
-        // 认证结果
+        // Authentication result
         let ret = true
-        // 是否是陌生人
+        // Is stranger
         let isStranger = false
 
         if (similarity === false) {
-            // 如果相似度验证失败，则不进行认证
+            // If similarity verification fails, do not authenticate
             ret = false
             isStranger = true
         } else {
 
             if (res.length == 0) {
-                logger.error("[access]: 通行失败，没查询到凭证！")
+                logger.error("[access]: Access failed, no credentials found!")
                 ret = false
                 isStranger = true
             } else {
                 data.userId = res[0].userId
                 data.keyId = res[0].id
-                // 根据userId查人员
+                // Query person by userId
                 res = sqliteService.d1_person.findByUserId(data.userId)
                 if (res.length == 0) {
-                    logger.error("[access]: 通行失败，没查询到人员！")
+                    logger.error("[access]: Access failed, no person found!")
                     ret = false
                     isStranger = true
                 } else {
@@ -81,7 +83,7 @@ accessService.access = function (data, fileName, similarity) {
                     try {
                         idCard = JSON.parse(res[0].extra).idCard
                     } catch (error) {
-                        log.error("无身份证号")
+                        log.error("No ID card number")
                     }
                     data.extra = { name: res[0].name, idCard: idCard }
 
@@ -89,28 +91,28 @@ accessService.access = function (data, fileName, similarity) {
             }
 
             if (ret) {
-                // 根据userId查询权限
+                // Query permissions by userId
                 res = sqliteService.d1_permission.findByUserId(data.userId)
                 if (res && res.length > 0 && judgmentPermission(res)) {
-                    logger.info("[access]: 通行成功")
+                    logger.info("[access]: Access successful")
                     ret = true
                 } else {
-                    logger.info("[access]: 无权限")
+                    logger.info("[access]: No permission")
                     ret = false
                 }
             }
 
             if (!ret && config.get('mqtt.onlinecheck') == 1 && driver.mqtt.getStatus()) {
-                logger.info("[access]: 无权限，走在线验证")
+                logger.info("[access]: No permission, use online verification")
                 let serialNo = std.genRandomStr(10)
                 driver.mqtt.send("access_device/v2/event/access_online", JSON.stringify(mqttService.mqttReply(serialNo, data, mqttService.CODE.S_000)))
-                driver.alsa.play(`/app/code/resource/${config.get("base.language") == "CN" ? "CN" : "EN"}/wav/verify.wav`)
-                // 等待在线验证结果
+                driver.alsa.play(`/app/code/resource/${getCurrentLanguage()}/wav/verify.wav`)
+                // Wait for online verification result
                 let payload = driver.mqtt.getOnlinecheck()
                 if (payload && payload.serialNo == serialNo && payload.code == '000000') {
                     ret = true
                 } else {
-                    logger.info("[access]: 在线验证失败")
+                    logger.info("[access]: Online verification failed")
                     ret = false
                 }
             }
@@ -118,19 +120,19 @@ accessService.access = function (data, fileName, similarity) {
         let alsaFile = (data.type).toString().startsWith("10") ? '10x' : data.type
         if (ret == true) {
             driver.screen.accessSuccess()
-            logger.info("[access]: 通行成功")
-            driver.alsa.play(`/app/code/resource/${config.get("base.language") == "CN" ? "CN" : "EN"}/wav/verify_${alsaFile}_s.wav`)
+            logger.info("[access]: Access successful")
+            driver.alsa.play(`/app/code/resource/${getCurrentLanguage()}/wav/verify_${alsaFile}_s.wav`)
             driver.gpio.open()
             savePassPic(data, fileName)
             reply(data, true)
         } else {
             driver.screen.accessFail()
-            logger.error("[access]: 通行失败")
+            logger.error("[access]: Access failed")
             if (utils.isEmpty(similarity)) {
-                driver.alsa.play(`/app/code/resource/${config.get("base.language") == "CN" ? "CN" : "EN"}/wav/verify_${alsaFile}_f.wav`)
+                driver.alsa.play(`/app/code/resource/${getCurrentLanguage()}/wav/verify_${alsaFile}_f.wav`)
             }
             if (isStranger && !config.get("sys.strangerImage")) {
-                // 陌生人不保存照片
+                // Strangers do not save photos
             } else {
                 savePassPic(data, fileName)
             }
@@ -139,13 +141,13 @@ accessService.access = function (data, fileName, similarity) {
     } catch (error) {
         logger.error(error)
     }
-    // 语音播报需要时间，所以延迟1秒解锁
+    // Voice broadcast needs time, so delay 1 second to unlock
     std.sleep(1000)
     lockMap.put("access_lock", false)
 
 }
 
-// 保存通行图片
+// Save access image
 function savePassPic(data, fileName) {
     if (data.type == "300") {
         let src = `/app/data/passRecord/${data.userId}_${data.time}.jpg`
@@ -155,36 +157,37 @@ function savePassPic(data, fileName) {
             common.systemBrief(`rm -rf /app/data/user/temp/*`)
             data.code = src
         } else {
-            logger.error("[access]: 通行失败，图片不存在！！！！！！！！！！！！！！！" + fileName)
+            logger.error("[access]: Access failed, image does not exist!" + fileName)
         }
     }
 }
 
+
 /**
- * 校验权限时间是否可以通行
- * @param {array} permissions 权限记录数组
- * @returns true成功，false失败
+ * Verify if permission time allows access
+ * @param {array} permissions Permission records array
+ * @returns true for success, false for failure
  */
 function judgmentPermission(permissions) {
     let currentTime = Math.floor(Date.now() / 1000)
     for (let permission of permissions) {
         if (permission.timeType == 0) {
-            // 永久权限
+            // Permanent permission
             return true
         } else if (permission.beginTime <= currentTime && currentTime <= permission.endTime) {
             if (permission.timeType == 1) {
-                // 时间段权限
+                // Time period permission
                 return true
             }
             if (permission.timeType == 2) {
-                // 每日权限
+                // Daily permission
                 let seconds = Math.floor((new Date() - new Date().setHours(0, 0, 0, 0)) / 1000);
                 if (permission.repeatBeginTime <= seconds && seconds <= permission.repeatEndTime) {
                     return true
                 }
             }
             if (permission.timeType == 3 && permission.period) {
-                // 周重复权限
+                // Weekly repeat permission
                 let dayTimes = JSON.parse(permission.period)[new Date().getDay() + 1]
                 if (dayTimes && dayTimes.split("|").some((dayTime) => isCurrentTimeInTimeRange(dayTime))) {
                     return true
@@ -196,35 +199,35 @@ function judgmentPermission(permissions) {
 }
 
 /**
- * 判断当前时间是否在时间段内
+ * Determine if current time is within time range
  * @param {string} time eg:15:00-19:00
  * @returns 
  */
 function isCurrentTimeInTimeRange(time) {
-    // 分割开始时间和结束时间
+    // Split start time and end time
     let [startTime, endTime] = time.split('-');
-    // 解析开始时间的小时和分钟
+    // Parse start time hours and minutes
     let [startHour, startMinute] = startTime.split(':');
-    // 解析结束时间的小时和分钟
+    // Parse end time hours and minutes
     let [endHour, endMinute] = endTime.split(':');
 
-    // 获取当前时间
+    // Get current time
     let currentTime = new Date();
 
-    // 创建开始时间的日期对象
+    // Create start time date object
     let startDate = new Date();
     startDate.setHours(parseInt(startHour, 10));
     startDate.setMinutes(parseInt(startMinute, 10));
-    // 创建结束时间的日期对象
+    // Create end time date object
     let endDate = new Date();
     endDate.setHours(parseInt(endHour, 10));
     endDate.setMinutes(parseInt(endMinute, 10));
 
-    // 检查当前时间是否在时间范围内
+    // Check if current time is within time range
     return currentTime >= startDate && currentTime <= endDate;
 }
 
-// access通行上报
+// Access report
 function reply(data, result) {
     let record = {
         id: std.genRandomStr(16),
@@ -236,17 +239,17 @@ function reply(data, result) {
             record[key] = data[key]
         }
     }
-    // 存储通行记录，判断上限
+    // Store access record, check upper limit
     let count = sqliteService.d1_pass_record.count()
     let configNum = config.get("access.offlineAccessNum");
     configNum = configNum ? configNum : 2000;
     if (configNum > 0) {
         if (count >= configNum) {
-            // 达到最大存储数量
-            // 删除最远的那条
+            // Reached maximum storage count
+            // Delete the oldest record
             let lastRecord = sqliteService.d1_pass_record.findAllOrderBytimeDesc({ page: 0, size: 1 })
             if (lastRecord && lastRecord.length == 1) {
-                //判断下如果是人脸 去删除一下人脸照片
+                // Check if it's a face, delete the face photo
                 if (lastRecord[0].type == 300) {
                     common.systemBrief(`rm -rf ${lastRecord[0].code}`)
                 }

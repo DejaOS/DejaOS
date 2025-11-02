@@ -1,5 +1,6 @@
-import dxui from '../../../../../dxmodules/dxUi.js'
+import dxUi from '../../../../../dxmodules/dxUi.js'
 import std from '../../../../../dxmodules/dxStd.js'
+import log from '../../../../../dxmodules/dxLogger.js'
 import viewUtils from "../../../viewUtils.js"
 import topView from "../../../topView.js"
 import localUserView from '../localUserView.js'
@@ -7,51 +8,55 @@ import faceEnterView from './faceEnterView.js'
 import i18n from "../../../i18n.js"
 import pinyin from '../../../pinyin/pinyin.js'
 import screen from '../../../../screen.js'
+import { getCurrentLanguage } from '../../../../common/utils/i18n.js'
+
 const localUserAddView = {}
-const dropdownData = ['普通用户', '管理员']
-const dropdownData2 = ['User', 'Administrator']
+const dropdownDataCn = ['普通用户', '管理员']
+const dropdownDataEn = ['User', 'Administrator']
+const dropdownDataRu = ['Житель', 'Администратор']
+
 
 localUserAddView.init = function () {
-    /**************************************************创建屏幕*****************************************************/
-    const screenMain = dxui.View.build('localUserAddView', dxui.Utils.LAYER.MAIN)
+    /************************************************** Create Screen *****************************************************/
+    const screenMain = dxUi.View.build('localUserAddView', dxUi.Utils.LAYER.MAIN)
     localUserAddView.screenMain = screenMain
     screenMain.scroll(false)
     screenMain.bgColor(0xffffff)
-    screenMain.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
+    screenMain.on(dxUi.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
         topView.changeTheme(true)
         refreshType()
         if (!localUserAddView.deleteBtn.isHide()) {
-            //修改用户不允许改id
+            // Editing user, ID cannot be changed
             localUserAddView.userInfo[0].input.disable(true)
         } else {
             localUserAddView.userInfo[0].input.disable(false)
         }
     })
 
-    screenMain.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_UNLOADED, () => {
+    screenMain.on(dxUi.Utils.ENUM.LV_EVENT_SCREEN_UNLOADED, () => {
     })
 
     const titleBox = viewUtils.title(screenMain, localUserView.screenMain, 'localUserAddViewTitle', 'localUserAddView.title', undefined)
     localUserAddView.titleBox = titleBox
-    titleBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 70)
+    titleBox.align(dxUi.Utils.ALIGN.TOP_MID, 0, 70)
 
     const titleBox2 = viewUtils.title(screenMain, localUserView.screenMain, 'localUserAddViewTitle2', 'localUserAddView.title2', undefined)
     localUserAddView.titleBox2 = titleBox2
-    titleBox2.align(dxui.Utils.ALIGN.TOP_MID, 0, 70)
+    titleBox2.align(dxUi.Utils.ALIGN.TOP_MID, 0, 70)
     titleBox2.hide()
 
-    const addUserBox = dxui.View.build('addUserBox', screenMain)
+    const addUserBox = dxUi.View.build('addUserBox', screenMain)
     viewUtils._clearStyle(addUserBox)
     addUserBox.setSize(screen.screenSize.width, 700)
-    addUserBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 142)
+    addUserBox.align(dxUi.Utils.ALIGN.TOP_MID, 0, 142)
     addUserBox.borderWidth(1)
     addUserBox.setBorderColor(0xDEDEDE)
-    addUserBox.obj.setStyleBorderSide(dxui.Utils.ENUM.LV_BORDER_SIDE_TOP, 0)
+    addUserBox.obj.setStyleBorderSide(dxUi.Utils.ENUM.LV_BORDER_SIDE_TOP, 0)
     addUserBox.bgOpa(0)
 
-    addUserBox.flexFlow(dxui.Utils.FLEX_FLOW.ROW_WRAP)
-    addUserBox.flexAlign(dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.START)
-    addUserBox.obj.lvObjSetStylePadGap(0, dxui.Utils.ENUM._LV_STYLE_STATE_CMP_SAME)
+    addUserBox.flexFlow(dxUi.Utils.FLEX_FLOW.ROW_WRAP)
+    addUserBox.flexAlign(dxUi.Utils.FLEX_ALIGN.CENTER, dxUi.Utils.FLEX_ALIGN.CENTER, dxUi.Utils.FLEX_ALIGN.START)
+    addUserBox.obj.lvObjSetStylePadGap(0, dxUi.Utils.ENUM._LV_STYLE_STATE_CMP_SAME)
 
     localUserAddView.userInfo = [
         {
@@ -109,35 +114,35 @@ localUserAddView.init = function () {
     ]
 
     localUserAddView.userInfo.forEach((item, index) => {
-        const userBox = dxui.View.build('userInfo' + index, addUserBox)
+        const userBox = dxUi.View.build('userInfo' + index, addUserBox)
         viewUtils._clearStyle(userBox)
         userBox.setSize(700, 65)
         userBox.borderWidth(1)
         userBox.setBorderColor(0xDEDEDE)
-        userBox.obj.setStyleBorderSide(dxui.Utils.ENUM.LV_BORDER_SIDE_BOTTOM, 0)
+        userBox.obj.setStyleBorderSide(dxUi.Utils.ENUM.LV_BORDER_SIDE_BOTTOM, 0)
         userBox.bgOpa(0)
 
         if (item.required) {
-            const titleLbl = dxui.Label.build('titleLblRequired' + index, userBox)
+            const titleLbl = dxUi.Label.build('titleLblRequired' + index, userBox)
             titleLbl.textFont(viewUtils.font(22))
-            titleLbl.align(dxui.Utils.ALIGN.LEFT_MID, 0, 0)
+            titleLbl.align(dxUi.Utils.ALIGN.LEFT_MID, 0, 0)
             titleLbl.text('*')
             titleLbl.textColor(0xFD5353)
         }
 
-        const titleLbl = dxui.Label.build('titleLbl' + index, userBox)
+        const titleLbl = dxUi.Label.build('titleLbl' + index, userBox)
         titleLbl.textFont(viewUtils.font(22))
-        titleLbl.align(dxui.Utils.ALIGN.LEFT_MID, 10, 0)
+        titleLbl.align(dxUi.Utils.ALIGN.LEFT_MID, 10, 0)
         titleLbl.dataI18n = item.title
 
         if (item.type === 'input') {
             const input = viewUtils.input(userBox, item.title, item.mode, undefined, "localUserAddView.input")
-            input.align(dxui.Utils.ALIGN.RIGHT_MID, 0, 0)
+            input.align(dxUi.Utils.ALIGN.RIGHT_MID, 0, 0)
             input.textFont(viewUtils.font(22))
             input.setSize(260, 50)
             item.input = input
 
-            input.on(dxui.Utils.EVENT.VALUE_CHANGED, () => {
+            input.on(dxUi.Utils.EVENT.VALUE_CHANGED, () => {
                 if (input.text() === "") {
                     return
                 }
@@ -157,58 +162,58 @@ localUserAddView.init = function () {
                 }
             })
         } else if (item.type === 'button') {
-            const btn = dxui.Button.build(item.title, userBox)
+            const btn = dxUi.Button.build(item.title, userBox)
             item.btn = btn
             btn.setSize(150, 50)
-            btn.align(dxui.Utils.ALIGN.RIGHT_MID, 0, 0)
+            btn.align(dxUi.Utils.ALIGN.RIGHT_MID, 0, 0)
             btn.bgColor(0xEEEEEE)
             btn.radius(10)
-            const btnLbl = dxui.Label.build(item.title + 'btnLbl', btn)
+            const btnLbl = dxUi.Label.build(item.title + 'btnLbl', btn)
             btnLbl.textFont(viewUtils.font(22))
             btnLbl.textColor(0x05AA8D)
-            btnLbl.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+            btnLbl.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
 
-            const btnEdit = dxui.Button.build(item.title + 'edit', userBox)
+            const btnEdit = dxUi.Button.build(item.title + 'edit', userBox)
             item.btnEdit = btnEdit
             btnEdit.setSize(150, 50)
-            btnEdit.align(dxui.Utils.ALIGN.RIGHT_MID, -60, 0)
+            btnEdit.align(dxUi.Utils.ALIGN.RIGHT_MID, -60, 0)
             btnEdit.bgColor(0xEEEEEE)
             btnEdit.radius(10)
             btnEdit.hide()
-            const btnEditLbl = dxui.Label.build(item.title + 'btnEditLbl', btnEdit)
+            const btnEditLbl = dxUi.Label.build(item.title + 'btnEditLbl', btnEdit)
             btnEditLbl.textFont(viewUtils.font(22))
             btnEditLbl.textColor(0x05AA8D)
-            btnEditLbl.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+            btnEditLbl.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
 
             const deleteBtn = viewUtils.imageBtn(userBox, item.title + 'deleteBtn', '/app/code/resource/image/delete.png')
             item.deleteBtn = deleteBtn
-            deleteBtn.align(dxui.Utils.ALIGN.RIGHT_MID, 0, 0)
+            deleteBtn.align(dxUi.Utils.ALIGN.RIGHT_MID, 0, 0)
             deleteBtn.hide()
 
             if (item.title === 'localUserAddView.pwd') {
                 btnLbl.dataI18n = 'localUserAddView.generate'
                 btnEditLbl.dataI18n = 'localUserAddView.reset'
 
-                // 密码
-                const pwdLbl = dxui.Label.build(userBox.id + 'pwdLbl', userBox)
+                // Password
+                const pwdLbl = dxUi.Label.build(userBox.id + 'pwdLbl', userBox)
                 item.pwdLbl = pwdLbl
-                pwdLbl.align(dxui.Utils.ALIGN.LEFT_MID, 180, 0)
+                pwdLbl.align(dxUi.Utils.ALIGN.LEFT_MID, 180, 0)
                 pwdLbl.textColor(0x767676)
                 pwdLbl.textFont(viewUtils.font(26))
                 pwdLbl.hide()
 
-                btn.on(dxui.Utils.EVENT.CLICK, () => {
+                btn.on(dxUi.Utils.EVENT.CLICK, () => {
                     pwdBoxBg.show()
                     pwdBoxBg.moveForeground()
                     topView.changeTheme(false)
                     localUserAddView.changePwd()
                 })
 
-                btnEdit.on(dxui.Utils.EVENT.CLICK, () => {
-                    btn.send(dxui.Utils.EVENT.CLICK)
+                btnEdit.on(dxUi.Utils.EVENT.CLICK, () => {
+                    btn.send(dxUi.Utils.EVENT.CLICK)
                 })
 
-                deleteBtn.on(dxui.Utils.EVENT.CLICK, () => {
+                deleteBtn.on(dxUi.Utils.EVENT.CLICK, () => {
                     viewUtils.confirmOpen('localUserAddView.confirm', 'localUserAddView.confirmPwd', () => {
                         localUserAddView.removePwd()
                     }, () => { })
@@ -220,29 +225,29 @@ localUserAddView.init = function () {
             }
 
             if (item.title === 'localUserAddView.card') {
-                // 卡
-                const cardLbl = dxui.Label.build(userBox.id + 'cardLbl', userBox)
+                // Card
+                const cardLbl = dxUi.Label.build(userBox.id + 'cardLbl', userBox)
                 item.cardLbl = cardLbl
-                cardLbl.align(dxui.Utils.ALIGN.LEFT_MID, 180, 0)
+                cardLbl.align(dxUi.Utils.ALIGN.LEFT_MID, 180, 0)
                 cardLbl.textColor(0x767676)
                 cardLbl.textFont(viewUtils.font(26))
                 cardLbl.hide()
-                cardLbl.longMode(dxui.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
+                cardLbl.longMode(dxUi.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
                 cardLbl.width(150)
 
-                btn.on(dxui.Utils.EVENT.CLICK, () => {
+                btn.on(dxUi.Utils.EVENT.CLICK, () => {
                     cardBoxBg.show()
                     cardBoxBg.moveForeground()
                     topView.changeTheme(false)
-                    // 开启刷卡识别
+                    // Start card reading recognition
                     screen.getCardStart()
                 })
 
-                btnEdit.on(dxui.Utils.EVENT.CLICK, () => {
-                    btn.send(dxui.Utils.EVENT.CLICK)
+                btnEdit.on(dxUi.Utils.EVENT.CLICK, () => {
+                    btn.send(dxUi.Utils.EVENT.CLICK)
                 })
 
-                deleteBtn.on(dxui.Utils.EVENT.CLICK, () => {
+                deleteBtn.on(dxUi.Utils.EVENT.CLICK, () => {
                     viewUtils.confirmOpen('localUserAddView.confirm', 'localUserAddView.confirmCard', () => {
                         localUserAddView.removeCard()
                     }, () => { })
@@ -251,47 +256,47 @@ localUserAddView.init = function () {
 
             if (item.title === 'localUserAddView.face') {
                 // userBox.height(220)
-                btn.on(dxui.Utils.EVENT.CLICK, () => {
+                btn.on(dxUi.Utils.EVENT.CLICK, () => {
                     if (!checkRequired()) {
                         return
                     }
-                    dxui.loadMain(faceEnterView.screenMain)
+                    dxUi.loadMain(faceEnterView.screenMain)
                 })
 
-                btnEdit.on(dxui.Utils.EVENT.CLICK, () => {
+                btnEdit.on(dxUi.Utils.EVENT.CLICK, () => {
                     if (!checkRequired()) {
                         return
                     }
-                    dxui.loadMain(faceEnterView.screenMain)
+                    dxUi.loadMain(faceEnterView.screenMain)
                 })
 
-                // 人脸图片
-                const facePreview = dxui.Button.build('facePreview', userBox)
+                // Face image
+                const facePreview = dxUi.Button.build('facePreview', userBox)
                 item.facePreview = facePreview
                 facePreview.bgColor(0x000000)
-                facePreview.align(dxui.Utils.ALIGN.LEFT_MID, 180, 0)
-                const facePreviewLbl = dxui.Label.build('facePreviewLbl', facePreview)
+                facePreview.align(dxUi.Utils.ALIGN.LEFT_MID, 180, 0)
+                const facePreviewLbl = dxUi.Label.build('facePreviewLbl', facePreview)
                 facePreviewLbl.textFont(viewUtils.font(22))
                 facePreviewLbl.dataI18n = "localUserAddView.preview"
-                facePreview.on(dxui.Utils.EVENT.CLICK, () => {
+                facePreview.on(dxUi.Utils.EVENT.CLICK, () => {
                     facePreviewBox.show()
                     facePreviewBox.moveForeground()
                 })
 
-                const facePreviewBox = dxui.View.build('facePreviewBox', screenMain)
+                const facePreviewBox = dxUi.View.build('facePreviewBox', screenMain)
                 viewUtils._clearStyle(facePreviewBox)
                 facePreviewBox.hide()
                 facePreviewBox.setSize(screenMain.width(), screenMain.height())
-                facePreviewBox.on(dxui.Utils.EVENT.CLICK, () => {
+                facePreviewBox.on(dxUi.Utils.EVENT.CLICK, () => {
                     facePreviewBox.hide()
                 })
 
-                const faceImg = dxui.Image.build('faceImg', facePreviewBox)
-                faceImg.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+                const faceImg = dxUi.Image.build('faceImg', facePreviewBox)
+                faceImg.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
                 item.faceImg = faceImg
 
 
-                deleteBtn.on(dxui.Utils.EVENT.CLICK, () => {
+                deleteBtn.on(dxUi.Utils.EVENT.CLICK, () => {
                     if (!checkRequired()) {
                         return
                     }
@@ -301,180 +306,180 @@ localUserAddView.init = function () {
                 })
             }
         } else if (item.type === 'dropdown') {
-            const dropdown = dxui.Dropdown.build(item.title, userBox)
+            const dropdown = dxUi.Dropdown.build(item.title, userBox)
             item.dropdown = dropdown
             dropdown.setSize(260, 50)
-            dropdown.align(dxui.Utils.ALIGN.RIGHT_MID, 0, 0)
+            dropdown.align(dxUi.Utils.ALIGN.RIGHT_MID, 0, 0)
             dropdown.textFont(viewUtils.font(22))
             dropdown.getList().textFont(viewUtils.font(22))
             dropdown.setSymbol('/app/code/resource/image/down.png')
-            dropdown.on(dxui.Utils.EVENT.VALUE_CHANGED, () => {
+            dropdown.on(dxUi.Utils.EVENT.VALUE_CHANGED, () => {
                 localUserAddView.nowUser.type = dropdown.getSelected()
             })
         }
     })
 
-    // 密码生成页
-    const pwdBoxBg = dxui.View.build('pwdBoxBg', screenMain)
+    // Password generation page
+    const pwdBoxBg = dxUi.View.build('pwdBoxBg', screenMain)
     viewUtils._clearStyle(pwdBoxBg)
     pwdBoxBg.bgColor(0x000000)
     pwdBoxBg.bgOpa(50)
     pwdBoxBg.setSize(screen.screenSize.width, screen.screenSize.height)
     pwdBoxBg.scroll(false)
     pwdBoxBg.hide()
-    pwdBoxBg.on(dxui.Utils.EVENT.CLICK, () => {
-        pwdBoxCloseBtn.send(dxui.Utils.EVENT.CLICK)
+    pwdBoxBg.on(dxUi.Utils.EVENT.CLICK, () => {
+        pwdBoxCloseBtn.send(dxUi.Utils.EVENT.CLICK)
     })
 
-    const pwdBox = dxui.View.build('pwdBox', pwdBoxBg)
+    const pwdBox = dxUi.View.build('pwdBox', pwdBoxBg)
     viewUtils._clearStyle(pwdBox)
     pwdBox.setSize(screen.screenSize.width, 694)
-    pwdBox.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, 50)
+    pwdBox.align(dxUi.Utils.ALIGN.BOTTOM_MID, 0, 50)
     pwdBox.bgColor(0xffffff)
     pwdBox.radius(50)
 
-    const pwdBoxLbl = dxui.Label.build('pwdBoxLbl', pwdBox)
+    const pwdBoxLbl = dxUi.Label.build('pwdBoxLbl', pwdBox)
     pwdBoxLbl.dataI18n = 'localUserAddView.pwdBoxLbl'
     pwdBoxLbl.textFont(viewUtils.font(36))
-    pwdBoxLbl.align(dxui.Utils.ALIGN.TOP_MID, 0, 39)
+    pwdBoxLbl.align(dxUi.Utils.ALIGN.TOP_MID, 0, 39)
 
     const pwdBoxCloseBtn = viewUtils.imageBtn(pwdBox, 'pwdBoxCloseBtn', '/app/code/resource/image/close_small.png')
-    pwdBoxCloseBtn.align(dxui.Utils.ALIGN.TOP_RIGHT, -55, 18)
-    pwdBoxCloseBtn.on(dxui.Utils.EVENT.CLICK, () => {
+    pwdBoxCloseBtn.align(dxUi.Utils.ALIGN.TOP_RIGHT, -55, 18)
+    pwdBoxCloseBtn.on(dxUi.Utils.EVENT.CLICK, () => {
         pwdBoxBg.hide()
         topView.changeTheme(true)
     })
 
-    const pwdBoxContent = dxui.View.build('pwdBoxContent', pwdBox)
+    const pwdBoxContent = dxUi.View.build('pwdBoxContent', pwdBox)
     viewUtils._clearStyle(pwdBoxContent)
     pwdBoxContent.setSize(650, 100)
-    pwdBoxContent.align(dxui.Utils.ALIGN.TOP_MID, 0, 172)
-    pwdBoxContent.flexFlow(dxui.Utils.FLEX_FLOW.ROW_WRAP)
-    pwdBoxContent.flexAlign(dxui.Utils.FLEX_ALIGN.SPACE_AROUND, dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.CENTER)
+    pwdBoxContent.align(dxUi.Utils.ALIGN.TOP_MID, 0, 172)
+    pwdBoxContent.flexFlow(dxUi.Utils.FLEX_FLOW.ROW_WRAP)
+    pwdBoxContent.flexAlign(dxUi.Utils.FLEX_ALIGN.SPACE_AROUND, dxUi.Utils.FLEX_ALIGN.CENTER, dxUi.Utils.FLEX_ALIGN.CENTER)
 
     localUserAddView.pwdBoxContentItem = []
     for (let i = 0; i < 6; i++) {
-        const pwdBoxContentItem = dxui.View.build('pwdBoxContentItem' + i, pwdBoxContent)
+        const pwdBoxContentItem = dxUi.View.build('pwdBoxContentItem' + i, pwdBoxContent)
         pwdBoxContentItem.setSize(78, 90)
         pwdBoxContentItem.radius(13)
         pwdBoxContentItem.borderWidth(1)
         pwdBoxContentItem.setBorderColor(0xEAEAEA)
 
-        const pwdBoxContentItemLbl = dxui.Label.build('pwdBoxContentItemLbl' + i, pwdBoxContentItem)
+        const pwdBoxContentItemLbl = dxUi.Label.build('pwdBoxContentItemLbl' + i, pwdBoxContentItem)
         pwdBoxContentItemLbl.textFont(viewUtils.font(30))
-        pwdBoxContentItemLbl.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+        pwdBoxContentItemLbl.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
         pwdBoxContentItemLbl.text('0')
         localUserAddView.pwdBoxContentItem.push(pwdBoxContentItemLbl)
     }
 
-    const pwdBoxSaveBtn = dxui.Button.build('pwdBoxSaveBtn', pwdBox)
+    const pwdBoxSaveBtn = dxUi.Button.build('pwdBoxSaveBtn', pwdBox)
     pwdBoxSaveBtn.setSize(210, 60)
-    pwdBoxSaveBtn.align(dxui.Utils.ALIGN.TOP_LEFT, 87, 340)
+    pwdBoxSaveBtn.align(dxUi.Utils.ALIGN.TOP_LEFT, 87, 340)
     pwdBoxSaveBtn.bgColor(0xEAEAEA)
     pwdBoxSaveBtn.radius(10)
-    pwdBoxSaveBtn.on(dxui.Utils.EVENT.CLICK, () => {
+    pwdBoxSaveBtn.on(dxUi.Utils.EVENT.CLICK, () => {
         localUserAddView.changePwd()
     })
 
-    const pwdBoxSaveBtnLbl = dxui.Label.build('pwdBoxSaveBtnLbl', pwdBoxSaveBtn)
+    const pwdBoxSaveBtnLbl = dxUi.Label.build('pwdBoxSaveBtnLbl', pwdBoxSaveBtn)
     pwdBoxSaveBtnLbl.dataI18n = 'localUserAddView.pwdBoxSaveBtnLbl'
     pwdBoxSaveBtnLbl.textFont(viewUtils.font(24))
-    pwdBoxSaveBtnLbl.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+    pwdBoxSaveBtnLbl.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
     pwdBoxSaveBtnLbl.textColor(0x000000)
 
-    const pwdBoxConfirmBtn = dxui.Button.build('pwdBoxConfirmBtn', pwdBox)
+    const pwdBoxConfirmBtn = dxUi.Button.build('pwdBoxConfirmBtn', pwdBox)
     pwdBoxConfirmBtn.setSize(210, 60)
-    pwdBoxConfirmBtn.align(dxui.Utils.ALIGN.TOP_RIGHT, -76, 340)
+    pwdBoxConfirmBtn.align(dxUi.Utils.ALIGN.TOP_RIGHT, -76, 340)
     pwdBoxConfirmBtn.bgColor(0x000000)
     pwdBoxConfirmBtn.radius(10)
-    pwdBoxConfirmBtn.on(dxui.Utils.EVENT.CLICK, () => {
+    pwdBoxConfirmBtn.on(dxUi.Utils.EVENT.CLICK, () => {
         localUserAddView.addPwd(localUserAddView.pwdBoxContentFin)
-        pwdBoxCloseBtn.send(dxui.Utils.EVENT.CLICK)
+        pwdBoxCloseBtn.send(dxUi.Utils.EVENT.CLICK)
     })
 
-    const pwdBoxConfirmBtnLbl = dxui.Label.build('pwdBoxConfirmBtnLbl', pwdBoxConfirmBtn)
+    const pwdBoxConfirmBtnLbl = dxUi.Label.build('pwdBoxConfirmBtnLbl', pwdBoxConfirmBtn)
     pwdBoxConfirmBtnLbl.dataI18n = 'localUserAddView.pwdBoxConfirmBtnLbl'
     pwdBoxConfirmBtnLbl.textFont(viewUtils.font(24))
-    pwdBoxConfirmBtnLbl.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+    pwdBoxConfirmBtnLbl.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
 
-    // 读取卡片中
-    const cardBoxBg = dxui.View.build('cardBoxBg', screenMain)
+    // Reading card
+    const cardBoxBg = dxUi.View.build('cardBoxBg', screenMain)
     viewUtils._clearStyle(cardBoxBg)
     cardBoxBg.setSize(screen.screenSize.width, screen.screenSize.height)
-    cardBoxBg.align(dxui.Utils.ALIGN.TOP_MID, 0, 0)
+    cardBoxBg.align(dxUi.Utils.ALIGN.TOP_MID, 0, 0)
     cardBoxBg.bgColor(0x000000)
     cardBoxBg.bgOpa(50)
     cardBoxBg.scroll(false)
     cardBoxBg.hide()
-    cardBoxBg.on(dxui.Utils.EVENT.CLICK, () => {
-        cardBoxCloseBtn.send(dxui.Utils.EVENT.CLICK)
+    cardBoxBg.on(dxUi.Utils.EVENT.CLICK, () => {
+        cardBoxCloseBtn.send(dxUi.Utils.EVENT.CLICK)
     })
 
-    const cardBox = dxui.View.build('cardBox', cardBoxBg)
+    const cardBox = dxUi.View.build('cardBox', cardBoxBg)
     viewUtils._clearStyle(cardBox)
     cardBox.setSize(screen.screenSize.width, 694)
-    cardBox.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, 50)
+    cardBox.align(dxUi.Utils.ALIGN.BOTTOM_MID, 0, 50)
     cardBox.bgColor(0xffffff)
     cardBox.radius(50)
-    cardBox.on(dxui.Utils.EVENT.CLICK, () => {
+    cardBox.on(dxUi.Utils.EVENT.CLICK, () => {
     })
 
-    const cardBoxLbl = dxui.Label.build('cardBoxLbl', cardBox)
+    const cardBoxLbl = dxUi.Label.build('cardBoxLbl', cardBox)
     cardBoxLbl.dataI18n = 'localUserAddView.cardBoxLbl'
     cardBoxLbl.textFont(viewUtils.font(36))
-    cardBoxLbl.align(dxui.Utils.ALIGN.TOP_MID, 0, 39)
+    cardBoxLbl.align(dxUi.Utils.ALIGN.TOP_MID, 0, 39)
 
     const cardBoxCloseBtn = viewUtils.imageBtn(cardBox, 'cardBoxCloseBtn', '/app/code/resource/image/close_small.png')
-    cardBoxCloseBtn.align(dxui.Utils.ALIGN.TOP_RIGHT, -55, 18)
-    cardBoxCloseBtn.on(dxui.Utils.EVENT.CLICK, () => {
+    cardBoxCloseBtn.align(dxUi.Utils.ALIGN.TOP_RIGHT, -55, 18)
+    cardBoxCloseBtn.on(dxUi.Utils.EVENT.CLICK, () => {
         cardBoxBg.hide()
         topView.changeTheme(true)
-        // 关闭刷卡识别
+        // Stop card reading recognition
         screen.endCardEnd()
     })
 
     const cardBoxInput = viewUtils.input(cardBox, 'localUserAddView.cardBoxInput', undefined, undefined, 'localUserAddView.cardBoxInput')
     localUserAddView.cardBoxInput = cardBoxInput
-    cardBoxInput.align(dxui.Utils.ALIGN.TOP_MID, 0, 183)
+    cardBoxInput.align(dxUi.Utils.ALIGN.TOP_MID, 0, 183)
     cardBoxInput.setSize(630, 75)
-    cardBoxInput.on(dxui.Utils.EVENT.CLICK, () => {
-        cardBoxInput.align(dxui.Utils.ALIGN.TOP_MID, 0, 90)
+    cardBoxInput.on(dxUi.Utils.EVENT.CLICK, () => {
+        cardBoxInput.align(dxUi.Utils.ALIGN.TOP_MID, 0, 90)
         pinyin.hideCb(() => {
-            cardBoxInput.align(dxui.Utils.ALIGN.TOP_MID, 0, 183)
+            cardBoxInput.align(dxUi.Utils.ALIGN.TOP_MID, 0, 183)
         })
     })
 
-    const cardBoxResetBtn = dxui.Button.build('cardBoxResetBtn', cardBox)
+    const cardBoxResetBtn = dxUi.Button.build('cardBoxResetBtn', cardBox)
     cardBoxResetBtn.setSize(210, 60)
-    cardBoxResetBtn.align(dxui.Utils.ALIGN.TOP_LEFT, 87, 340)
+    cardBoxResetBtn.align(dxUi.Utils.ALIGN.TOP_LEFT, 87, 340)
     cardBoxResetBtn.bgColor(0xEAEAEA)
     cardBoxResetBtn.radius(10)
-    cardBoxResetBtn.on(dxui.Utils.EVENT.CLICK, () => {
+    cardBoxResetBtn.on(dxUi.Utils.EVENT.CLICK, () => {
         cardBoxInput.text('')
     })
 
-    const cardBoxResetBtnLbl = dxui.Label.build('cardBoxResetBtnLbl', cardBoxResetBtn)
+    const cardBoxResetBtnLbl = dxUi.Label.build('cardBoxResetBtnLbl', cardBoxResetBtn)
     cardBoxResetBtnLbl.dataI18n = 'localUserAddView.cardBoxResetBtnLbl'
     cardBoxResetBtnLbl.textFont(viewUtils.font(24))
-    cardBoxResetBtnLbl.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+    cardBoxResetBtnLbl.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
     cardBoxResetBtnLbl.textColor(0x000000)
 
-    const cardBoxSaveBtn = dxui.Button.build('cardBoxSaveBtn', cardBox)
+    const cardBoxSaveBtn = dxUi.Button.build('cardBoxSaveBtn', cardBox)
     cardBoxSaveBtn.setSize(210, 60)
-    cardBoxSaveBtn.align(dxui.Utils.ALIGN.TOP_RIGHT, -76, 340)
+    cardBoxSaveBtn.align(dxUi.Utils.ALIGN.TOP_RIGHT, -76, 340)
     cardBoxSaveBtn.bgColor(0x000000)
     cardBoxSaveBtn.radius(10)
-    cardBoxSaveBtn.on(dxui.Utils.EVENT.CLICK, () => {
-        cardBoxCloseBtn.send(dxui.Utils.EVENT.CLICK)
+    cardBoxSaveBtn.on(dxUi.Utils.EVENT.CLICK, () => {
+        cardBoxCloseBtn.send(dxUi.Utils.EVENT.CLICK)
         if (cardBoxInput.text()) {
             localUserAddView.addCard(cardBoxInput.text())
         }
     })
 
-    const cardBoxSaveBtnLbl = dxui.Label.build('cardBoxSaveBtnLbl', cardBoxSaveBtn)
+    const cardBoxSaveBtnLbl = dxUi.Label.build('cardBoxSaveBtnLbl', cardBoxSaveBtn)
     cardBoxSaveBtnLbl.dataI18n = 'localUserAddView.cardBoxSaveBtnLbl'
     cardBoxSaveBtnLbl.textFont(viewUtils.font(24))
-    cardBoxSaveBtnLbl.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+    cardBoxSaveBtnLbl.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
 
     const deleteBtn = viewUtils.bottomBtn(screenMain, screenMain.id + 'deleteBtn', 'localUserAddView.delete', () => {
         if (!checkRequired()) {
@@ -482,17 +487,17 @@ localUserAddView.init = function () {
         }
 
         viewUtils.confirmOpen('localUserAddView.confirmDelete', 'localUserAddView.confirmDeleteContent', () => {
-            // 删除用户
+            // Delete user
             const res = screen.deleteUser(localUserAddView.nowUser)
             if (res) {
-                dxui.loadMain(localUserView.screenMain)
+                dxUi.loadMain(localUserView.screenMain)
             } else {
                 localUserAddView.statusPanel.fail()
             }
         }, () => { })
 
     }, 0xEAEAEA, 0xEA0000)
-    deleteBtn.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, -200)
+    deleteBtn.align(dxUi.Utils.ALIGN.BOTTOM_MID, 0, -200)
     localUserAddView.deleteBtn = deleteBtn
     deleteBtn.hide()
 
@@ -502,18 +507,18 @@ localUserAddView.init = function () {
         }
         let res = false
         if (localUserAddView.deleteBtn.isHide()) {
-            // 新增用户
+            // Add new user
             res = await screen.insertUser(localUserAddView.nowUser)
         } else {
-            // 修改用户
+            // Update user
             res = screen.updateUser(localUserAddView.nowUser)
         }
 
         if (res === true) {
             localUserAddView.statusPanel.success()
             std.setTimeout(() => {
-                // 成功返回上一层界面
-                dxui.loadMain(localUserView.screenMain)
+                // Success, return to previous screen
+                dxUi.loadMain(localUserView.screenMain)
             }, 500)
         } else {
             if (typeof res === "string") {
@@ -523,7 +528,7 @@ localUserAddView.init = function () {
             }
         }
     })
-    saveBtn.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, -83)
+    saveBtn.align(dxUi.Utils.ALIGN.BOTTOM_MID, 0, -83)
     localUserAddView.saveBtn = saveBtn
 
     localUserAddView.statusPanel = viewUtils.statusPanel(screenMain, 'localUserAddView.success', 'localUserAddView.fail')
@@ -642,18 +647,18 @@ localUserAddView.isEdit = function (flag) {
     localUserAddView.removeName()
     localUserAddView.removeIDCard()
     if (flag) {
-        localUserAddView.saveBtn.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, -53)
+        localUserAddView.saveBtn.align(dxUi.Utils.ALIGN.BOTTOM_MID, 0, -53)
         localUserAddView.deleteBtn.show()
         localUserAddView.titleBox2.show()
     } else {
-        localUserAddView.saveBtn.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, -83)
+        localUserAddView.saveBtn.align(dxUi.Utils.ALIGN.BOTTOM_MID, 0, -83)
         localUserAddView.deleteBtn.hide()
         localUserAddView.titleBox2.hide()
         localUserAddView.nowUser = {}
     }
 }
 
-// 检查必填项
+// Check required fields
 function checkRequired() {
     if (!localUserAddView.userInfo[0].input.text()) {
         localUserAddView.statusPanel.fail("localUserAddView.requiredInfo")
@@ -667,14 +672,22 @@ function checkRequired() {
 }
 
 function refreshType() {
-    switch (screen.getConfig()['base.language']) {
+    const screenLanguage = screen.getConfig()['base.language']
+    const configLanguage = getCurrentLanguage()
+
+    log.info(`screenLanguage: ${screenLanguage}\n, configLanguage: ${configLanguage}`)
+    switch (screenLanguage) {
         case 'CN':
-            localUserAddView.userInfo[6].dropdown.setOptions(dropdownData)
+            localUserAddView.userInfo[6].dropdown.setOptions(dropdownDataCn)
             break;
         case 'EN':
-            localUserAddView.userInfo[6].dropdown.setOptions(dropdownData2)
+            localUserAddView.userInfo[6].dropdown.setOptions(dropdownDataEn)
+            break;
+        case 'RU':
+            localUserAddView.userInfo[6].dropdown.setOptions(dropdownDataRu)
             break;
         default:
+            localUserAddView.userInfo[6].dropdown.setOptions(dropdownDataEn)
             break;
     }
 }

@@ -1,4 +1,4 @@
-import dxui from '../../../../dxmodules/dxUi.js'
+import dxUi from '../../../../dxmodules/dxUi.js'
 import viewUtils from "../../viewUtils.js"
 import topView from "../../topView.js"
 import configView from '../configView.js'
@@ -8,12 +8,12 @@ import faceEnterView from './localUser/faceEnterView.js'
 import screen from '../../../screen.js'
 const localUserView = {}
 localUserView.init = function () {
-    /**************************************************创建屏幕*****************************************************/
-    const screenMain = dxui.View.build('localUserView', dxui.Utils.LAYER.MAIN)
+    /************************************************** Create Screen *****************************************************/
+    const screenMain = dxUi.View.build('localUserView', dxUi.Utils.LAYER.MAIN)
     localUserView.screenMain = screenMain
     screenMain.scroll(false)
     screenMain.bgColor(0xffffff)
-    screenMain.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
+    screenMain.on(dxUi.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
         topView.changeTheme(true)
 
         localUserView.nowPage = localUserView.nowPage ? localUserView.nowPage : 0
@@ -23,60 +23,60 @@ localUserView.init = function () {
             users = screen.getUsers(localUserView.nowPage, 6)
         }
         if (users.data.length > 0) {
-            // localUserView.initData([{ id: "1", name: '张三' }, { id: "2", name: '李四' }, { id: "3", name: '王五' }, { id: "4", name: '赵六' }, { id: "5", name: '孙七' }, { id: "6", name: '周八' }, { id: "7", name: '吴九' }, { id: "8", name: '郑十' }, { id: "9", name: '陈十一' }, { id: "10", name: '赵十二' }, { id: "11", name: '孙十三' }, { id: "12", name: '周十四' }, { id: "13", name: '吴十五' }, { id: "14", name: '郑十六' }, { id: "15", name: '陈十七' }, { id: "16", name: '赵十八' }, { id: "17", name: '孙十九' }, { id: "20", name: '周二十' },])
+            // localUserView.initData([{ id: "1", name: 'Zhang San' }, { id: "2", name: 'Li Si' }, { id: "3", name: 'Wang Wu' }, { id: "4", name: 'Zhao Liu' }, { id: "5", name: 'Sun Qi' }, { id: "6", name: 'Zhou Ba' }, { id: "7", name: 'Wu Jiu' }, { id: "8", name: 'Zheng Shi' }, { id: "9", name: 'Chen Shiyi' }, { id: "10", name: 'Zhao Shier' }, { id: "11", name: 'Sun Shisan' }, { id: "12", name: 'Zhou Shisi' }, { id: "13", name: 'Wu Shiwu' }, { id: "14", name: 'Zheng Shiliu' }, { id: "15", name: 'Chen Shiqi' }, { id: "16", name: 'Zhao Shiba' }, { id: "17", name: 'Sun Shijiu' }, { id: "20", name: 'Zhou Ershi' },])
             localUserView.initData(users.data)
         } else {
             localUserView.initData()
         }
-        // 刷新分页信息
+        // Refresh pagination information
         refreshPageInfo(users)
     })
 
     const titleBox = viewUtils.title(screenMain, configView.screenMain, 'localUserViewTitle', 'localUserView.title', () => { localUserView.nowPage = 0 })
-    titleBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 70)
+    titleBox.align(dxUi.Utils.ALIGN.TOP_MID, 0, 70)
 
-    const empty = dxui.Image.build('empty', screenMain)
+    const empty = dxUi.Image.build('empty', screenMain)
     localUserView.empty = empty
-    empty.align(dxui.Utils.ALIGN.TOP_MID, 0, 218)
+    empty.align(dxUi.Utils.ALIGN.TOP_MID, 0, 218)
     empty.source('/app/code/resource/image/empty.png')
 
-    const emptyLbl = dxui.Label.build('emptyLbl', screenMain)
+    const emptyLbl = dxUi.Label.build('emptyLbl', screenMain)
     localUserView.emptyLbl = emptyLbl
     emptyLbl.textFont(viewUtils.font(26))
-    emptyLbl.align(dxui.Utils.ALIGN.TOP_MID, 0, 479)
+    emptyLbl.align(dxUi.Utils.ALIGN.TOP_MID, 0, 479)
     emptyLbl.dataI18n = 'localUserView.empty'
     emptyLbl.textColor(0x888888)
 
-    const userList = dxui.View.build('userList', screenMain)
+    const userList = dxUi.View.build('userList', screenMain)
     viewUtils._clearStyle(userList)
     localUserView.userList = userList
     userList.setSize(screen.screenSize.width, 570)
-    userList.align(dxui.Utils.ALIGN.TOP_MID, 0, 142)
-    userList.flexFlow(dxui.Utils.FLEX_FLOW.ROW_WRAP)
-    userList.flexAlign(dxui.Utils.FLEX_ALIGN.START, dxui.Utils.FLEX_ALIGN.START, dxui.Utils.FLEX_ALIGN.START)
-    userList.obj.lvObjSetStylePadGap(5, dxui.Utils.ENUM._LV_STYLE_STATE_CMP_SAME)
+    userList.align(dxUi.Utils.ALIGN.TOP_MID, 0, 142)
+    userList.flexFlow(dxUi.Utils.FLEX_FLOW.ROW_WRAP)
+    userList.flexAlign(dxUi.Utils.FLEX_ALIGN.START, dxUi.Utils.FLEX_ALIGN.START, dxUi.Utils.FLEX_ALIGN.START)
+    userList.obj.lvObjSetStylePadGap(5, dxUi.Utils.ENUM._LV_STYLE_STATE_CMP_SAME)
     userList.hide()
 
-    const searchBox = dxui.View.build('searchBox', userList)
+    const searchBox = dxUi.View.build('searchBox', userList)
     viewUtils._clearStyle(searchBox)
     searchBox.setSize(screen.screenSize.width, 76)
     searchBox.bgOpa(0)
     searchBox.borderWidth(1)
     searchBox.setBorderColor(0xDEDEDE)
-    searchBox.obj.setStyleBorderSide(dxui.Utils.ENUM.LV_BORDER_SIDE_BOTTOM, 0)
+    searchBox.obj.setStyleBorderSide(dxUi.Utils.ENUM.LV_BORDER_SIDE_BOTTOM, 0)
 
     const searchInput = viewUtils.input(searchBox, 'searchBoxInput', undefined, () => {
     }, 'localUserView.search')
     searchInput.setSize(screen.screenSize.width / 2, 60)
-    searchInput.align(dxui.Utils.ALIGN.LEFT_MID, 28, 0)
+    searchInput.align(dxUi.Utils.ALIGN.LEFT_MID, 28, 0)
 
-    const searchBtn = dxui.Button.build('searchBtn', searchBox)
+    const searchBtn = dxUi.Button.build('searchBtn', searchBox)
     searchBtn.setSize(126, 44)
-    searchBtn.align(dxui.Utils.ALIGN.RIGHT_MID, -29, 0)
+    searchBtn.align(dxUi.Utils.ALIGN.RIGHT_MID, -29, 0)
     searchBtn.bgColor(0xF6FAFA)
     searchBtn.radius(10)
 
-    searchBtn.on(dxui.Utils.EVENT.CLICK, () => {
+    searchBtn.on(dxUi.Utils.EVENT.CLICK, () => {
         const users = screen.getUsers(0, 6, searchInput.text(), searchInput.text())
         if (users.data) {
             localUserView.initData(users.data)
@@ -86,52 +86,52 @@ localUserView.init = function () {
         // pinyin.hide()
     })
 
-    const searchBtnLbl = dxui.Label.build('searchBtnLbl', searchBtn)
+    const searchBtnLbl = dxUi.Label.build('searchBtnLbl', searchBtn)
     searchBtnLbl.dataI18n = 'localUserView.searchBtn'
     searchBtnLbl.textFont(viewUtils.font(26))
     searchBtnLbl.textColor(0x05AA8D)
-    searchBtnLbl.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+    searchBtnLbl.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
 
     localUserView.userItemList = []
     for (let i = 0; i < 6; i++) {
-        const userItem = dxui.View.build('userItem' + i, userList)
+        const userItem = dxUi.View.build('userItem' + i, userList)
         viewUtils._clearStyle(userItem)
         userItem.setSize(screen.screenSize.width, 76)
-        userItem.align(dxui.Utils.ALIGN.TOP_MID, 0, 0)
+        userItem.align(dxUi.Utils.ALIGN.TOP_MID, 0, 0)
         userItem.bgOpa(0)
         userItem.borderWidth(1)
         userItem.setBorderColor(0xDEDEDE)
-        userItem.obj.setStyleBorderSide(dxui.Utils.ENUM.LV_BORDER_SIDE_BOTTOM, 0)
+        userItem.obj.setStyleBorderSide(dxUi.Utils.ENUM.LV_BORDER_SIDE_BOTTOM, 0)
         userItem.hide()
 
-        const userItemId0 = dxui.Label.build('userItemId0' + i, userItem)
+        const userItemId0 = dxUi.Label.build('userItemId0' + i, userItem)
         userItemId0.text('ID：')
         userItemId0.textFont(viewUtils.font(26))
-        userItemId0.align(dxui.Utils.ALIGN.LEFT_MID, 28, 0)
+        userItemId0.align(dxUi.Utils.ALIGN.LEFT_MID, 28, 0)
 
-        const userItemId = dxui.Label.build('userItemId' + i, userItem)
+        const userItemId = dxUi.Label.build('userItemId' + i, userItem)
         userItemId.text(i + '')
         userItemId.textFont(viewUtils.font(26))
-        userItemId.align(dxui.Utils.ALIGN.LEFT_MID, 80, 0)
+        userItemId.align(dxUi.Utils.ALIGN.LEFT_MID, 80, 0)
         userItemId.width(100)
-        userItemId.longMode(dxui.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
+        userItemId.longMode(dxUi.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
 
-        const userItemName = dxui.Label.build('userItemName' + i, userItem)
+        const userItemName = dxUi.Label.build('userItemName' + i, userItem)
         userItemName.text('')
         userItemName.textFont(viewUtils.font(26))
-        userItemName.align(dxui.Utils.ALIGN.LEFT_MID, 220, 0)
+        userItemName.align(dxUi.Utils.ALIGN.LEFT_MID, 220, 0)
         userItemName.width(200)
-        userItemName.longMode(dxui.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
+        userItemName.longMode(dxUi.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
 
-        const userItemEdit = dxui.Button.build('userItemEdit' + i, userItem)
+        const userItemEdit = dxUi.Button.build('userItemEdit' + i, userItem)
         userItemEdit.setSize(126, 44)
-        userItemEdit.align(dxui.Utils.ALIGN.RIGHT_MID, -29, 0)
+        userItemEdit.align(dxUi.Utils.ALIGN.RIGHT_MID, -29, 0)
         userItemEdit.bgColor(0xF6FAFA)
         userItemEdit.radius(10)
 
-        userItemEdit.on(dxui.Utils.EVENT.CLICK, () => {
+        userItemEdit.on(dxUi.Utils.EVENT.CLICK, () => {
             localUserAddView.isEdit(true)
-            dxui.loadMain(localUserAddView.screenMain)
+            dxUi.loadMain(localUserAddView.screenMain)
 
             let item = localUserView.userData.filter(item => {
                 return item.id === userItemId.text().replace('ID：', '')
@@ -164,31 +164,31 @@ localUserView.init = function () {
             }
         })
 
-        const userItemEditLbl = dxui.Label.build('userItemEditLbl' + i, userItemEdit)
+        const userItemEditLbl = dxUi.Label.build('userItemEditLbl' + i, userItemEdit)
         userItemEditLbl.dataI18n = 'localUserView.edit'
         userItemEditLbl.textFont(viewUtils.font(26))
         userItemEditLbl.textColor(0x05AA8D)
-        userItemEditLbl.align(dxui.Utils.ALIGN.CENTER, 0, 0)
+        userItemEditLbl.align(dxUi.Utils.ALIGN.CENTER, 0, 0)
 
         localUserView.userItemList.push({ userItem, userItemId, userItemName })
     }
 
-    const pageNextBtn = dxui.Button.build('pageNextBtn', screenMain)
+    const pageNextBtn = dxUi.Button.build('pageNextBtn', screenMain)
     pageNextBtn.bgColor(0x000000)
     localUserView.pageNextBtn = pageNextBtn
-    const pageNextLbl = dxui.Label.build('pageNextLbl', pageNextBtn)
+    const pageNextLbl = dxUi.Label.build('pageNextLbl', pageNextBtn)
     pageNextLbl.text("→")
-    pageNextBtn.align(dxui.Utils.ALIGN.BOTTOM_RIGHT, -20, -372)
+    pageNextBtn.align(dxUi.Utils.ALIGN.BOTTOM_RIGHT, -20, -372)
     pageNextBtn.textFont(viewUtils.font(20))
-    const pagePrevBtn = dxui.Button.build('pagePrevBtn', screenMain)
+    const pagePrevBtn = dxUi.Button.build('pagePrevBtn', screenMain)
     pagePrevBtn.bgColor(0x000000)
     localUserView.pagePrevBtn = pagePrevBtn
-    const pagePrevLbl = dxui.Label.build('pagePrevLbl', pagePrevBtn)
+    const pagePrevLbl = dxUi.Label.build('pagePrevLbl', pagePrevBtn)
     pagePrevLbl.text("←")
-    pagePrevBtn.align(dxui.Utils.ALIGN.BOTTOM_LEFT, 20, -372)
+    pagePrevBtn.align(dxUi.Utils.ALIGN.BOTTOM_LEFT, 20, -372)
     pagePrevBtn.textFont(viewUtils.font(20))
 
-    pageNextBtn.on(dxui.Utils.EVENT.CLICK, () => {
+    pageNextBtn.on(dxUi.Utils.EVENT.CLICK, () => {
         if (!localUserView.nowPage) {
             localUserView.nowPage = 0
         }
@@ -201,7 +201,7 @@ localUserView.init = function () {
         }
         refreshPageInfo(users)
     })
-    pagePrevBtn.on(dxui.Utils.EVENT.CLICK, () => {
+    pagePrevBtn.on(dxUi.Utils.EVENT.CLICK, () => {
         if (!localUserView.nowPage) {
             localUserView.nowPage = 0
         }
@@ -215,14 +215,14 @@ localUserView.init = function () {
         refreshPageInfo(users)
     })
 
-    const pageSelect = dxui.Dropdown.build('pageSelect', screenMain)
+    const pageSelect = dxUi.Dropdown.build('pageSelect', screenMain)
     localUserView.pageSelect = pageSelect
     pageSelect.textFont(viewUtils.font(22))
     pageSelect.getList().textFont(viewUtils.font(22))
     pageSelect.setSize(150, 55)
     pageSelect.setSymbol('/app/code/resource/image/down.png')
-    pageSelect.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, -370)
-    pageSelect.on(dxui.Utils.EVENT.VALUE_CHANGED, () => {
+    pageSelect.align(dxUi.Utils.ALIGN.BOTTOM_MID, 0, -370)
+    pageSelect.on(dxUi.Utils.EVENT.VALUE_CHANGED, () => {
         localUserView.pageNum = pageSelect.getSelected()
         const users = screen.getUsers(localUserView.pageNum, 6)
         if (users.data) {
@@ -235,11 +235,11 @@ localUserView.init = function () {
 
     const syncBtn = viewUtils.bottomBtn(screenMain, screenMain.id + 'syncBtn', 'localUserView.sync', () => {
     }, 0xEAEAEA, 0x000000)
-    syncBtn.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, -204)
+    syncBtn.align(dxUi.Utils.ALIGN.BOTTOM_MID, 0, -204)
     localUserView.syncBtn = syncBtn
     syncBtn.hide()
 
-    syncBtn.on(dxui.Utils.EVENT.CLICK, () => {
+    syncBtn.on(dxUi.Utils.EVENT.CLICK, () => {
         viewUtils.confirmOpen('localUserView.attention', 'localUserView.attentionContent', () => {
             viewUtils.confirmOpen('localUserView.tip', 'localUserView.tipContent')
         })
@@ -247,13 +247,13 @@ localUserView.init = function () {
 
     const addBtn = viewUtils.bottomBtn(screenMain, screenMain.id + 'addBtn', 'localUserView.add', () => {
         localUserAddView.isEdit(false)
-        dxui.loadMain(localUserAddView.screenMain)
+        dxUi.loadMain(localUserAddView.screenMain)
     })
-    addBtn.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, -83)
+    addBtn.align(dxUi.Utils.ALIGN.BOTTOM_MID, 0, -83)
 }
 
 localUserView.initData = function (data) {
-    // 当前页的人员信息
+    // Current page user information
     localUserView.userData = data
     localUserView.refresh(data)
 }
@@ -271,7 +271,7 @@ localUserView.refresh = function (data) {
         item.userItem.hide()
     })
 
-    // 渲染人员列表
+    // Render user list
     data.forEach((item, index) => {
         if (index >= localUserView.userItemList.length) {
             return
