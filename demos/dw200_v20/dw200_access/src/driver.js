@@ -709,20 +709,20 @@ driver.config = {
 driver.watchdog = {
     id: "watchdog",
     init: function () {
-        watchdog.open(1 | 2, this.id)
-        watchdog.enable(1, this.id)
-        watchdog.enable(2, this.id)
-        watchdog.start(20000, this.id)
+        // watchdog.open(1 | 2, this.id)
+        // watchdog.enable(1, this.id)
+        // watchdog.enable(2, this.id)
+        // watchdog.start(20000, this.id)
     },
     loop: function () {
-        watchdog.loop(1, this.id)
+        // watchdog.loop(1, this.id)
     },
     feed: function (flag, timeout) {
-        if (utils.isEmpty(this.feedTime) || new Date().getTime() - this.feedTime > 2000) {
-            // 降低喂狗频率，间隔2秒喂一次
-            this.feedTime = new Date().getTime()
-            watchdog.feed(flag, timeout)
-        }
+        // if (utils.isEmpty(this.feedTime) || new Date().getTime() - this.feedTime > 2000) {
+        //     // 降低喂狗频率，间隔2秒喂一次
+        //     this.feedTime = new Date().getTime()
+        //     watchdog.feed(flag, timeout)
+        // }
     }
 }
 

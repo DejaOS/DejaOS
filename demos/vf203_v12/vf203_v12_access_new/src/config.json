@@ -1,0 +1,112 @@
+{
+    // 人脸识别相似度
+    "face.similarity": 0.5,
+    // 活体检测
+    "face.livenessOff": 1,
+    // 活体检测阈值
+    "face.livenessVal": 5,
+    "face.showNir": 1,
+    // ["无语音", "播放请先注册", "播放陌生人你好"]
+    "face.stranger": 1,
+    // ["无语音", "播放名字", "播放问候语"]
+    "face.voiceMode": 1,
+    "face.voiceModeDate": "欢迎光临",
+    // Server URI must start with one of: tcp://, ssl://, mqtt://, mqtts://
+    "mqtt.addr": "mqtt://192.168.10.202:1883",
+    "mqtt.clientId": "",
+    "mqtt.username": "",
+    "mqtt.password": "",
+    "mqtt.qos": 1,
+    "mqtt.prefix": "",
+    "mqtt.onlinecheck": 0,
+    "mqtt.timeout": 5000,
+    "mqtt.willTopic": "access_device/v2/event/offline",
+    "mqtt.cleanSession": 0,
+    "mqtt.clientIdSuffix": 1,
+    // 1:以太网，2：wifi，4：4g
+    "net.type": 1,
+    "net.ssid": "",
+    "net.psk": "",
+    // 1：静态，2：动态
+    "net.dhcp": 2,
+    "net.ip": "",
+    "net.gateway": "",
+    "net.mask": "",
+    "net.dns": "",
+    "net.mac": "",
+    // 0关闭，1定时同步
+    "ntp.ntp": 1,
+    "ntp.server": "182.92.12.11",
+    // "ntp.interval": 1440,
+    // 定时同步，24小时制
+    "ntp.hour": 3,
+    //时区
+    "ntp.gmt": 8,
+    //通行记录存储上限
+    "access.offlineAccessNum": 2000,
+    //继电器延迟时间
+    "access.relayTime": 3000,
+    // 火警开关 1:开 0:关
+    "access.fire": 0,
+    // 火警状态 1:火警 0:正常
+    "access.fireStatus": 0,
+    // 防拆开关 1:开 0:关
+    "access.tamper": 0,
+    // CN/EN
+    "base.language": "CN",
+    // 管理员密码
+    "base.password": "password",
+    //是否第一次登录后台 0 未登录 1 已登录 // TODO 这个配置项应该属于运行时状态,不赢该写入config.json或者写入单独分组,查询配置时做过滤
+    "base.firstLogin": 0,
+    // 熄屏时间，单位分钟，0从不
+    "base.screenOff": 0,
+    // 屏幕保护，单位分钟，0从不
+    "base.screensaver": 0,
+    //屏幕背光
+    "base.backlight": 70,
+    //白色补光灯
+    "base.brightness": 70,
+    //红外补光灯
+    "base.nirBrightness": 70,
+    //音量(0-10)
+    "base.volume": 8,
+    "base.showIp": 1,
+    //sn 显示  1 显示 0 隐藏
+    "base.showSn": 1,
+    //小程序码 显示  1 显示 0 隐藏
+    "base.showProgramCode": 1,
+    //云证功能菜单 显示  1 显示 0 隐藏
+    "base.showIdentityCard": 1,
+    // 0: 标准模式 1: 简约模式
+    "base.appMode": 1,
+    // mac地址
+    "sys.mac": "",
+    //UUID //TODO 尝试去掉UUID字段,统一使用SN,尽可能减少UUID和SN不一致的可能性
+    "sys.uuid": "",
+    //UUID
+    "sys.sn": "",
+    //设备型号
+    "sys.model": "",
+    //版本号
+    "sys.version": "",
+    //固件版本号
+    "sys.appVersion": "",
+    //更新时间
+    "sys.releaseTime": "",
+    "sys.heart_en": 0, //心跳1开 0 关
+    "sys.heart_time": 30,
+    "sys.nfc": 1, //1开 0 关    刷卡开关
+    "sys.pwd": 1, //1开 0 关    密码开门开关
+    "sys.strangerImage": 1, //1开 0 关   陌生人保存图片开关
+    "sys.accessImageType": 1, //1人脸 0 全景   通行图片类型
+    //云证开关 3:云证获取 1:物理卡号
+    "sys.nfcIdentityCardEnable": 1,
+    // 0:wifi 版本  1:4G版本  2:以太网版本 默认 3未读取状态
+    "sys.devType": 0,
+    // 重启次数记录 // TODO 这个配置项应该属于运行时状态,不应该写入config.json或者写入单独分组,查询配置时做过滤
+    "sys.restartCount": 0,
+    // 企微设备绑定状态 1:已绑定 0:未绑定
+    "sys.weComStatus": 0,
+    // 企微绑定专用mqtt地址
+    "sys.weComMqttAddr": "mqtt://192.168.10.1:61011"
+}

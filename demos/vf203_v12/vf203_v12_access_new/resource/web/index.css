@@ -1,0 +1,125 @@
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+}
+
+/*
+ *
+ * 朴素按钮字体颜色
+ * 默认为黑色，为与主题一致改成主题色
+ * 与主题色一致
+ * 更改主题色时，需要更改该色值
+ *
+ */
+/* .el-button.el-button--default {
+  color: #00bcd4;
+} */
+
+.el-button.el-button--default.el-button--primary {
+  color: #ffffff;
+}
+
+/*
+ * 搜索框统一样式
+ */
+.el-InputForm {
+  background-color: #fff;
+  padding: 10px 20px;
+  box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
+  border-radius: 15px;
+  position: relative;
+}
+
+.el-InputForm .el-form-item {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 5px 0;
+}
+
+/*
+ * 侧边栏选项行高
+ */
+.el-submenu__title,
+.el-menu-item {
+  height: 46px !important;
+  line-height: 46px !important;
+}
+
+/*
+ * 面包屑最后一项颜色
+ */
+.el-breadcrumb__item:last-child span {
+  color: #999 !important;
+}
+
+/* 表格鼠标悬停框宽度限制 */
+.el-tooltip__popper {
+  max-width: 90%;
+  line-height: 2 !important;
+}
+
+/* 禁用状态输入框文字颜色 */
+.the-main .el-textarea.is-disabled .el-textarea__inner,
+.the-main .el-input.is-disabled .el-input__inner {
+  color: #000;
+}
+
+.el-button {
+  min-width: 120px;
+}
+
+.el-button--text {
+  min-width: auto;
+}
+
+/* 修改开关按钮样式 */
+.el-switch__core {
+  width: 60px !important;
+}
+
+.el-switch__label {
+  display: none;
+  color: #ffffff00 !important;
+  position: absolute;
+  z-index: 9;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.el-switch__label--right {
+  right: 22px;
+}
+
+.el-switch__label--left {
+  left: 22px;
+}
+
+.el-switch .is-active {
+  color: #fff !important;
+}
+
+.el-dialog__footer {
+  text-align: center !important;
+}
+
+.el-dialog {
+  border-radius: 10px !important;
+}
+
+.dialog-footer {
+  text-align: center;
+}

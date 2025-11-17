@@ -15,15 +15,15 @@ const driver = {}
 
 driver.watchdog = {
     init: function () {
-        dxWatchdog.open(1 | 2)
-        dxWatchdog.enable(1)
-        dxWatchdog.start(60000)
+        // dxWatchdog.open(1 | 2)
+        // dxWatchdog.enable(1)
+        // dxWatchdog.start(60000)
     },
     loop: function () {
-        dxWatchdog.loop(1)
+        // dxWatchdog.loop(1)
     },
     feed: function (flag, timeout) {
-        dxWatchdog.feed(flag, timeout)
+        // dxWatchdog.feed(flag, timeout)
     }
 }
 driver.pwm = {

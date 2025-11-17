@@ -644,19 +644,19 @@ driver.gpiokey = {
 }
 driver.watchdog = {
     init: function () {
-        watchdog.open(1)
-        watchdog.enable(1)
-        watchdog.start(20000)
+        // watchdog.open(1)
+        // watchdog.enable(1)
+        // watchdog.start(20000)
     },
     loop: function () {
-        watchdog.loop(1)
+        // watchdog.loop(1)
     },
     feed: function (flag, timeout) {
-        if (utils.isEmpty(this["feedTime" + flag]) || new Date().getTime() - this["feedTime" + flag] > 2000) {
-            // 降低喂狗频率，间隔2秒喂一次
-            this["feedTime" + flag] = new Date().getTime()
-            watchdog.feed(flag, timeout)
-        }
+        // if (utils.isEmpty(this["feedTime" + flag]) || new Date().getTime() - this["feedTime" + flag] > 2000) {
+        //     // 降低喂狗频率，间隔2秒喂一次
+        //     this["feedTime" + flag] = new Date().getTime()
+        //     watchdog.feed(flag, timeout)
+        // }
     }
 }
 

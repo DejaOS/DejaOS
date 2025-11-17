@@ -602,15 +602,15 @@ driver.heartbeat = {
 
 driver.watchdog = {
     init: function () {
-        watchdog.open(1 | 2)
-        watchdog.enable(1)
-        watchdog.start(20000)
+        // watchdog.open(1 | 2)
+        // watchdog.enable(1)
+        // watchdog.start(20000)
     },
     loop: function () {
-        watchdog.loop(1)
+        // watchdog.loop(1)
     },
     feed: function (flag, timeout) {
-        watchdog.feed(flag, timeout)
+        // watchdog.feed(flag, timeout)
     }
 }
 

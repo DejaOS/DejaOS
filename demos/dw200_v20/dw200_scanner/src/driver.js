@@ -593,16 +593,16 @@ driver.heartbeat = {
 driver.watchdog = {
     id: "watchdog",
     init: function () {
-        watchdog.open(1 | 2, this.id)
-        watchdog.enable(1, this.id)
-        watchdog.enable(2, this.id)
-        watchdog.start(20000, this.id)
+        // watchdog.open(1 | 2, this.id)
+        // watchdog.enable(1, this.id)
+        // watchdog.enable(2, this.id)
+        // watchdog.start(20000, this.id)
     },
     loop: function () {
-        watchdog.loop(1, this.id)
+        // watchdog.loop(1, this.id)
     },
     feed: function (flag, timeout) {
-        watchdog.feed(flag, timeout)
+        // watchdog.feed(flag, timeout)
     }
 }
 
