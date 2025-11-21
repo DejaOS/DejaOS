@@ -10,21 +10,21 @@ import * as os from "os";
 
 const configService = {}
 
-// 匹配以点分十进制形式表示的 IP 地址，例如：192.168.0.1。
+// Match IP address in dotted decimal notation, e.g.: 192.168.0.1
 const ipCheck = v => /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(v)
-// 匹配 www.baidu.com or www.baidu.com:1883 or 192.168.0.1:8080
+// Match www.baidu.com or www.baidu.com:1883 or 192.168.0.1:8080
 const ipOrDomainCheckWithPort = v => /^(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})(:\d{1,5})?$/.test(v);
 
-// 正整数
+// Positive integer
 const regpCheck = v => /^[1-9]\d*$/.test(v)
-// 非负整数
+// Non-negative integer
 const regnCheck = v => /^([1-9]\d*|0{1})$/.test(v)
-// 所有支持的配置项的检验规则以及设置成功后的回调
+// Validation rules for all supported configuration items and callbacks after successful setting
 
 const supported = {
     netInfo: {
         type: { rule: v => [0, 1, 2, 4].includes(v) },
-        // 1:动态,0:静态
+        // 1: dynamic, 0: static
         dhcp: { rule: v => [0, 1].includes(v) },
         ip: { rule: ipCheck },
         gateway: { rule: ipCheck },
@@ -32,7 +32,7 @@ const supported = {
         subnetMask: { rule: ipCheck },
         netMac: { rule: v => typeof v == 'string' },
         fixed_macaddr_enable: { rule: v => [0, 2].includes(v) },
-        // 0：关闭 1：间隔同步
+        // 0: disabled 1: interval sync
         ntp: { rule: v => [0, 1].includes(v) },
         ntpAddr: { rule: v => typeof v == 'string' },
         ntpInterval: { rule: regpCheck },
@@ -83,11 +83,11 @@ const supported = {
                 try {
                     suffix = base64ImageSave(v, true)
                 } catch (error) {
-                    log.error("解码失败", error)
+                    log.error("Decode failed", error)
                     config.set("uiInfo.horBgImage", "")
                     return
                 }
-                // 由于base64太大，查询配置会慢，所以设置完清空此项
+                // Since base64 is too large, querying config will be slow, so clear this item after setting
                 config.set("uiInfo.horBgImage", "")
                 if (!suffix) {
                     return
@@ -103,11 +103,11 @@ const supported = {
                 try {
                     suffix = base64ImageSave(v, false)
                 } catch (error) {
-                    log.error("解码失败", error)
+                    log.error("Decode failed", error)
                     config.set("uiInfo.verBgImage", "")
                     return
                 }
-                // 由于base64太大，所以设置完清空此项
+                // Since base64 is too large, clear this item after setting
                 config.set("uiInfo.verBgImage", "")
                 if (!suffix) {
                     return
@@ -117,13 +117,13 @@ const supported = {
                 driver.screen.reload()
             }
         },
-        // 日期显示隐藏 1开 0 关
+        // Date display visibility 1: show 0: hide
         show_date: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
-        // 设备名称显示隐藏 1开 0 关
+        // Device name display visibility 1: show 0: hide
         show_devname: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
-        //sn是否隐藏 1 显示 0 隐藏
+        // SN visibility 1: show 0: hide
         sn_show: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
-        //ip是否隐藏 1 显示 0 隐藏
+        // IP visibility 1: show 0: hide
         ip_show: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
         // buttonText: { rule: v => typeof v == 'string' && v.length <= 6, callback: v => driver.screen.reload() },
         fontPath: { rule: v => typeof v == 'string', callback: v => driver.screen.reload() },
@@ -138,23 +138,23 @@ const supported = {
         offlineAccessNum: { rule: regpCheck },
     },
     sysInfo: {
-        //语音音量
+        // Voice volume
         volume: { rule: regnCheck },
-        //按键音量
+        // Key press volume
         volume2: { rule: regnCheck },
-        //蜂鸣音量
+        // Buzzer volume
         volume3: { rule: regnCheck },
-        //版本号显示隐藏
+        // Version number display visibility
         version_show: { rule: v => [0, 1].includes(v), callback: v => driver.screen.reload() },
         heart_time: { rule: regpCheck },
         heart_en: { rule: v => [0, 1].includes(v) },
         heart_data: { rule: v => typeof v == 'string' },
-        //设备号
+        // Device number
         deviceNum: { rule: regnCheck },
-        // 设备名称
+        // Device name
         deviceName: { rule: v => typeof v == 'string', callback: v => driver.screen.reload() },
         com_passwd: { rule: v => v.length == 16 },
-        // 0:中文, 1:英文
+        // 0: Chinese, 1: English
         language: {
             rule: v => [0, 1].includes(v), callback: v => {
                 config.set("sysInfo.language", v == 1 ? "EN" : "CN")
@@ -163,36 +163,36 @@ const supported = {
         },
         status: { rule: v => [1, 2].includes(v) },
         nfc_identity_card_enable: { rule: v => [1, 3].includes(v) },
-        //1打开0关闭
+        // 1: enable 0: disable
         nfc: { rule: v => [0, 1].includes(v) },
-        // 设置系统时间，秒级
+        // Set system time, in seconds
         time: { rule: regnCheck, callback: v => common.systemBrief(`date -s "@${v}"`) },
-        //在线验证错误提示 开关 0 关闭 1 开启
+        // Online verification error message switch 0: off 1: on
         onlinecheckErrorMsg: { rule: v => [0, 1].includes(v) },
-        //-1 关闭自动重启   0-23 整点重启
+        // -1: disable auto restart, 0-23: restart at the hour
         autoRestart: { rule: v => typeof v == 'number' && /^(-1|[0-9]|1[0-9]|2[0-3])$/.test(v.toString()) },
     },
     scanInfo: {
-        //码制选择根据比特位来的 全选64511
+        // Code type selection based on bit position, select all: 64511
         deType: { rule: regnCheck },
-        //扫码模式 0是间隔 1是单次
+        // Scan mode 0: interval 1: single
         sMode: { rule: v => [0, 1].includes(v) },
-        //间隔生效  间隔时间
+        // Interval effective, interval time
         interval: { rule: regnCheck },
     }
 }
 configService.setSn = function (params) {
-    //写入本地文件
+    // Write to local file
     std.saveFile('/etc/.sn', params)
     config.setAndSave('sysInfo.uuid', params)
     config.setAndSave('sysInfo.sn', params)
     config.setAndSave('mqttInfo.clientId', params)
 }
-// 需要重启的配置
+// Configurations that require reboot
 const needReboot = ["sysInfo.autoRestart", "netInfo", "mqttInfo", "sysInfo.volume", "sysInfo.volume2", "sysInfo.volume3", "sysInfo.heart_time", "sysInfo.heart_en", "sysInfo.nfc_identity_card_enable", 'sysInfo.language',
     'scanInfo.deType', 'sysInfo.nfc']
 
-// 统一用户配置校验方法
+// Unified user configuration validation method
 configService.configVerifyAndSave = function (data) {
     let isReboot = false
     for (const key in data) {
@@ -201,7 +201,7 @@ configService.configVerifyAndSave = function (data) {
         }
         const item = data[key];
         if (typeof item != 'object') {
-            // 必须是一个组
+            // Must be a group
             continue
         }
         if (needReboot.includes(key)) {
@@ -218,11 +218,11 @@ configService.configVerifyAndSave = function (data) {
             }
 
             if (!option.rule || option.rule(value)) {
-                // 没有校验规则，或者校验通过
+                // No validation rule, or validation passed
                 config.set(key + "." + subKey, value)
                 if (option.callback) {
-                    log.info("执行配置设置回调")
-                    // 执行配置设置回调
+                    log.info("Execute configuration setting callback")
+                    // Execute configuration setting callback
                     option.callback(value)
                 }
             } else {
@@ -231,14 +231,14 @@ configService.configVerifyAndSave = function (data) {
         }
     }
     config.save()
-    // 检查需要重启的配置，3秒后重启
+    // Check configurations that require reboot, restart after 3 seconds
     if (isReboot) {
         common.asyncReboot(3)
     }
     return true
 }
 
-// 开门模式修改回调
+// Door opening mode modification callback
 function openModeCb(value) {
     if (value == 1) {
         driver.gpio.open()
@@ -247,7 +247,7 @@ function openModeCb(value) {
     }
 }
 
-// base64图片保存
+// Base64 image save
 // data:image/jpg;base64,/data:image/jpeg;base64,
 // data:image/png;base64,
 // data:image/bmp;base64,
@@ -256,7 +256,7 @@ function base64ImageSave(value, isHor) {
         return false
     }
     let suffix = ".png"
-    // base64转图片保存
+    // Convert base64 to image and save
     let jpg_prefix1 = "data:image/jpg;base64,"
     let jpg_prefix2 = "data:image/jpeg;base64,"
     let png_prefix = "data:image/png;base64,"
@@ -274,7 +274,7 @@ function base64ImageSave(value, isHor) {
         value = value.slice(bmp_prefix.length)
         suffix = ".bmp"
     } else {
-        log.error("base64前缀错误")
+        log.error("Base64 prefix error")
         return false
     }
 
@@ -284,11 +284,11 @@ function base64ImageSave(value, isHor) {
     console.log("=======================", len);
 
     if (len != buf.length) {
-        log.error("base64转图片失败")
+        log.error("Base64 to image conversion failed")
         return false
     }
     if (os.close(fd) != 0) {
-        log.error("存储文件失败")
+        log.error("File storage failed")
         return false
     }
     return suffix

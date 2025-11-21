@@ -33,19 +33,19 @@ driver.net = {
         let ssid = ""
         let psk = ""
         
-        // 从JSON配置文件读取网络配置
+        // Read network configuration from JSON config file
         try {
             if (std.exist('/app/code/src/config.json')) {
-                logger.info("[driver.net] 从配置文件读取网络配置"+std.loadFile('/app/code/src/config.json'))
+                logger.info("[driver.net] Read network configuration from config file"+std.loadFile('/app/code/src/config.json'))
                 const configData = JSON.parse(std.loadFile('/app/code/src/config.json'))
                 type = configData.type || net.TYPE.ETHERNET
                 dhcp = configData.dhcp || net.DHCP.DYNAMIC
                 ssid = configData.ssid || ""
                 psk = configData.psk || ""
-                logger.info("[driver.net] 从配置文件读取网络配置:", { type, dhcp, ssid, psk })
+                logger.info("[driver.net] Read network configuration from config file:", { type, dhcp, ssid, psk })
             }
         } catch (error) {
-            logger.error("[driver.net] 读取配置文件失败:", error)
+            logger.error("[driver.net] Failed to read config file:", error)
         }
         
         let options = {
@@ -75,28 +75,28 @@ driver.net = {
 
 driver.mqtt = {
     init: function () {
-        //判断是否配置了mqtt地址
+        // Check if MQTT address is configured
         let mqttAddr = ""
         let username = ""
         let password = ""
         
-        // 从JSON配置文件读取MQTT配置
+        // Read MQTT configuration from JSON config file
         try {
             if (std.exist('/app/code/src/config.json')) {
                 const configData = JSON.parse(std.loadFile('/app/code/src/config.json'))
                 mqttAddr = configData.mqttAddr || ""
                 username = configData.username || ""
                 password = configData.password || ""
-                logger.info("[driver.mqtt] 从配置文件读取MQTT配置:", { mqttAddr, username, password })
+                logger.info("[driver.mqtt] Read MQTT configuration from config file:", { mqttAddr, username, password })
             }
         } catch (error) {
-            logger.error("[driver.mqtt] 读取配置文件失败:", error)
+            logger.error("[driver.mqtt] Failed to read config file:", error)
         }
         
-        // 如果mqttAddr为空，使用默认地址
+        // If mqttAddr is empty, use default address
         if (!mqttAddr || mqttAddr.trim() === "") {
             mqttAddr = "mqtt://123.57.175.193:61613"
-            logger.info("[driver.mqtt] 使用默认MQTT地址:", mqttAddr)
+            logger.info("[driver.mqtt] Using default MQTT address:", mqttAddr)
         }
         
         let options = {

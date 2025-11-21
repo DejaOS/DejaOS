@@ -245,7 +245,7 @@ pageView.init = function () {
   button2Label.align(ui.Utils.ALIGN.CENTER, 0, 0)
   button2Label.textColor(0xffffff)
 
-  // 创建按钮控件
+  // Create button control
   let button3 = ui.Button.build('button3', theMain)
   button3.setSize(85, 40)
   button3.setPos(383, 110)
@@ -254,10 +254,10 @@ pageView.init = function () {
   // 
   button3Label.text("功能设置")
   button3Label.textFont(viewUtils.font16)
-  // 元素基于父元素上下左右居中
+  // Element centered relative to parent element
   button3Label.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
-  // 创建按钮控件
+  // Create button control
   let button4 = ui.Button.build('button4', theMain)
   button4.setSize(85, 40)
   button4.setPos(383, 160)
@@ -266,10 +266,10 @@ pageView.init = function () {
   // 
   button4Label.text("温度曲线")
   button4Label.textFont(viewUtils.font16)
-  // 元素基于父元素上下左右居中
+  // Element centered relative to parent element
   button4Label.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
-  // 创建按钮控件
+  // Create button control
   let button5 = ui.Button.build('button5', theMain)
   button5.setSize(85, 40)
   button5.setPos(383, 210)
@@ -278,7 +278,7 @@ pageView.init = function () {
   // 
   button5Label.text("报警画面")
   button5Label.textFont(viewUtils.font16)
-  // 元素基于父元素上下左右居中
+  // Element centered relative to parent element
   button5Label.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
   // Bind style to buttons
@@ -410,7 +410,7 @@ pageView.init = function () {
   plateLabel5.setPos(190, 70)
   plateLabel5.textAlign(2)
 
-  // 创建按钮控件
+  // Create button control
   let plateBtn1 = ui.Button.build('plateBtn1', plate)
   plateBtn1.setSize(45, 45)
   plateBtn1.radius(100)
@@ -419,10 +419,10 @@ pageView.init = function () {
 
   let wendujian = ui.Image.build('wendujian', plateBtn1)
   wendujian.source("/app/code/resource/image/jian.png")
-  // 元素基于父元素上下左右居中
+  // Element centered relative to parent element
   wendujian.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
-  // 创建按钮控件
+  // Create button control
   let plateBtn2 = ui.Button.build('plateBtn2', plate)
   plateBtn2.setSize(45, 45)
   plateBtn2.radius(100)
@@ -431,10 +431,10 @@ pageView.init = function () {
 
   let wendujia = ui.Image.build('wendujia', plateBtn2)
   wendujia.source("/app/code/resource/image/jia.png")
-  // 元素基于父元素上下左右居中
+  // Element centered relative to parent element
   wendujia.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
-  // 创建按钮控件
+  // Create button control
   let plateBtn3 = ui.Button.build('plateBtn3', plate)
   plateBtn3.setSize(45, 45)
   plateBtn3.radius(100)
@@ -442,9 +442,9 @@ pageView.init = function () {
 
   let shijianjian = ui.Image.build('shijianjian', plateBtn3)
   shijianjian.source("/app/code/resource/image/jian.png")
-  // 元素基于父元素上下左右居中
+  // Element centered relative to parent element
   shijianjian.align(ui.Utils.ALIGN.CENTER, 0, 0)
-  // 创建按钮控件
+  // Create button control
   let plateBtn4 = ui.Button.build('plateBtn4', plate)
   plateBtn4.setSize(45, 45)
   plateBtn4.radius(100)
@@ -452,11 +452,11 @@ pageView.init = function () {
 
   let shijianjia = ui.Image.build('shijianjia', plateBtn4)
   shijianjia.source("/app/code/resource/image/jia.png")
-  // 元素基于父元素上下左右居中
+  // Element centered relative to parent element
   shijianjia.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
 
-  // 创建按钮控件
+  // Create button control
   let closeBtn = ui.Button.build('closeBtn', plate)
   closeBtn.setSize(30, 30)
   closeBtn.radius(100)
@@ -465,7 +465,7 @@ pageView.init = function () {
 
   let closeimg = ui.Image.build('closeimg', closeBtn)
   closeimg.source("/app/code/resource/image/close.png")
-  // 元素基于父元素上下左右居中
+  // Element centered relative to parent element
   closeimg.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
   plate.hide()
@@ -503,7 +503,7 @@ pageView.init = function () {
 
 }
 pageView.load = function () {
-  // 加载屏幕
+  // Load screen
   ui.loadMain(theView)
 }
 

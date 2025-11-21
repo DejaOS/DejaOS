@@ -27,34 +27,34 @@ codeService.code = function (data) {
     log.info('[codeService] code :' + data)
     data = qrRule.formatCode(data, sqliteFuncs)
     if (data.type == 'config' || (data.type == '100' && comparePrefix(data.code, "__VGS__0", "__VGS__0".length))) {
-        // 配置码
+        // Configuration code
         configCode(data.code)
     } else if (data.type == 'eid') {
-        //云证激活
+        // Cloud certificate activation
         driver.pwm.warning()
         let activeResute = driver.eid.active(config.get("sysInfo.sn"), config.get("sysInfo.appVersion"), config.get("sysInfo.mac"), data.code);
         log.info("activeResute:" + activeResute)
         if (activeResute === 0) {
-            log.info("云证激活成功")
+            log.info("Cloud certificate activation successful")
             driver.screen.warning({ msg: '云证激活成功' })
             driver.audio.doPlay("yz_s")
         } else {
-            log.info("云证激活失败")
+            log.info("Cloud certificate activation failed")
             driver.screen.warning({ msg: '云证激活失败' })
             driver.audio.doPlay("yz_f")
         }
     } else {
-        // 通行码
-        log.info("解析通行码：", JSON.stringify(data))
+        // Access code
+        log.info("Parse access code: ", JSON.stringify(data))
         accessService.access(data)
     }
 }
 
-// 配置码处理
+// Configuration code processing
 function configCode(code) {
     if (!checkConfigCode(code)) {
         driver.pwm.fail()
-        log.error("配置码校验失败")
+        log.error("Configuration code verification failed")
         return
     }
     let json = utils.parseString(code)
@@ -65,8 +65,8 @@ function configCode(code) {
             log.error(error)
         }
     }
-    log.info("解析配置码：", JSON.stringify(json))
-    //切换模式
+    log.info("Parse configuration code: ", JSON.stringify(json))
+    // Switch mode
     if (!utils.isEmpty(json.w_model)) {
         try {
             common.setMode(json.w_model)
@@ -74,13 +74,13 @@ function configCode(code) {
             common.asyncReboot(1)
         } catch (error) {
             log.error(error, error.stack)
-            log.info('切换失败不做任何处理');
+            log.info('Mode switch failed, no action taken');
             driver.pwm.fail()
         }
         return
     }
     let map = dxMap.get("UPDATE")
-    // 扫码升级相关
+    // QR code upgrade related
     if (json.update_flag === 1) {
         if (!driver.net.getStatus()) {
             codeService.updateFailed("Please check the network")
@@ -113,12 +113,12 @@ function configCode(code) {
         }
         let downloadPath = "/app/data/upgrades/" + json.update_name
         if (json.update_flag === 2) {
-            // 下载图片、SO等
+            // Download images, SO files, etc.
             return resourceDownload(json.update_addr, json.update_md5, downloadPath, () => {
                 common.systemBrief(`mv "${downloadPath}" "${json.update_path}"`)
             })
         } else if (json.update_flag === 3) {
-            // 下载压缩包
+            // Download compressed package
             return resourceDownload(json.update_addr, json.update_md5, downloadPath, () => {
                 common.systemBrief(`unzip -o "${downloadPath}" -d "${json.update_path}"`)
             })
@@ -134,7 +134,7 @@ function configCode(code) {
             return
         }
         map.put("updateFlag", true)
-        // 兼容旧的升级格式
+        // Compatible with old upgrade format
         if (utils.isEmpty(json.update_haddr) || utils.isEmpty(json.update_md5)) {
             driver.pwm.fail()
             map.del("updateFlag")
@@ -167,7 +167,7 @@ function configCode(code) {
         return
 
     }
-    // 设备配置相关
+    // Device configuration related
     let configData = {}
     for (let key in json) {
         let transKey = key.indexOf(".") >= 0 ? key : configConst.getValueByKey(key)
@@ -191,7 +191,7 @@ function configCode(code) {
     if (Object.keys(configData).length > 0) {
         res = configService.configVerifyAndSave(configData)
     }
-    log.info("配置完成res：" + res)
+    log.info("Configuration completed, res: " + res)
     if (typeof res != 'boolean') {
         log.error(res)
         driver.pwm.fail()
@@ -199,10 +199,10 @@ function configCode(code) {
     }
     if (res) {
         driver.pwm.success()
-        log.info("配置成功")
+        log.info("Configuration successful")
     } else {
         driver.pwm.fail()
-        log.error("配置失败")
+        log.error("Configuration failed")
     }
     if (json.reboot === 1) {
         driver.screen.warning({ msg: config.get("sysInfo.language") == "EN" ? "Rebooting" : "重启中", beep: false })
@@ -210,9 +210,9 @@ function configCode(code) {
     }
 }
 
-// 下载通用方法
+// General download method
 function resourceDownload(url, md5, path, cb) {
-    // 本机升级
+    // Local upgrade
     if (utils.isEmpty(url) || utils.isEmpty(md5)) {
         driver.pwm.fail()
         return false
@@ -233,13 +233,13 @@ function resourceDownload(url, md5, path, cb) {
     if (cb) {
         cb()
     }
-    // 下载完成，1秒后重启
+    // Download completed, restart after 1 second
     common.asyncReboot(0)
     std.sleep(2000)
     return true
 }
 
-//校验配置码
+// Verify configuration code
 function checkConfigCode(code) {
     let password = config.get('sysInfo.com_passwd') || '1234567887654321'
     let lastIndex = code.lastIndexOf("--");
@@ -296,7 +296,7 @@ codeService.updateFailed = function (errorMsg) {
     }
 }
 
-// 比较两个字符串的前N个字符是否相等
+// Compare whether the first N characters of two strings are equal
 function comparePrefix(str1, str2, N) {
     let substring1 = str1.substring(0, N);
     let substring2 = str2.substring(0, N);

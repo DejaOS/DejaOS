@@ -9,7 +9,7 @@ viewUtils.font = function (size, style) {
     return dxui.Font.build(screen.fontPath, size || 14, style || dxui.Utils.FONT_STYLE.NORMAL)
 }
 
-// 预定义的字体大小 - 延迟初始化
+// Predefined font sizes - lazy initialization
 viewUtils.font14 = null
 viewUtils.font16 = null
 viewUtils.font18 = null
@@ -17,7 +17,7 @@ viewUtils.font20 = null
 viewUtils.font24 = null
 viewUtils.font28 = null
 
-// 获取字体的函数
+// Function to get font
 viewUtils.getFont14 = function() {
     if (!viewUtils.font14) {
         viewUtils.font14 = viewUtils.font(14)
@@ -61,24 +61,24 @@ viewUtils.getFont28 = function() {
 }
 
 viewUtils.color = {
-    // 成功，绿色
+    // Success, green
     success: 0x00BF8A,
-    // 失败，红色
+    // Failure, red
     fail: 0xFF0000,
-    // 警告，黄色
+    // Warning, yellow
     warning: 0xFFA800,
-    // 默认：蓝色
+    // Default: blue
     default: 0x00a8ff
 }
 
-// 清除样式
+// Clear style
 viewUtils._clearStyle = function (obj) {
     obj.radius(0)
     obj.borderWidth(0)
     obj.padAll(0)
 }
 
-// 创建标签
+// Create label
 viewUtils.createLabel = function (id, parent, text, fontSize) {
     const label = dxui.Label.build(id, parent)
     label.text(text || '')
@@ -88,7 +88,7 @@ viewUtils.createLabel = function (id, parent, text, fontSize) {
     return label
 }
 
-// 输入框
+// Input box
 viewUtils.input = function (mainView,parent, id, mode, enter = () => { }, dataI18n) {
    
     const input = dxui.Textarea.build(id + 'input', parent)
@@ -110,7 +110,7 @@ viewUtils.input = function (mainView,parent, id, mode, enter = () => { }, dataI1
     input.radius(13)
     input.textFont(font)
     if (dataI18n) {
-        // 只有在dxui.all中，才能使用dataI18n
+        // Only in dxui.all can dataI18n be used
         dxui.all[id + 'input' + 'obj'] = input.obj
         input.obj.dataI18n = dataI18n
         input.obj.text = (text) => {
@@ -119,11 +119,11 @@ viewUtils.input = function (mainView,parent, id, mode, enter = () => { }, dataI1
     }
 
     input.on(dxui.Utils.EVENT.CLICK, () => {
-        log.info('键盘显示'+id)
+        log.info('Keyboard show'+id)
         
-        // 获取当前DHCP状态
+        // Get current DHCP status
         const dhcpSelected = mainView.netInfo[3].dropdown.getSelected()
-        const isDhcpEnabled = (dhcpSelected === 1) // 1表示yes
+        const isDhcpEnabled = (dhcpSelected === 1) // 1 means yes
         
         mainView.networkSettingBox.align(dxui.Utils.ALIGN.TOP_MID, 0, -65)
         
@@ -138,7 +138,7 @@ viewUtils.input = function (mainView,parent, id, mode, enter = () => { }, dataI1
                     case 'enter':
                         enter()
                         pinyin.hide()
-                        log.info('键盘隐藏')
+                        log.info('Keyboard hide')
                         mainView.networkSettingBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 30)
                         break
                     case 'backspace':
@@ -162,7 +162,7 @@ viewUtils.input = function (mainView,parent, id, mode, enter = () => { }, dataI1
     root.on(dxui.Utils.EVENT.CLICK, () => {
         input.setBorderColor(0xE7E7E7)
         pinyin.hide()
-        // 恢复网络设置框到原始位置
+        // Restore network setting box to original position
         mainView.networkSettingBox.align(dxui.Utils.ALIGN.TOP_MID, 0, 30)
     })
 

@@ -11,16 +11,16 @@ codeService.receiveMsg = function (data) {
 
 codeService.code = function (data) {
     // log.info('[codeService] code :' + data)
-    //判断data是否为json格式
+    // Check if data is in JSON format
     let json = parseString(data)
     if (Object.keys(json).length <= 0) {
-        log.error("[codeService] code: 非json格式")
+        log.error("[codeService] code: Not JSON format")
         return
     }
     configCode(data)
 }
 
-// 配置码处理
+// Configuration code processing
 function configCode(code) {
     if (Object.keys(code).length <= 0) {
         try {
@@ -29,38 +29,38 @@ function configCode(code) {
             log.error(error)
         }
     }
-    log.info("[codeService] configCode: 解析配置码 ", JSON.stringify(code))
+    log.info("[codeService] configCode: Parse configuration code ", JSON.stringify(code))
 
-    // 保存配置到文件
+    // Save configuration to file
     if (Object.keys(code).length > 0) {
         try {
-            // 构建完整的配置数据结构
+            // Build complete configuration data structure
             let configData = buildConfigData(code)
-            log.info("[codeService] configCode: 构建配置数据 ", JSON.stringify(configData))
+            log.info("[codeService] configCode: Build configuration data ", JSON.stringify(configData))
 
-            // 使用更新方法保存配置
+            // Save configuration using update method
             const success = updateConfigFile(configData)
 
             if (success) {
-                log.info("[codeService] configCode: 配置保存成功")
+                log.info("[codeService] configCode: Configuration saved successfully")
             } else {
-                log.error("[codeService] configCode: 配置保存失败")
+                log.error("[codeService] configCode: Configuration save failed")
             }
 
             common.asyncReboot(2)
 
         } catch (error) {
-            log.error("[codeService] configCode: 配置保存失败", error)
+            log.error("[codeService] configCode: Configuration save failed", error)
         }
     }
 }
 
-// 构建完整的配置数据结构
+// Build complete configuration data structure
 function buildConfigData(json) {
-    // 动态生成配置数据，只包含传入的字段
+    // Dynamically generate configuration data, only including passed fields
     let configData = {}
 
-    // 根据传入的JSON数据动态添加字段
+    // Dynamically add fields based on passed JSON data
     if (json.net_type !== undefined) {
         configData.type = json.net_type
     }
@@ -100,9 +100,9 @@ function buildConfigData(json) {
 
 
 function parseString(inputString) {
-    // 获取{}及其之间的内容
+    // Get {} and content between them
     inputString = inputString.slice(inputString.indexOf("{"), inputString.lastIndexOf("}") + 1)
-    // key=value正则，key是\w+（字母数字下划线，区别大小写），=两边可有空格，value是\w+或相邻两个"之间的内容（包含"）
+    // key=value regex, key is \w+ (alphanumeric underscore, case sensitive), spaces allowed around =, value is \w+ or content between two adjacent " (including ")
     const keyValueRegex = /(\w+)\s*=\s*("[^"]*"|\w+)/g;
     let jsonObject = {};
     let match;
@@ -111,17 +111,17 @@ function parseString(inputString) {
         let value = match[2]
 
         if (/^\d+$/.test(value)) {
-            // 数字
+            // Number
             value = parseInt(value)
         } else if (/^\d+\.\d+$/.test(value)) {
-            // 小数
+            // Decimal
             value = parseFloat(value)
         } else if (value == 'true') {
             value = true
         } else if (value == 'false') {
             value = false
         } else {
-            // 字符串
+            // String
             value = value.replace(/"/g, '').trim()
         }
         jsonObject[key] = value;
@@ -129,31 +129,31 @@ function parseString(inputString) {
     return jsonObject;
 }
 
-// 更新配置文件中的特定字段
+// Update specific fields in configuration file
 function updateConfigFile(configData) {
     try {
         let existingConfig = {}
 
-        // 尝试读取现有配置文件
+        // Try to read existing configuration file
         if (std.exist("/app/code/src/config.json")) {
             try {
                 existingConfig = JSON.parse(std.loadFile("/app/code/src/config.json"))
             } catch (error) {
-                log.error("[codeService] updateConfigFile: 解析现有配置文件失败", error)
+                log.error("[codeService] updateConfigFile: Failed to parse existing config file", error)
             }
         }
 
-        // 合并配置：保留原有配置，只更新传入的字段
+        // Merge configuration: keep original configuration, only update passed fields
         const mergedConfig = { ...existingConfig, ...configData }
 
-        // 保存合并后的配置
+        // Save merged configuration
         std.saveFile("/app/code/src/config.json", JSON.stringify(mergedConfig))
 
-        log.info("[codeService] updateConfigFile: 配置更新成功", JSON.stringify(mergedConfig))
+        log.info("[codeService] updateConfigFile: Configuration updated successfully", JSON.stringify(mergedConfig))
         return true
 
     } catch (error) {
-        log.error("[codeService] updateConfigFile: 配置更新失败", error)
+        log.error("[codeService] updateConfigFile: Configuration update failed", error)
         return false
     }
 }

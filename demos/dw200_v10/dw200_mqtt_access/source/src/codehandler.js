@@ -1,4 +1,4 @@
-//扫描结果处理
+// Scan result processing
 import logger from '../dxmodules/dxLogger.js'
 import driver from './driver.js'
 import config from '../dxmodules/dxConfig.js'
@@ -14,7 +14,7 @@ vg.invoke = function (pack) {
     data = common.arrToHex(data)
     driver.pwm.press()
     logger.info('code: ', data)
-    // 配置码前缀：5f5f5f564241525f434f4e4649475f56312e312e305f5f5f
+    // Configuration code prefix: 5f5f5f564241525f434f4e4649475f56312e312e305f5f5f
     if (data.startsWith('5f5f5f564241525f434f4e4649475f56312e312e305f5f5f')) {
         try {
             setConfig(common.utf8HexToStr(data))
@@ -25,25 +25,25 @@ vg.invoke = function (pack) {
         return
     }
     driver.pwm.success()
-    mqtt.accessOnline('code', data)// 透传
+    mqtt.accessOnline('code', data)// Passthrough
 }
-function setConfig(pack) {//扫描配置
+function setConfig(pack) {// Scan configuration
     const start = '___VBAR_CONFIG_V1.1.0___'.length
     const end = pack.indexOf('--')
     pack = pack.substring(start, end).replaceAll('=', ':')
     const obj = std.parseExtJSON(pack)
-    if (obj.hasOwnProperty('update_flag') || obj.hasOwnProperty('update_flg')) {//升级的单独线程处理
+    if (obj.hasOwnProperty('update_flag') || obj.hasOwnProperty('update_flg')) {// Upgrade handled in separate thread
         std.setTimeout(function(){
             driver.ota.update(obj)
         },10)
         return
     }
-    //只要一次需要重启就不会变化
+    // Once a reboot is required, it won't change
     const results = []
     results.push(applyConfig(obj, 'net.', ['ip_mode', 'net_type', 'macaddr', 'ip', 'mask', 'gateway', 'dns'], true))
     results.push(applyConfig(obj, 'sys.', ['sn_show', 'ver_show', 'boot_music', 'devname', 'volume', 'net_show','ntpgmt'], true))
     results.push(applyConfig(obj, 'mqtt.', ['mqttaddr', 'mqttusername', 'mqttpassword'], true))
-    const reboot = results.reduce((acc, cur) => acc || cur, false)//只需要有一个结果是true，就需要重启
+    const reboot = results.reduce((acc, cur) => acc || cur, false)// If any result is true, reboot is required
     driver.pwm.success()
     if (reboot) {
         common.asyncReboot(2)
@@ -57,6 +57,6 @@ function applyConfig(obj, pre, items, isReboot) {
             reboot = true;
         }
     }
-    return isReboot ? reboot : false;//有一些无需考虑重启，直接返回false
+    return isReboot ? reboot : false;// Some don't need to consider reboot, directly return false
 }
 export default vg

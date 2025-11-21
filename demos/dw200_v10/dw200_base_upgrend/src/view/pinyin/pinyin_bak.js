@@ -2,24 +2,24 @@ import dxui from '../../../dxmodules/dxUi.js'
 import dict from './dict.js'
 const pinyin = {}
 
-// 键盘大小
+// Keyboard size
 let width = 800
 let height = 400
-// 是否锁定键盘
+// Whether keyboard is locked
 let isLock = false
-// 是否支持拼音输入
+// Whether pinyin input is supported
 let enablePinyin = true
-// 初始化容器
+// Initialize container
 pinyin.init = function (w, h) {
     width = w
     height = h
 
-    // 只允许初始化一次
+    // Only allow initialization once
     if (pinyin.inited) {
         return
     }
     pinyin.inited = true
-    // 全局字体
+    // Global font
     pinyin.font24 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 24, dxui.Utils.FONT_STYLE.NORMAL)
     let container = dxui.View.build('container', dxui.Utils.LAYER.TOP)
     pinyin.container = container
@@ -28,11 +28,11 @@ pinyin.init = function (w, h) {
     container.setSize(width, height)
     container.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, 0)
     container.textFont(pinyin.font24)
-    // 容器初始化
+    // Container initialization
     container.bgOpa(0)
     container.update()
     container.hide()
-    // 创建三种键盘模式
+    // Create three keyboard modes
     pinyin.englishPanel = createEnglish()
     pinyin.pinyinPanel = createPinyin()
     pinyin.numPanel = createNum()
@@ -42,9 +42,9 @@ pinyin.getSize = function () {
     return { width: width, height: height }
 }
 /**
- * 显示键盘，需要先初始化
- * @param {number} mode 键盘模式，0：英文键盘，1：拼音键盘，2：数字键盘，3：符号键盘
- * @param {function} cb 按键内容回调
+ * Show keyboard, must initialize first
+ * @param {number} mode Keyboard mode, 0: English keyboard, 1: Pinyin keyboard, 2: Number keyboard, 3: Symbol keyboard
+ * @param {function} cb Key press content callback
  */
 pinyin.show = function (mode, cb) {
     if (![0, 1, 2, 3].includes(mode)) {
@@ -52,7 +52,7 @@ pinyin.show = function (mode, cb) {
     }
     this.unlock()
     this.hide()
-    // 按键内容回调
+    // Key press content callback
     pinyin.cb = cb
     pinyin.container.show()
     pinyin.container.moveForeground()
@@ -73,7 +73,7 @@ pinyin.show = function (mode, cb) {
             break;
     }
 }
-// 获取当前键盘模式
+// Get current keyboard mode
 pinyin.getMode = function () {
     if (!pinyin.englishPanel.isHide()) {
         return 0
@@ -87,7 +87,7 @@ pinyin.getMode = function () {
         return 0
     }
 }
-// 隐藏键盘
+// Hide keyboard
 pinyin.hide = function () {
     pinyin.englishPanel.hide()
     pinyin.pinyinPanel.hide()
@@ -99,15 +99,15 @@ pinyin.hide = function () {
         pinyin.callback = null
     }
 }
-// 隐藏回调，单次有效
+// Hide callback, single use only
 pinyin.hideCb = function (cb) {
     pinyin.callback = cb
 }
-// 锁定键盘，不允许切换模式
+// Lock keyboard, mode switching not allowed
 pinyin.lock = function () {
     isLock = true
 }
-// 解除锁定键盘
+// Unlock keyboard
 pinyin.unlock = function () {
     isLock = false
 }
@@ -115,13 +115,13 @@ pinyin.pinyinSupport = function (bool) {
     enablePinyin = bool
 }
 
-// 英文键盘
+// English keyboard
 function createEnglish() {
     let englishPanel = dxui.View.build(pinyin.container.id + 'englishPanel', pinyin.container)
     clearStyle(englishPanel)
     englishPanel.setSize(pinyin.container.width(), pinyin.container.height())
     englishPanel.update()
-    // 创建大小写的英文键盘
+    // Create uppercase and lowercase English keyboard
     function createKeyboard(capital) {
         let englishKeyboard = dxui.Buttons.build(englishPanel.id + 'englishKeyboard' + (capital ? "Big" : "Small"), englishPanel)
         clearStyle(englishKeyboard)
@@ -146,7 +146,7 @@ function createEnglish() {
                 "!?#", "123", ",", " ", ".", "EN", " ",
                 ""])
         }
-        // 设置按钮宽度
+        // Set button width
         englishKeyboard.setBtnWidth(10, 1)
         for (let i = 11; i < 20; i++) {
             englishKeyboard.setBtnWidth(i, 2)
@@ -160,11 +160,11 @@ function createEnglish() {
         englishKeyboard.obj.addEventCb((e) => {
             let dsc = e.lvEventGetDrawPartDsc()
             if (dsc.class_p == englishKeyboard.obj.ClassP && dsc.type == dxui.Utils.ENUM.LV_BTNMATRIX_DRAW_PART_BTN) {
-                // 隐藏无用按钮
+                // Hide unused buttons
                 if (dsc.id == 10 || dsc.id == 20) {
                     dxui.Utils.GG.NativeDraw.lvDrawRectReset(dsc.rect_dsc, { bg_opa: 0, shadow_opa: 0 })
                 }
-                // 加深一些功能按钮
+                // Darken some function buttons
                 if (dsc.id == 21 || dsc.id == 29 || dsc.id == 30 || dsc.id == 31 || dsc.id == 35) {
                     if (englishKeyboard.obj.lvBtnmatrixGetSelectedBtn() == dsc.id && e.lvEventGetTarget().hasState(dxui.Utils.ENUM.LV_STATE_PRESSED)) {
                         dxui.Utils.GG.NativeDraw.lvDrawRectReset(dsc.rect_dsc, { bg_color: 0xcdcdcd })
@@ -172,7 +172,7 @@ function createEnglish() {
                         dxui.Utils.GG.NativeDraw.lvDrawRectReset(dsc.rect_dsc, { bg_color: 0xdbdbdb })
                     }
                 }
-                // 回车按钮蓝色
+                // Enter button blue
                 if (dsc.id == 36) {
                     if (englishKeyboard.obj.lvBtnmatrixGetSelectedBtn() == dsc.id && e.lvEventGetTarget().hasState(dxui.Utils.ENUM.LV_STATE_PRESSED)) {
                         dxui.Utils.GG.NativeDraw.lvDrawRectReset(dsc.rect_dsc, { bg_color: 0x0C6CE4 })
@@ -185,44 +185,44 @@ function createEnglish() {
         englishKeyboard.obj.addEventCb((e) => {
             let dsc = e.lvEventGetDrawPartDsc()
             if (dsc.class_p == englishKeyboard.obj.ClassP && dsc.type == dxui.Utils.ENUM.LV_BTNMATRIX_DRAW_PART_BTN) {
-                // 删除按钮图案添加
+                // Add delete button icon
                 if (dsc.id == 29) {
                     let src = '/app/code/resource/image/key/backspace.png'
-                    // 获取图片信息
+                    // Get image information
                     let header = dxui.Utils.GG.NativeDraw.lvImgDecoderGetInfo(src)
-                    // 定义一块区域，居中显示，注意：尺寸转area需要-1，area转尺寸需要+1
+                    // Define an area, center display, note: size to area needs -1, area to size needs +1
                     let x1 = dsc.draw_area.x1 + (dsc.draw_area.x2 - dsc.draw_area.x1 + 1 - header.w) / 2;
                     let y1 = dsc.draw_area.y1 + (dsc.draw_area.y2 - dsc.draw_area.y1 + 1 - header.h) / 2;
                     let x2 = x1 + header.w - 1;
                     let y2 = y1 + header.h - 1;
                     let area = dxui.Utils.GG.NativeArea.lvAreaSet(x1, y1, x2, y2)
-                    // 绘制图片信息
+                    // Draw image information
                     let img_draw_dsc = dxui.Utils.GG.NativeDraw.lvDrawImgDscInit()
-                    // 绘制图片
+                    // Draw image
                     dxui.Utils.GG.NativeDraw.lvDrawImg(dsc.dsc, img_draw_dsc, area, src)
                 }
-                // 回车按钮图案添加
+                // Add enter button icon
                 if (dsc.id == 36) {
                     let src = '/app/code/resource/image/key/enter.png'
-                    // 获取图片信息
+                    // Get image information
                     let header = dxui.Utils.GG.NativeDraw.lvImgDecoderGetInfo(src)
-                    // 定义一块区域，居中显示，注意：尺寸转area需要-1，area转尺寸需要+1
+                    // Define an area, center display, note: size to area needs -1, area to size needs +1
                     let x1 = dsc.draw_area.x1 + (dsc.draw_area.x2 - dsc.draw_area.x1 + 1 - header.w) / 2;
                     let y1 = dsc.draw_area.y1 + (dsc.draw_area.y2 - dsc.draw_area.y1 + 1 - header.h) / 2;
                     let x2 = x1 + header.w - 1;
                     let y2 = y1 + header.h - 1;
                     let area = dxui.Utils.GG.NativeArea.lvAreaSet(x1, y1, x2, y2)
-                    // 绘制图片信息
+                    // Draw image information
                     let img_draw_dsc = dxui.Utils.GG.NativeDraw.lvDrawImgDscInit()
-                    // 绘制图片
+                    // Draw image
                     dxui.Utils.GG.NativeDraw.lvDrawImg(dsc.dsc, img_draw_dsc, area, src)
                 }
-                // 空格按钮图案添加
+                // Add space button icon
                 if (dsc.id == 33) {
                     let src = '/app/code/resource/image/key/space.png'
-                    // 获取图片信息
+                    // Get image information
                     let header = dxui.Utils.GG.NativeDraw.lvImgDecoderGetInfo(src)
-                    // 定义一块区域，居中显示，注意：尺寸转area需要-1，area转尺寸需要+1
+                    // Define an area, center display, note: size to area needs -1, area to size needs +1
                     let x1 = dsc.draw_area.x1 + (dsc.draw_area.x2 - dsc.draw_area.x1 + 1 - header.w) / 2;
                     let y1 = dsc.draw_area.y1 + (dsc.draw_area.y2 - dsc.draw_area.y1 + 1 - header.h) / 2;
                     let x2 = x1 + header.w - 1;
@@ -230,9 +230,9 @@ function createEnglish() {
                     y1 += 10
                     y2 += 10
                     let area = dxui.Utils.GG.NativeArea.lvAreaSet(x1, y1, x2, y2)
-                    // 绘制图片信息
+                    // Draw image information
                     let img_draw_dsc = dxui.Utils.GG.NativeDraw.lvDrawImgDscInit()
-                    // 绘制图片
+                    // Draw image
                     dxui.Utils.GG.NativeDraw.lvDrawImg(dsc.dsc, img_draw_dsc, area, src)
                 }
             }
@@ -242,7 +242,7 @@ function createEnglish() {
             let id = clickBtn.id
             switch (id) {
                 case 29:
-                    // 退格
+                    // Backspace
                     pinyin.cb({ cmd: "backspace" })
                     break;
             }
@@ -253,7 +253,7 @@ function createEnglish() {
             let text = clickBtn.text
             switch (id) {
                 case 21:
-                    // 大小写切换
+                    // Case toggle
                     if (englishKeyboardBig.isHide()) {
                         englishKeyboardBig.show()
                         englishKeyboardSmall.hide()
@@ -263,14 +263,14 @@ function createEnglish() {
                     }
                     break;
                 case 29:
-                    // 退格
+                    // Backspace
                     pinyin.cb({ cmd: "backspace" })
                     break;
                 case 30:
                     if (isLock) {
                         break;
                     }
-                    // 切换符号键盘
+                    // Switch to symbol keyboard
                     pinyin.symbolPanel.show()
                     pinyin.englishPanel.hide()
                     break;
@@ -278,30 +278,30 @@ function createEnglish() {
                     if (isLock) {
                         break;
                     }
-                    // 切换数字键盘
+                    // Switch to number keyboard
                     pinyin.numPanel.show()
                     pinyin.englishPanel.hide()
                     break;
                 case 33:
-                    // 空格
+                    // Space
                     pinyin.cb(" ")
                     break;
                 case 35:
                     if (isLock || !enablePinyin) {
                         break;
                     }
-                    // 切换拼音键盘
+                    // Switch to pinyin keyboard
                     pinyin.pinyinPanel.show()
                     pinyin.englishPanel.hide()
                     break;
                 case 36:
-                    // 回车
+                    // Enter
                     pinyin.cb({ cmd: "enter" })
                     break;
                 default:
                     break;
             }
-            // 打印字符
+            // Print character
             if (["q", "w", "e", "r", "t", "y", "u", "i", "o", "p",
                 "a", "s", "d", "f", "g", "h", "j", "k", "l",
                 "z", "x", "c", "v", "b", "n", "m",
@@ -315,24 +315,24 @@ function createEnglish() {
         })
         return englishKeyboard
     }
-    // 创建大小写键盘
+    // Create uppercase and lowercase keyboard
     let englishKeyboardBig = createKeyboard(true)
     let englishKeyboardSmall = createKeyboard(false)
-    // 默认是小写
+    // Default is lowercase
     englishKeyboardBig.hide()
     englishKeyboardSmall.show()
     englishPanel.hide()
     return englishPanel
 }
 
-// 拼音键盘
+// Pinyin keyboard
 function createPinyin() {
     let pinyinPanel = dxui.View.build(pinyin.container.id + 'pinyinPanel', pinyin.container)
     clearStyle(pinyinPanel)
     pinyinPanel.setSize(pinyin.container.width(), pinyin.container.height())
     pinyinPanel.obj.lvObjAddFlag(dxui.Utils.ENUM.LV_OBJ_FLAG_OVERFLOW_VISIBLE)
     pinyinPanel.update()
-    // 创建汉字预览框
+    // Create Chinese character preview box
     let previewBox = dxui.View.build(pinyinPanel.id + 'previewBox', pinyinPanel)
     clearStyle(previewBox)
     previewBox.setSize(pinyinPanel.width(), 70)
@@ -341,7 +341,7 @@ function createPinyin() {
     previewBox.flexFlow(dxui.Utils.FLEX_FLOW.ROW)
     previewBox.flexAlign(dxui.Utils.FLEX_ALIGN.SPACE_AROUND, dxui.Utils.FLEX_ALIGN.CENTER, dxui.Utils.FLEX_ALIGN.CENTER)
     previewBox.labels = []
-    // 8个预览文字
+    // 8 preview characters
     for (let i = 0; i < 8; i++) {
         let labelBox = dxui.View.build(previewBox.id + 'labelBox' + i, previewBox)
         clearStyle(labelBox)

@@ -101,13 +101,13 @@ function initConfig() {
 }
 function refershDateTime() {
     let currentDate = new Date();
-    let month = (currentDate.getMonth() + 1).toString(10).padStart(2, '0') // 月份从0开始，所以要加1
-    let day = currentDate.getDate().toString(10).padStart(2, '0') // 获取日期
-    let hours = currentDate.getHours().toString(10).padStart(2, '0') // 获取小时
-    let minutes = currentDate.getMinutes().toString(10).padStart(2, '0') // 获取分钟
+    let month = (currentDate.getMonth() + 1).toString(10).padStart(2, '0') // Month starts from 0, so add 1
+    let day = currentDate.getDate().toString(10).padStart(2, '0') // Get date
+    let hours = currentDate.getHours().toString(10).padStart(2, '0') // Get hours
+    let minutes = currentDate.getMinutes().toString(10).padStart(2, '0') // Get minutes
     let dayOfWeek = currentDate.getDay()
 
-    // 映射星期数字到文本
+    // Map weekday number to text
     let daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     let dayText = daysOfWeek[dayOfWeek]
 

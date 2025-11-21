@@ -4,7 +4,7 @@ import mainView from './mainView.js'
 import screen from '../screen.js'
 const passwordView = {}
 passwordView.init = function () {
-    /**************************************************创建屏幕*****************************************************/
+    /**************************************************Create screen*****************************************************/
     let screen_password = dxui.View.build('screen_password', dxui.Utils.LAYER.MAIN)
     passwordView.screen_password = screen_password
     screen_password.scroll(false)
@@ -12,10 +12,10 @@ passwordView.init = function () {
         screen.screenNow = screen_password
         let uiConfig = screen.getUIConfig()
         if (uiConfig.rotation == 0 || uiConfig.rotation == 2) {
-            // 竖屏
+            // Portrait orientation
             linePoints = linePointsVer
             password_btnm.setSize(320, 480)
-            // 中英文切换，0中文1英文
+            // Chinese/English switch, 0: Chinese 1: English
             if (uiConfig.language == "EN") {
                 password_btnm.data([
                     "1", "2", "3", "\n",
@@ -32,7 +32,7 @@ passwordView.init = function () {
                 ]);
             }
         } else {
-            // 横屏
+            // Landscape orientation
             linePoints = linePointsHor
             password_btnm.setSize(480, 320)
             if (uiConfig.language == "EN") {
@@ -49,7 +49,7 @@ passwordView.init = function () {
                 ]);
             }
         }
-        // 无操作10秒自动返回
+        // Auto return after 10 seconds of no operation
         if (passwordView.timer) {
             std.clearInterval(passwordView.timer)
         }
@@ -62,7 +62,7 @@ passwordView.init = function () {
             }
         }, 1000)
     })
-    /**************************************************创建按钮矩阵*****************************************************/
+    /**************************************************Create button matrix*****************************************************/
     let password_btnm = dxui.Buttons.build('password_btnm', screen_password)
     let font30 = dxui.Font.build(screen.fontPath, 30, dxui.Utils.FONT_STYLE.NORMAL)
     password_btnm.textFont(font30)
@@ -73,7 +73,7 @@ passwordView.init = function () {
     password_btnm.radius(9, dxui.Utils.STYLE_PART.ITEMS)
     password_btnm.bgColor(0x437fc9, dxui.Utils.STYLE_PART.ITEMS)
     password_btnm.textColor(0xFFFFFF, dxui.Utils.STYLE_PART.ITEMS)
-    // 注册密码键盘事件
+    // Register password keyboard event
     password_btnm.on(dxui.Utils.EVENT.CLICK, () => {
         screen.press()
         let txt = password_btnm.clickedButton().text;
@@ -81,7 +81,7 @@ passwordView.init = function () {
             if (password == "") {
                 dxui.loadMain(mainView.screen_main)
             } else {
-                // 密码校验
+                // Password verification
                 dxui.loadMain(mainView.screen_main)
                 screen.password(password)
                 password = ""
@@ -91,7 +91,7 @@ passwordView.init = function () {
             password = ""
             dxui.loadMain(mainView.screen_main)
         }
-        // 最多输入20位
+        // Maximum 20 digits input
         if (password.length >= 20) {
             password = ""
         }
@@ -106,7 +106,7 @@ passwordView.init = function () {
         }
         password_line.setPoints(linePoints, passwordLen + 1);
     })
-    /**************************************************创建按键线条*****************************************************/
+    /**************************************************Create key line*****************************************************/
     let password_line = dxui.Line.build('password_line', screen_password)
     password_line.lineColor(0xff6600)
     password_line.lineWidth(8)
@@ -119,9 +119,9 @@ function clearStyle(obj) {
 }
 
 let passwordArray = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-// 键盘密码记录
+// Keyboard password record
 let password = ""
-// 密码线段
+// Password line segment
 let linePoints = [[0, 0]]
 let linePointsHor = (function () {
     let arr = [[0, 0]]

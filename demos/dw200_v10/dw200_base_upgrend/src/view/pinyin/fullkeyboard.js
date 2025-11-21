@@ -43,26 +43,26 @@ const keyboardLayouts = {
 };
 
 fullKeyboard.init = function () {
-    console.log('Initializing fullkeyboard...')  // 添加调试信息
+    console.log('Initializing fullkeyboard...')  // Add debug info
     createKeyboardView()
-    console.log('Fullkeyboard initialized')  // 添加调试信息
+    console.log('Fullkeyboard initialized')  // Add debug info
 }
 
 // Create keyboard view
 function createKeyboardView() {
-    console.log('Creating keyboard view...')  // 添加调试信息
+    console.log('Creating keyboard view...')  // Add debug info
     keyboardView = dxui.View.build('keyboardView', dxui.Utils.LAYER.TOP)
     keyboardView.padAll(0)
     keyboardView.borderWidth(0)
     keyboardView.bgColor(0x1e3a8a)
-    keyboardView.setPos(0, 240)  // 调整位置，让键盘显示在屏幕下半部分
-    keyboardView.setSize(320, 240)  // 调整为适合320x480屏幕的尺寸
+    keyboardView.setPos(0, 240)  // Adjust position to show keyboard in lower half of screen
+    keyboardView.setSize(320, 240)  // Adjust to fit 320x480 screen size
     keyboardView.hide()
     console.log('Keyboard view properties set:', {
         pos: [0, 240],
         size: [320, 240],
         layer: dxui.Utils.LAYER.TOP
-    })  // 添加调试信息
+    })  // Add debug info
 
     // Input display area
     let keyboardInputDisplay = dxui.View.build('keyboardInputDisplay', keyboardView)
@@ -93,17 +93,17 @@ function createKeyboardView() {
 
     buildKeyboard()
     updateKeyMapping()
-    console.log('Keyboard view created successfully')  // 添加调试信息
+    console.log('Keyboard view created successfully')  // Add debug info
 }
 
 // Build keyboard keys
 function buildKeyboard() {
     let layout = keyboardLayouts[currentKeyboardType]
     let keys = layout.keys
-    let keyWidth = 25  // 调整按键宽度
-    let keyHeight = 25  // 调整按键高度
-    let keyMarginX = 2  // 左右间距
-    let keyMarginY = 4  // 上下间距
+    let keyWidth = 25  // Adjust key width
+    let keyHeight = 25  // Adjust key height
+    let keyMarginX = 2  // Left-right spacing
+    let keyMarginY = 4  // Top-bottom spacing
     let startX = 5
     let startY = 5
 
@@ -178,7 +178,7 @@ function createKeyButton(key, parent, x, y, w, h, row, col) {
     // Create label
     let label = dxui.Label.build(btn.id + 'label', btn)
     label.text(key)
-    label.textFont(viewUtils.getFont14())  // 调整字体大小
+    label.textFont(viewUtils.getFont14())  // Adjust font size
     label.textColor(0xFFFFFF)
     label.align(dxui.Utils.ALIGN.CENTER, 0, 0)
 
@@ -269,11 +269,11 @@ function updateKeyboardDisplay() {
 // Open keyboard
 fullKeyboard.open = function (callback, initText) {
     onConfirmCallback = callback
-    // 初始化当前输入为初始文本
+    // Initialize current input to initial text
     currentInput = initText || ""
     keyboardView.show()
     updateKeyboardDisplay()
-    console.log('Keyboard opened with text:', currentInput)  // 添加调试信息
+    console.log('Keyboard opened with text:', currentInput)  // Add debug info
 }
 
 // Close keyboard
@@ -314,7 +314,7 @@ function confirmInput() {
     fullKeyboard.close()
 }
 
-// 添加一个方法来处理文本追加
+// Add a method to handle text appending
 fullKeyboard.appendText = function(text) {
     currentInput += text
     updateKeyboardDisplay()

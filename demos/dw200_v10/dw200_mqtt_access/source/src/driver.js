@@ -28,20 +28,20 @@ driver.watchdog = {
 }
 driver.pwm = {
     init: function () {
-        // 初始化pwm
+        // Initialize PWM
         dxPwm.request(4);
         dxPwm.setPeriodByChannel(4, 366166)
         dxPwm.enable(4, true)
     },
-    // 按键音
+    // Key press sound
     press: function () {
         dxPwm.beep({ channel: 4 })
     },
-    //失败音
+    // Failure sound
     fail: function () {
         dxPwm.beep({ channel: 4, time: 500 })
     },
-    //成功音
+    // Success sound
     success: function () {
         dxPwm.beep({ channel: 4, count: 2 })
     }
@@ -82,12 +82,12 @@ driver.gpio = {
     close: function () {
         dxGpio.setValue(105, 0)
     },
-    toggle: function (delay) {//先开继电器等待一下再关
+    toggle: function (delay) {// Open relay first, wait a bit, then close
         if (!delay || typeof delay !== 'number' || isNaN(delay)) {
-            delay = 2000; // 默认 2000
+            delay = 2000; // Default 2000
         }
         dxGpio.setValue(105, 1)
-        std.sleep(Math.max(delay, 50))//最少也要sleep 50毫秒
+        std.sleep(Math.max(delay, 50))// At least sleep 50 milliseconds
         dxGpio.setValue(105, 0)
     }
 }
@@ -109,13 +109,13 @@ driver.audio = {
     init: function () {
         dxAlsaplay.init()
         const option = constants.audiooption()
-        //范围0-60，默认30，最大不超过60，先除10，取整得到0-6
+        // Range 0-60, default 30, maximum not exceeding 60, divide by 10 first, round to get 0-6
         if (option.volumn === 0) {
             dxAlsaplay.setVolume(0)
         } else {
             dxAlsaplay.setVolume(Math.ceil(Math.min(option.volumn || 30, 60) / 10))
         }
-        if (option.boot) {//缺省不播放
+        if (option.boot) {// Default: do not play
             this.play('boot_music.wav')
         }
     },
@@ -126,10 +126,10 @@ driver.audio = {
 driver.ota = {
     update: function (obj) {
         try {
-            if (obj.hasOwnProperty('update_flag')) {//升级安装包
+            if (obj.hasOwnProperty('update_flag')) {// Upgrade installation package
                 ota.update(obj.update_addr, obj.update_md5)
             }
-            if (obj.hasOwnProperty('update_flg')) {//升级旧版本的资源文件
+            if (obj.hasOwnProperty('update_flg')) {// Upgrade resource files for old version
                 ota.updateResource(obj.update_haddr, obj.update_md5)
             }
             driver.pwm.success()

@@ -43,7 +43,7 @@ vg.netInvoke = function (pack) {
     config.save()   
 }
 /**
- * 连接上报
+ * Connection report
  */
 vg.connectChanged = function (pack) {
     if (pack !=='connected') {

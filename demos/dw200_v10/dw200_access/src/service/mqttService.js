@@ -16,7 +16,7 @@ let sqliteFuncs = sqliteService.getFunction()
 
 const mqttService = {}
 
-// mqtt连接状态变化
+// MQTT connection status change
 mqttService.connectedChanged = function (data) {
     log.info('[mqttService] connectedChanged :' + JSON.stringify(data))
     if (data == "connected") {
@@ -25,24 +25,24 @@ mqttService.connectedChanged = function (data) {
     driver.screen.mqttConnectedChange(data)
 }
 
-// mqtt接收消息
+// MQTT receive message
 mqttService.receiveMsg = function (data) {
     let payload = JSON.parse(data.payload)
     if (payload.uuid != config.get('sysInfo.sn')) {
-        log.error('uuid校验失败')
+        log.error('UUID verification failed')
         return
     }
-    log.debug("[mqtt receive:]" + data.topic, data.payload.length > 500 ? "数据内容过长，暂不显示" : data.payload)
+    log.debug("[mqtt receive:]" + data.topic, data.payload.length > 500 ? "Data content too long, not displayed" : data.payload)
     this[data.topic.match(/[^/]+$/)[0]](data)
 }
 
-// 配置查询
+// Configuration query
 mqttService.getConfig = function (raw) {
     //  log.info("{mqttService} [getConfig] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
     let configAll = config.getAll()
     let res = {}
-    // 配置分组
+    // Configuration grouping
     for (const key in configAll) {
         const value = configAll[key];
         const keys = key.split(".")
@@ -55,12 +55,12 @@ mqttService.getConfig = function (raw) {
             res[keys[0]] = value
         }
     }
-    // 查询蓝牙配置
+    // Query Bluetooth configuration
     let bleInfo = driver.uartBle.getConfig()
     res["bleInfo"] = bleInfo
 
     if (utils.isEmpty(data) || typeof data != "string") {
-        // 查询全部
+        // Query all
         reply(raw, res)
         return
     }
@@ -77,7 +77,7 @@ mqttService.getConfig = function (raw) {
     reply(raw, search)
 }
 
-// 配置修改
+// Configuration modification
 mqttService.setConfig = function (raw) {
     //  log.info("{mqttService} [setConfig] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
@@ -87,7 +87,7 @@ mqttService.setConfig = function (raw) {
     }
     let res = configService.configVerifyAndSave(data)
     if (typeof res != 'boolean') {
-        // c版校验失败不回复，和c对齐
+        // C version validation failure does not reply, aligned with C version
         log.error(res)
         // reply(raw, res, CODE.E_100)
         return
@@ -95,14 +95,14 @@ mqttService.setConfig = function (raw) {
     if (res) {
         reply(raw)
     } else {
-        // c版校验失败不回复，和c对齐
+        // C version validation failure does not reply, aligned with C version
         log.error(res)
         // reply(raw, "unknown failure", CODE.E_100)
         return
     }
 }
 
-// 查询权限
+// Query permission
 mqttService.getPermission = function (raw) {
     //  log.info("{mqttService} [getPermission] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
@@ -126,7 +126,7 @@ mqttService.getPermission = function (raw) {
     }
 }
 
-// 添加权限
+// Add permission
 mqttService.insertPermission = function (raw) {
     //  log.info("{mqttService} [insertPermission] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
@@ -134,7 +134,7 @@ mqttService.insertPermission = function (raw) {
         reply(raw, "data shoulde be an array", CODE.E_100)
         return
     }
-    // 校验
+    // Validation
     for (let i = 0; i < data.length; i++) {
         let record = data[i];
         if (utils.isEmpty(record.id) || utils.isEmpty(record.type) || utils.isEmpty(record.code) || typeof record.time != 'object') {
@@ -162,7 +162,7 @@ mqttService.insertPermission = function (raw) {
             return
         }
         if (record.type == 200) {
-            // 卡类型
+            // Card type
             record.code = record.code.toLowerCase()
         }
         data[i] = {
@@ -179,7 +179,7 @@ mqttService.insertPermission = function (raw) {
             period: record.time.type != 3 ? 0 : JSON.stringify(record.time.weekPeriodTime)
         }
     }
-    // 入库
+    // Insert into database
     try {
         let res = sqliteFuncs.permisisonInsert(data)
         if (res == 0) {
@@ -195,7 +195,7 @@ mqttService.insertPermission = function (raw) {
     }
 }
 
-// 删除权限
+// Delete permission
 mqttService.delPermission = function (raw) {
     //  log.info("{mqttService} [delPermission] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
@@ -218,7 +218,7 @@ mqttService.delPermission = function (raw) {
     }
 }
 
-// 清空权限
+// Clear permission
 mqttService.clearPermission = function (raw) {
     //  log.info("{mqttService} [clearPermission] req:" + JSON.stringify(raw))
     try {
@@ -236,7 +236,7 @@ mqttService.clearPermission = function (raw) {
     }
 }
 
-// 查询密钥
+// Query security key
 mqttService.getSecurity = function (raw) {
     //  log.info("{mqttService} [getSecurity] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
@@ -260,7 +260,7 @@ mqttService.getSecurity = function (raw) {
     }
 }
 
-// 添加密钥
+// Add security key
 mqttService.insertSecurity = function (raw) {
     //  log.info("{mqttService} [insertSecurity] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
@@ -268,7 +268,7 @@ mqttService.insertSecurity = function (raw) {
         reply(raw, "data shoulde be an array", CODE.E_100)
         return
     }
-    // 校验
+    // Validation
     for (let i = 0; i < data.length; i++) {
         let secret = data[i];
         if (utils.isEmpty(secret.id) || utils.isEmpty(secret.type) || utils.isEmpty(secret.key) || utils.isEmpty(secret.value) || typeof secret.startTime != 'number' || typeof secret.endTime != 'number') {
@@ -291,7 +291,7 @@ mqttService.insertSecurity = function (raw) {
     }
 }
 
-// 删除密钥
+// Delete security key
 mqttService.delSecurity = function (raw) {
     //  log.info("{mqttService} [delSecurity] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
@@ -314,7 +314,7 @@ mqttService.delSecurity = function (raw) {
     }
 }
 
-// 清空密钥
+// Clear security key
 mqttService.clearSecurity = function (raw) {
     //  log.info("{mqttService} [clearSecurity] req:" + JSON.stringify(raw))
     try {
@@ -332,7 +332,7 @@ mqttService.clearSecurity = function (raw) {
     }
 }
 
-// 远程控制
+// Remote control
 mqttService.control = function (raw) {
     //  log.info("{mqttService} [control] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
@@ -342,31 +342,31 @@ mqttService.control = function (raw) {
     }
     switch (data.command) {
         case 0:
-            // 重启
+            // Reboot
             driver.screen.warning({ msg: config.get("sysInfo.language") == "EN" ? "Rebooting" : "重启中", beep: false })
             driver.pwm.success()
             common.asyncReboot(2)
             break
         case 1:
-            // 远程开门
+            // Remote open door
             accessService.access({ type: 900 })
             break
         case 2:
-            // 启用
+            // Enable
             config.setAndSave("sysInfo.status", "1")
             break
         case 3:
-            // 禁用
+            // Disable
             config.setAndSave("sysInfo.status", "2")
             break
         case 4:
-            // 重置
-            // 删除配置文件和数据库
+            // Reset
+            // Delete configuration files and database
             common.systemBrief("rm -rf /app/data/config/* && rm -rf /app/data/db/app.db")
             common.asyncReboot(2)
             break
         case 5:
-            // 远程控制展示弹窗
+            // Remote control display popup
             driver.audio.doPlay(data.extra.wavFileName)
             driver.screen.showMsg({ msg: data.extra.msg, time: data.extra.msgTimeout })
 
@@ -378,7 +378,7 @@ mqttService.control = function (raw) {
     reply(raw)
 }
 
-// 升级固件
+// Upgrade firmware
 mqttService.upgradeFirmware = async function (raw) {
     //  log.info("{mqttService} [upgradeFirmware] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
@@ -421,13 +421,13 @@ mqttService.upgradeFirmware = async function (raw) {
 }
 
 /**
- * 蓝牙升级
+ * Bluetooth upgrade
  * @param {*} pack 
  */
 let count = 0
 mqttService.bleUpgrade = function bleUpgrade(pack) {
     if (pack.data[0] == 0x03 && pack.data[1] == 0x01 && pack.data[2] == 0x80 && pack.data[3] == 0x01) {
-        // pack.data[3] == 0x01发送蓝牙进入升级模式指令的回复 
+        // pack.data[3] == 0x01 reply to Bluetooth enter upgrade mode command
         if (pack.data[5] == 0x00) {
             driver.screen.warning({ msg: "正在进入升级模式，请等待", beep: false })
             // print("正在进入升级模式，请等待")
@@ -441,7 +441,7 @@ mqttService.bleUpgrade = function bleUpgrade(pack) {
     }
 
     if (pack.data[0] == 0x03 && pack.data[1] == 0x01 && pack.data[2] == 0x80 && pack.data[3] == 0x02) {
-        // pack.data[3] == 0x02发送蓝牙升级包描述信息指令的回复
+        // pack.data[3] == 0x02 reply to Bluetooth upgrade package description information command
         if (pack.data[5] == 0x00) {
             // print("发送升级包描述信息成功，请发送升级包")
         } else {
@@ -450,22 +450,22 @@ mqttService.bleUpgrade = function bleUpgrade(pack) {
     }
 
     if (pack.data[0] == 0x03 && pack.data[1] == 0x01 && pack.data[2] == 0x80 && pack.data[3] == 0x03) {
-        // pack.data[3] == 0x03发送蓝牙升级包的回复
+        // pack.data[3] == 0x03 reply to Bluetooth upgrade package
         count++
         if (pack.data[5] == 0x00) {
-            console.log("发送升级包成功，第" + count + "包发送成功")
+            console.log("Upgrade package sent successfully, package " + count + " sent successfully")
         } else {
-            console.log("发送升级包失败，应答码为: ", pack.data[5])
+            console.log("Upgrade package send failed, response code: ", pack.data[5])
         }
     }
 
     if (pack.data[0] == 0x03 && pack.data[1] == 0x01 && pack.data[2] == 0x80 && pack.data[3] == 0x04) {
-        // pack.data[3] == 0x04发送蓝牙升级结束指令的回复
+        // pack.data[3] == 0x04 reply to Bluetooth upgrade finish command
         if (pack.data[5] == 0x00) {
             driver.screen.warning({ msg: "升级结束指令发送成功", beep: false })
-            console.log("升级结束指令发送成功")
+            console.log("Upgrade finish command sent successfully")
         } else {
-            console.log("升级结束指令发送失败，应答码为: ", pack.data[5])
+            console.log("Upgrade finish command send failed, response code: ", pack.data[5])
         }
         if (1) {
             // print("升级包发送完毕: ", count)
@@ -475,7 +475,7 @@ mqttService.bleUpgrade = function bleUpgrade(pack) {
     }
 
     if (pack.data[0] == 0x03 && pack.data[1] == 0x01 && pack.data[2] == 0x80 && pack.data[3] == 0x05) {
-        // pack.data[3] == 0x05发送安装升级包指令的回复
+        // pack.data[3] == 0x05 reply to install upgrade package command
         if (pack.data[5] == 0x00) {
             driver.screen.warning({ msg: "蓝牙升级成功", beep: false })
             // print("安装升级包指令发送成功，蓝牙升级成功，流程结束")
@@ -487,7 +487,7 @@ mqttService.bleUpgrade = function bleUpgrade(pack) {
     }
 }
 
-// 通行记录回复
+// Access record reply
 mqttService.access_reply = function (raw) {
     //  log.info("{mqttService} [access_reply] req:" + JSON.stringify(raw))
     let payload = JSON.parse(raw.payload)
@@ -500,7 +500,7 @@ mqttService.access_reply = function (raw) {
 }
 
 /**
- * 在线验证结果
+ * Online verification result
  */
 mqttService.access_online_reply = function (raw) {
     //  log.info("{mqttService} [access_online_reply] req:" + JSON.stringify(raw))
@@ -514,7 +514,7 @@ mqttService.access_online_reply = function (raw) {
 }
 
 //-----------------------private-------------------------
-// mqtt请求统一回复
+// MQTT request unified reply
 function reply(raw, data, code) {
     let topicReply = raw.topic.replace("/" + config.get("sysInfo.sn"), '') + "_reply"
     let payloadReply = JSON.stringify(mqttReply(JSON.parse(raw.payload).serialNo, data, (code == null || code == undefined) ? CODE.S_000 : code))
@@ -525,7 +525,7 @@ function reply(raw, data, code) {
     driver.mqtt.send({ topic: topicReply, payload: payloadReply })
 }
 
-// mqtt回复格式构建
+// MQTT reply format construction
 function mqttReply(serialNo, data, code) {
     return {
         serialNo: serialNo,
@@ -539,24 +539,24 @@ function mqttReply(serialNo, data, code) {
 mqttService.mqttReply = mqttReply
 
 const CODE = {
-    // 成功
+    // Success
     S_000: "000000",
-    // 未知错误
+    // Unknown error
     E_100: "100000",
-    // 设备已被禁用	
+    // Device has been disabled
     E_101: "100001",
-    // 设备正忙，请稍后再试	
+    // Device is busy, please try again later
     E_102: "100002",
-    // 签名检验失败	
+    // Signature verification failed
     E_103: "100003",
-    // 超时错误
+    // Timeout error
     E_104: "100004",
-    // 设备离线	
+    // Device offline
     E_105: "100005",
 }
 mqttService.CODE = CODE
 
-// 获取所有订阅的topic
+// Get all subscribed topics
 function getTopics() {
     let sn = config.get("sysInfo.sn")
     const topics = [
@@ -573,7 +573,7 @@ function getTopics() {
     return topics.map(item => flag + item).concat(eventReplies.map(item => eventFlag + item));
 }
 
-// 获取net连接配置
+// Get network connection configuration
 mqttService.getNetOptions = function () {
     let dhcp = config.get("netInfo.dhcp")
     dhcp = utils.isEmpty(dhcp) ? dxNet.DHCP.DYNAMIC : (dhcp + 1)
@@ -581,7 +581,7 @@ mqttService.getNetOptions = function () {
     dns = utils.isEmpty(dns) ? [null, null] : dns.split(",")
     let ip = config.get("netInfo.ip")
     if (utils.isEmpty(ip)) {
-        // 如果ip未设置，则使用动态ip
+        // If IP is not set, use dynamic IP
         dhcp = dxNet.DHCP.DYNAMIC
     }
     let options = {
@@ -597,7 +597,7 @@ mqttService.getNetOptions = function () {
     return options
 }
 
-// 获取mqtt连接配置
+// Get MQTT connection configuration
 mqttService.getOptions = function () {
     let qos = config.get("mqttInfo.qos")
     qos = utils.isEmpty(qos) ? 1 : qos
@@ -608,9 +608,9 @@ mqttService.getOptions = function () {
         password: config.get("mqttInfo.password") || 'password',
         prefix: config.get("mqttInfo.prefix"),
         qos: qos,
-        // 订阅
+        // Subscribe
         subs: getTopics(),
-        // 遗嘱
+        // Will
         willTopic: 'access_device/v1/event/offline',
         willMessage: JSON.stringify({
             serialNo: utils.genRandomStr(10),
@@ -623,13 +623,13 @@ mqttService.getOptions = function () {
 }
 
 /**
- * 连接上报(在线上报/在线后的通行记录上报)
+ * Connection report (online report / access record report after online)
  */
 mqttService.report = function () {
-    console.log('---连接上报---', new Date().getTime());
+    console.log('---Connection report---', new Date().getTime());
 
     let bleInfo = driver.uartBle.getConfig()
-    // 在线上报
+    // Online report
     let payloadReply = JSON.stringify(mqttReply(utils.genRandomStr(10), {
         sysVersion: config.get("sysInfo.appVersion") || '',
         appVersion: config.get("sysInfo.appVersion") || '',
@@ -649,10 +649,10 @@ mqttService.report = function () {
     log.info("------" + payloadReply)
     driver.mqtt.send({ topic: "access_device/v1/event/connect", payload: payloadReply })
 
-    //通行记录上报
+    // Access record report
     let res = sqliteFuncs.passRecordFindAll()
     if (res && res.length != 0) {
-        let reportCount = config.get('sysInfo.reportCount') || 500; // 定义每批处理的大小
+        let reportCount = config.get('sysInfo.reportCount') || 500; // Define batch processing size
         for (let i = 0; i < res.length; i += reportCount) {
             let batch = res.slice(i, i + reportCount);
             let serialNo = utils.genRandomStr(10)

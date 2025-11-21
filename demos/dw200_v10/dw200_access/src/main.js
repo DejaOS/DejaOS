@@ -21,7 +21,7 @@ let topics = ["bleupgrade", dxCode.RECEIVE_MSG, "code", "password", dxNfc.RECEIV
 
 function startWorkers() {
     // if (std.exist("/app/code/os/S999")) {
-    //     //如果存在代表升级os
+    //     // If exists, it means OS upgrade
     //     common.systemBrief("cp /app/code/os/S999 /etc/init.d/")
     //     common.systemBrief("chmod 777 /etc/init.d/S999")
     //     common.systemBrief("reboot")
@@ -31,9 +31,9 @@ function startWorkers() {
     // }
 
 
-    // 配置文件先初始化，因为后面的组件初始化中可能要用到配置文件 
+    // Initialize configuration file first, as subsequent component initialization may need to use the configuration file
     driver.config.init()
-    // 只能在主线程开辟子线程
+    // Can only create child threads in the main thread
     driver.uartBle.init()
     driver.mqtt.init()
 

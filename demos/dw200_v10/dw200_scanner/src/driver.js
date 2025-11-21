@@ -24,32 +24,32 @@ const driver = {}
 
 driver.pwm = {
     init: function () {
-        // 初始化蜂鸣
+        // Initialize buzzer
         dxPwm.request(4);
         dxPwm.setPeriodByChannel(4, 366166)
         dxPwm.enable(4, true)
 
-        //初始化亮度
+        // Initialize brightness
         let backlight = config.get('sysInfo.backlight')
         common.systemBrief("echo " + (backlight <= 0 ? 1 : Math.floor(backlight * 15 / 100)) + " > /sys/class/backlight/backlight/brightness")
     },
-    // 按键音
+    // Key press sound
     press: function () {
         dxPwm.beep({ channel: 4, time: 30, volume: utils.getVolume1(config.get("sysInfo.volume1")), interval: 0 })
     },
-    //失败音
+    // Failure sound
     fail: function () {
         dxPwm.beep({ channel: 4, time: 500, volume: utils.getVolume1(config.get("sysInfo.volume1")), interval: 0 })
     },
-    //成功音
+    // Success sound
     success: function () {
         dxPwm.beep({ channel: 4, time: 30, count: 2, volume: utils.getVolume1(config.get("sysInfo.volume1")) })
     },
-    //警告音
+    // Warning sound
     warning: function () {
         dxPwm.beep({ channel: 4, volume: utils.getVolume1(config.get("sysInfo.volume1")), interval: 0 })
     },
-    //自定义蜂鸣
+    // Custom beep
     beep: function (time, interval, count) {
         dxPwm.beep({ channel: 4, time: time ? time : config.get('sysInfo.beepd'), volume: utils.getVolume1(config.get("sysInfo.volume1")), interval: interval ? interval : config.get('sysInfo.beepd'), count: count })
     },
@@ -57,14 +57,14 @@ driver.pwm = {
 driver.net = {
     init: function () {
         if (!config.get('sysInfo.net_type')) {
-            log.debug("网络已关闭")
+            log.debug("Network is closed")
             return
         }
         dxNet.worker.beforeLoop(getNetOptions())
     },
     loop: function () {
         if (!config.get('sysInfo.net_type')) {
-            log.debug("网络已关闭")
+            log.debug("Network is closed")
             this.loop = () => { }
         } else {
             this.loop = () => dxNet.worker.loop()
@@ -81,7 +81,7 @@ driver.net = {
     },
 }
 
-// 获取net连接配置
+// Get network connection configuration
 function getNetOptions() {
     let dhcp = config.get("sysInfo.ip_mode")
     dhcp = utils.isEmpty(dhcp) ? dxNet.DHCP.DYNAMIC : (dhcp == 0 ? 2 : 1)
@@ -92,7 +92,7 @@ function getNetOptions() {
     let macaddr = config.get('sysInfo.macaddr') || common.getUuid2mac()
 
     if (utils.isEmpty(ip)) {
-        // 如果ip未设置，则使用动态ip
+        // If IP is not set, use dynamic IP
         dhcp = dxNet.DHCP.DYNAMIC
     }
     let options = {
@@ -111,17 +111,17 @@ function getNetOptions() {
 driver.gpio = {
     init: function () {
         dxGpio.init()
-        // 继电器
+        // Relay
         dxGpio.request(105)
     },
     relay: function (status, time) {
-        //判断是否开启安全模块
+        // Check if safety module is enabled
         if (config.get('sysInfo.safe_open') === 1) {
             safeService.open();
         } else {
             dxGpio.setValue(105, status)
             if (status) {
-                // 定时关继电器
+                // Timed relay close
                 std.setTimeout(() => dxGpio.setValue(105, 0), !utils.isEmpty(time) ? time : config.get('sysInfo.relayd'))
             }
         }
@@ -141,7 +141,7 @@ driver.code = {
     options2: { id: 'decoder1', name: "decoder v4", width: 800, height: 600 },
     init: function () {
         if (!config.get('sysInfo.codeSwitch')) {
-            log.debug("扫码已关闭")
+            log.debug("Code scanning is closed")
             return
         }
         dxCode.worker.beforeLoop(this.options1, this.options2)
@@ -149,7 +149,7 @@ driver.code = {
     },
     loop: function () {
         if (!config.get('sysInfo.codeSwitch')) {
-            log.debug("扫码已关闭")
+            log.debug("Code scanning is closed")
             this.loop = () => { }
         } else {
             this.loop = () => dxCode.worker.loop(config.get('sysInfo.s_mode'), config.get('sysInfo.interval'))
@@ -161,40 +161,40 @@ driver.nfc = {
     options: { id: 'nfc1', m1: true, psam: false },
     init: function () {
         if (!config.get('sysInfo.nfc')) {
-            log.debug("刷卡已关闭")
+            log.debug("Card reading is closed")
             return
         }
         dxNfc.worker.beforeLoop(this.options)
     },
     loop: function () {
         if (!config.get('sysInfo.nfc')) {
-            log.debug("刷卡已关闭")
+            log.debug("Card reading is closed")
             this.loop = () => { }
         } else {
             this.loop = () => dxNfc.worker.loop(this.options)
         }
     },
-    //读M1  卡一块数据
+    // Read one block of M1 card data
     m1cardReadBlk: function (taskFlg, blkNum, key, keyType) {
         return dxNfc.m1cardReadBlk(taskFlg, blkNum, key, keyType, this.options.id)
         // return dxNfc.m1cardReadBlk(0, 0,[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], 0x60,this.options.id)
     },
-    //写M1  卡一块数据
+    // Write one block of M1 card data
     m1cardWriteBlk: function (taskFlg, blkNum, key, keyType, data) {
         return dxNfc.m1cardWriteBlk(taskFlg, blkNum, key, keyType, data, this.options.id)
         // return dxNfc.m1cardWriteBlk(0, 1, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], 0x61, [0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff], this.options.id)
 
     },
-    //读M1  卡多块数据
+    // Read multiple blocks of M1 card data
     m1cardReadSector: function (taskFlg, secNum, logicBlkNum, blkNums, key, keyType) {
         return dxNfc.m1cardReadSector(taskFlg, secNum, logicBlkNum, blkNums, key, keyType, this.options.id)
-        //2 删除 0 块 读4 块
+        // 2 delete 0 blocks read 4 blocks
         // return dxNfc.m1cardReadSector(0, 2, 0, 4,[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], 0x60,this.options.id)
     },
-    //写M1  卡多块数据
+    // Write multiple blocks of M1 card data
     m1cardWriteSector: function (taskFlg, secNum, logicBlkNum, blkNums, key, keyType, data) {
         return dxNfc.m1cardWriteSector(taskFlg, secNum, logicBlkNum, blkNums, key, keyType, data, this.options.id)
-        //5删除 0 块写 2 块 数据不足随机填写
+        // 5 delete 0 blocks write 2 blocks, fill randomly if data insufficient
         // return dxNfc.m1cardWriteBlk(0, 5, 0, 2,[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], 0x61, [0x11, 0x22, 0x33], this.options.id)
     },
 }
@@ -202,7 +202,7 @@ driver.nfc = {
 driver.audio = {
     init: function () {
         dxAlsaplay.init()
-        // 语音播报音量
+        // Voice broadcast volume
         let volume = Math.floor(config.get("sysInfo.volume") / 10)
         dxAlsaplay.setVolume(volume)
         if (config.get('sysInfo.boot_music') == 1) {
@@ -213,7 +213,7 @@ driver.audio = {
             }
         }
     },
-    // 获取/设置音量，范围（[0,6]），配置是0-60，超过6效果是一样的
+    // Get/set volume, range ([0,6]), config is 0-60, effect is the same beyond 6
     volume: function (volume) {
         if (utils.isEmpty(volume)) {
             return dxAlsaplay.getVolume()

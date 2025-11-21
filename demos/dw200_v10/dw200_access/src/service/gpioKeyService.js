@@ -8,14 +8,14 @@ gpioKeyService.receiveMsg = function (data) {
     this["key" + data.code](data)
 }
 
-// 出门开关30
+// Exit switch 30
 gpioKeyService.key30 = function (data) {
     log.info('[gpioKeyService] key30 :' + JSON.stringify(data))
     if (data.value == 0) {
         accessService.access({ type: 800 })
     }
 }
-// 门磁48
+// Door sensor 48
 gpioKeyService.key48 = function (data) {
     log.info('[gpioKeyService] key48 :' + JSON.stringify(data))
     driver.gpiokey.sensorChanged(data.value == 1 ? 0 : 1)

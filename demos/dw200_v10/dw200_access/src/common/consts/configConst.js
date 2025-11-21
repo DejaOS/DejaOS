@@ -1,100 +1,100 @@
 
 const configConst = {}
 configConst.setConfig = {
-    // mqttip+端口
+    // MQTT IP + port
     mqttaddr: "mqttInfo.mqttAddr",
-    // mqtt 账号
+    // MQTT account
     mqttusername: "mqttInfo.mqttName",
-    //mqtt 密码
+    // MQTT password
     mqttpassword: "mqttInfo.password",
-    //mqtt前缀
+    // MQTT prefix
     mqttprefix: "mqttInfo.prefix",
-    //qosmqtt
+    // MQTT QoS
     mqttqos: "mqttInfo.qos",
-    // 客户端ID
+    // Client ID
     mqttclientid: "mqttInfo.clientId",
-    //ntp对时服务地址
+    // NTP time synchronization service address
     ntpAddr: "netInfo.ntpAddr",
-    //net_type 
+    // Network type
     net_type: "netInfo.type",
-    //DHCP 
+    // DHCP
     ip_mode: "netInfo.dhcp",
-    //ip
+    // IP
     ip: "netInfo.ip",
-    //网关
+    // Gateway
     gateway: "netInfo.gateway",
-    //dns
+    // DNS
     dns: "netInfo.dns",
-    //macaddr
+    // MAC address
     macaddr: "netInfo.netMac",
-    // fixed_macaddr_enable 0:默认mac 2:自定义mac
+    // fixed_macaddr_enable 0: default MAC 2: custom MAC
     fixed_macaddr_enable: "netInfo.fixed_macaddr_enable",
-    //子网掩码
+    // Subnet mask
     mask: "netInfo.subnetMask",
-    //设备号
+    // Device number
     devnum: "sysInfo.deviceNum",
-    //公司名称
+    // Company name
     devname: "sysInfo.deviceName",
-    //喇叭音量
+    // Speaker volume
     volume: "sysInfo.volume",
-    //按键音量
+    // Key press volume
     volume2: "sysInfo.volume2",
-    //蜂鸣音量
+    // Buzzer volume
     volume3: "sysInfo.volume3",
-    //心跳开关
+    // Heartbeat switch
     heart_en: "sysInfo.heart_en",
-    //心跳间隔
+    // Heartbeat interval
     heart_time: "sysInfo.heart_time",
-    //心跳内容
+    // Heartbeat content
     heart_data: "sysInfo.heart_data",
-    //设备状态
+    // Device status
     dev_sta: "sysInfo.status",
-    //云证开关 3:云证获取 1:物理卡号
+    // Cloud certificate switch 3: cloud certificate 1: physical card number
     nfc_identity_card_enable: "sysInfo.nfc_identity_card_enable",
-    //sn是否隐藏 1 显示 0 隐藏
+    // SN visibility 1: show 0: hide
     sn_show: "uiInfo.sn_show",
-    //ip是否隐藏 1 显示 0 隐藏
+    // IP visibility 1: show 0: hide
     ip_show: "uiInfo.ip_show",
-    //version是否隐藏 1 显示 0 隐藏
+    // Version visibility 1: show 0: hide
     version_show: "sysInfo.version_show",
-    //设备配置密码
+    // Device configuration password
     com_passwd: "sysInfo.com_passwd",
-    //语言
+    // Language
     language: "sysInfo.language",
-    //开门模式
+    // Door opening mode
     openMode: "doorInfo.openMode",
-    //开门时长
+    // Door opening duration
     openTime: "doorInfo.openTime",
-    //开门超时时间
+    // Door opening timeout
     openTimeout: "doorInfo.openTimeout",
-    //在线验证开关 1开 0 关
+    // Online verification switch 1: on 0: off
     onlinecheck: "doorInfo.onlinecheck",
-    //在线验证超时时间
+    // Online verification timeout
     onlineTimeout: "doorInfo.timeout",
     // buttonText: "uiInfo.buttonText",
     show_date: "uiInfo.show_date",
     show_devname: "uiInfo.show_devname",
-    // 显示开锁按钮 1 显示 0 隐藏
+    // Show unlock button 1: show 0: hide
     show_unlocking: "uiInfo.show_unlocking",
-    // 屏幕旋转
+    // Screen rotation
     rotation: "uiInfo.rotation",
-    //1打开0关闭
+    // 1: enable 0: disable
     nfc: "sysInfo.nfc",
-    // 时区
+    // Timezone
     ntpLocaltime: "netInfo.ntpLocaltime",
-    // 码制
+    // Code type
     de_type: "scanInfo.deType",
-    //扫码模式 0是间隔 1是单次
+    // Scan mode 0: interval 1: single
     s_mode: "scanInfo.sMode",
-    //间隔生效  间隔时间
+    // Interval effective, interval time
     interval: "scanInfo.interval",
-    //在线验证错误提示 开关 0 关闭 1 开启
+    // Online verification error message switch 0: off 1: on
     onlinecheckErrorMsg: "sysInfo.onlinecheckErrorMsg",
-    //-1 关闭自动重启   0-23 整点重启
+    // -1: disable auto restart, 0-23: restart at the hour
     autoRestart: "sysInfo.autoRestart",
     setSn: "sysInfo.setSn",
 }
-//根据 key 获取 setCofig中的 value
+// Get value from setConfig by key
 configConst.getValueByKey = function (key) {
     return this.setConfig[key] || undefined;
 }
