@@ -7,12 +7,12 @@ import accessService from './accessService.js'
 
 const uartBleService = {}
 
-// 写死的密钥
+// Hardcoded security key
 let BLE_KEY = [0x01, 0x23, 0x45, 0x67, 0x89, 0x01, 0x23, 0x45, 0x67, 0x89, 0x01, 0x23, 0x45, 0x67, 0x89, 0x01]
 
-// 保存连接记录
+// Save connection records
 let map = dxMap.get("uartBleService")
-// 3个连接
+// 3 connections
 map.put("auth", [
     {
         random: [0],
@@ -39,7 +39,7 @@ uartBleService.receiveMsg = function (data) {
 }
 
 /**
- * 蓝牙回复
+ * Bluetooth reply
  * @param {*} pack eg:{"cmd":"60","length":8,"bcc":false,"data":"7e00000102030005"}
  * @returns 
  */
@@ -107,10 +107,10 @@ uartBleService.cmd60 = function (pack) {
         if (bleMac) {
             res.mac = bleMac
         }
-        // 查询回复
+        // Query reply
         driver.uartBle.getConfigReply(res)
     } else if (t == '01') {
-        // 修改回复
+        // Modification reply
         driver.uartBle.setConfigReply(true)
     } else {
         log.error("[uartBleService] cmd60: ble info data err")
@@ -119,14 +119,14 @@ uartBleService.cmd60 = function (pack) {
 }
 
 /**
- * 回复随机数
+ * Reply with random number
  * @param {*} pack
  */
 uartBleService.cmd07 = function (pack) {
     log.info('[uartBleService] cmd07 :' + JSON.stringify(pack))
     let data = pack.data.match(/.{2}/g).map(v => parseInt(v, 16))
     let index = data[pack.length - 1]
-    // 记录连接标识
+    // Record connection identifier
     log.info("[uartBleService] cmd07: index " + index);
     let curr = 0
     let auth = map.get("auth")
@@ -158,7 +158,7 @@ uartBleService.cmd07 = function (pack) {
 }
 
 /**
- * 回复外部授权
+ * Reply external authorization
  * @param {*} pack 
  */
 uartBleService.cmd08 = function (pack) {
@@ -170,7 +170,7 @@ uartBleService.cmd08 = function (pack) {
     let result = "90"
     let auth = map.get("auth")
     for (let i = 0; i < 3; i++) {
-        // 查询指定的连接
+        // Query specified connection
         if (auth[i].index == index) {
             curr = i
             break;
@@ -180,7 +180,7 @@ uartBleService.cmd08 = function (pack) {
         log.info("[uartBleService] cmd08: extern auth failed");
         result = "90"
     } else {
-        // aes解密
+        // AES decryption
         let key = BLE_KEY
         let cipher = data.slice(1, -1)
         let plain = common.aes128EcbDecrypt(cipher, key)
@@ -203,7 +203,7 @@ uartBleService.cmd08 = function (pack) {
 }
 
 /**
- * 回复开门
+ * Reply door opening
  * @param {*} pack 
  */
 uartBleService.cmd0f = function (pack) {
@@ -214,13 +214,13 @@ uartBleService.cmd0f = function (pack) {
     log.info("[uartBleService] cmd0f: index " + index);
 
     if(data[0] == 0x00 && data[1] == 0x00 && data[2] == 0x30 && data[3] == 0x06 && data[4] == 0x03 && data[5] == 0x00 && data[6] == 0x01 && data[7] == 0x01 && data[8] == 0x01){
-        // 蓝牙设备远程开门
+        // Bluetooth device remote door opening
         accessService.access({ type: 600, code: null, index: index })
         return
     } else {
         let userId = data.slice(5, -1).map((byte) => byte.toString(16).padStart(2, '0')).join('')
         userId = common.hexToString(userId)
-        // 用户id
+        // User id
         log.info("[uartBleService] cmd0f: 用户id ", userId)
         accessService.access({ type: 600, code: userId, index: index })
         return
@@ -231,8 +231,8 @@ uartBleService.cmd0f = function (pack) {
 }
 
 /**
- * 设置蓝牙配置信息
- * @param {*} param param.name蓝牙名称 param.mac蓝牙mac
+ * Set Bluetooth configuration information
+ * @param {*} param param.name Bluetooth name param.mac Bluetooth mac
  * @returns 
  */
 uartBleService.setBleConfig = function (param) {
@@ -255,7 +255,7 @@ uartBleService.setBleConfig = function (param) {
         }
     }
 
-    // 内部方法，mac校验
+    // Internal method, mac validation
     let VBAR_M_BLE_MACLEN = 6
     function bleMacIsValid(mac) {
         if (mac.length != VBAR_M_BLE_MACLEN) {
@@ -288,7 +288,7 @@ function getUrandom(len) {
 }
 
 /**
- * 过滤蓝牙升级的指令
+ * Filter Bluetooth upgrade commands
  */
 function CMDIsBleUpdate (pack) {
     let data = common.hexToArr(pack.data)

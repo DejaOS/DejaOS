@@ -9,6 +9,7 @@ import accessService from "./accessService.js";
 import dxMap from '../../dxmodules/dxMap.js'
 import ota from '../../dxmodules/dxOta.js'
 import bus from '../../dxmodules/dxEventBus.js'
+import dxStd from '../../dxmodules/dxStd.js'
 import codeService from './codeService.js'
 import configService from './configService.js'
 import * as os from "os"
@@ -17,16 +18,7 @@ let sqliteFuncs = sqliteService.getFunction()
 
 const mqttService = {}
 
-// mqtt连接状态变化
-mqttService.connectedChanged = function (data) {
-    log.info('[mqttService] connectedChanged :' + JSON.stringify(data))
-    driver.screen.mqttConnectedChange(data)
-    if (data == "connected") {
-        this.report()
-    }
-}
-
-// mqtt接收消息
+// MQTT receive message
 mqttService.receiveMsg = function (data) {
     let payload = JSON.parse(data.payload)
     if (payload.uuid != config.get('sysInfo.sn')) {
@@ -37,14 +29,15 @@ mqttService.receiveMsg = function (data) {
     this[data.topic.match(/[^/]+$/)[0]](data)
 }
 
-// 配置查询
+// Configuration query
 mqttService.getConfig = function (raw) {
     //  log.info("{mqttService} [getConfig] req:" + JSON.stringify(raw))
     config.set('sysInfo.time', Math.floor(new Date().getTime() / 1000))
     let data = JSON.parse(raw.payload).data
     let configAll = config.getAll()
+    let code = CODE.S_000
     let res = {}
-    // 配置分组
+    // Configuration grouping
     for (const key in configAll) {
         const value = configAll[key];
         const keys = key.split(".")
@@ -57,51 +50,77 @@ mqttService.getConfig = function (raw) {
             res[keys[0]] = value
         }
     }
-    // 查询蓝牙配置
+    // Query Bluetooth configuration
     let bleInfo = driver.uartBle.getConfig()
     res["bleInfo"] = bleInfo
-    res["sysInfo"] = {
-        ...res["sysInfo"],
-        freeSpace: Math.floor(common.getFreedisk() / 1024 / 1024)
-    }
+    filterSpecificProperties(res)
     if (utils.isEmpty(data) || typeof data != "string") {
-        // 查询全部
+        if (res.mqttInfo && res.mqttInfo.clientId) {
+            res.mqttInfo.clientId = dxMap.get("CLIENT").get("CLIENT_ID")
+        }
+        // Query all
         reply(raw, res)
         return
     }
     let keys = data.split(".")
     let search = {}
     if (keys.length == 2) {
-        if (res[keys[0]]) {
-            search[keys[0]] = {}
-            search[keys[0]][keys[1]] = res[keys[0]][keys[1]]
+        const [group, field] = keys
+        if (res[group] && res[group][field] !== undefined) {
+            search[group] = {}
+            search[group][field] = res[group][field]
+        } else {
+            code = CODE.E_200
         }
     } else {
-        search[keys[0]] = res[keys[0]]
+        const group = keys[0]
+        if(res[group]) {
+            search[group] = res[group]
+        } else {
+            code = CODE.E_200
+        }
     }
-    reply(raw, search)
+    filterSpecificProperties(search)
+    if (search.mqttInfo && search.mqttInfo.clientId) {
+        search.mqttInfo.clientId = dxMap.get("CLIENT").get("CLIENT_ID")
+    }
+    reply(raw, search, code)
 }
 
-// 配置修改
+// Configuration item filtering function
+function filterSpecificProperties(configObj) {
+    if (!configObj || typeof configObj !== 'object') return;
+    // Precisely specify 5 property paths to delete
+    const propertiesToRemove = [
+        'uiInfo.rotation0BgImage',
+        'uiInfo.rotation1BgImage', 
+        'uiInfo.rotation2BgImage',
+        'uiInfo.rotation3BgImage',
+        'uiInfo.fontPath'
+    ];
+    propertiesToRemove.forEach(propPath => {
+        const [group, field] = propPath.split('.');
+        if (configObj[group] && configObj[group][field] !== undefined) {
+            delete configObj[group][field];
+        }
+    });
+}
+
+// Configuration modification
 mqttService.setConfig = function (raw) {
     let oldPrefix = config.get("mqttInfo.prefix")
     let data = JSON.parse(raw.payload).data
     if (!data || typeof data != 'object') {
-        reply(raw, "data should not be empty", CODE.E_100)
+        reply(raw, "data should not be empty or in an incorrect format", CODE.E_200)
         return
     }
     let res = configService.configVerifyAndSave(data)
     if (typeof res != 'boolean') {
         log.error(res)
-        reply(raw, res, CODE.E_100)
+        reply(raw, res, CODE.E_201)
         return
     }
     if (res) {
-        // 如果有旧的mqtt前缀，需要先把topic中旧的前缀去掉，因为mqtt默认会在旧的前缀上再拼接上前缀：如 /prefix/topic ---> /prefix/prefix/topic
-        if (oldPrefix) {
-            let topic = raw.topic
-            raw.topic = topic.startsWith(oldPrefix) ? topic.replace(oldPrefix, '') : topic
-        }
         reply(raw)
     } else {
         log.error(res)
@@ -110,19 +129,21 @@ mqttService.setConfig = function (raw) {
     }
 }
 
-// 查询权限
+// Query permissions
 mqttService.getPermission = function (raw) {
     //  log.info("{mqttService} [getPermission] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
     if (!data || typeof data != 'object') {
-        reply(raw, "data should not be empty", CODE.E_100)
+        reply(raw, "data should not be empty", CODE.E_200)
         return
     }
-    if (typeof data.page != 'number') {
-        data.page = 0
+    if (typeof data.page !== 'number' || data.page < 1) {
+        reply(raw, "Invalid parameter: 'page' must be a number >= 1", CODE.E_200);
+        return;
     }
-    if (typeof data.size != 'number' || data.size > 200) {
-        data.size = 10
+    if (typeof data.size !== 'number' || data.size <= 0 || data.size > 200) {
+        reply(raw, "Invalid parameter: 'size' must be a number between 1 and 200", CODE.E_200);
+        return;
     }
     try {
         let res = sqliteFuncs.permissionFindAll(data.page, data.size, data.code, data.type, data.id);
@@ -134,44 +155,44 @@ mqttService.getPermission = function (raw) {
     }
 }
 
-// 添加权限
+// Add permissions
 mqttService.insertPermission = function (raw) {
     //  log.info("{mqttService} [insertPermission] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
     if (!Array.isArray(data)) {
-        reply(raw, "data shoulde be an array", CODE.E_100)
+        reply(raw, "data shoulde be an array", CODE.E_200)
         return
     }
-    // 校验
+    // Validation
     for (let i = 0; i < data.length; i++) {
         let record = data[i];
         if (utils.isEmpty(record.id) || utils.isEmpty(record.type) || utils.isEmpty(record.code) || typeof record.time != 'object') {
-            reply(raw, "id,type,code,time shoulde not be empty", CODE.E_100)
+            reply(raw, "id,type,code,time shoulde not be empty", CODE.E_200)
             return
         }
         if (![0, 1, 2, 3].includes(record.time.type)) {
-            reply(raw, "time's type is not supported", CODE.E_100)
+            reply(raw, "time's type is not supported", CODE.E_200)
             return
         }
         if (record.time.type != 0 && (typeof record.time.range != 'object' || typeof record.time.range.beginTime != 'number' || typeof record.time.range.endTime != 'number')) {
-            reply(raw, "time's range format error", CODE.E_100)
+            reply(raw, "time's range format error", CODE.E_200)
             return
         }
         if (record.time.type == 2 && (typeof record.time.beginTime != 'number' || typeof record.time.endTime != 'number')) {
-            reply(raw, "time format error", CODE.E_100)
+            reply(raw, "time format error", CODE.E_200)
             return
         }
         if (record.time.type == 3 && typeof record.time.weekPeriodTime != 'object') {
-            reply(raw, "time format error", CODE.E_100)
+            reply(raw, "time format error", CODE.E_200)
             return
         }
         if (record.type == 200) {
-            // 卡类型
+            // Card type
             record.code = record.code.toLowerCase()
         }
         if (record.type == 400 && record.code.length > 20) {
-            // 卡类型
-            reply(raw, "password length error", CODE.E_100)
+            // Card type
+            reply(raw, "password length error", CODE.E_200)
             return
         }
         data[i] = {
@@ -188,7 +209,7 @@ mqttService.insertPermission = function (raw) {
             period: record.time.type != 3 ? 0 : JSON.stringify(record.time.weekPeriodTime)
         }
     }
-    // 入库
+    // Store to database
     try {
         let res = sqliteFuncs.permisisonInsert(data)
         if (res == 0) {
@@ -204,12 +225,12 @@ mqttService.insertPermission = function (raw) {
     }
 }
 
-// 删除权限
+// Delete permissions
 mqttService.delPermission = function (raw) {
     //  log.info("{mqttService} [delPermission] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
     if (!Array.isArray(data)) {
-        reply(raw, "data shoulde be an array", CODE.E_100)
+        reply(raw, "data shoulde be an array", CODE.E_200)
         return
     }
     try {
@@ -227,7 +248,7 @@ mqttService.delPermission = function (raw) {
     }
 }
 
-// 清空权限
+// Clear permissions
 mqttService.clearPermission = function (raw) {
     //  log.info("{mqttService} [clearPermission] req:" + JSON.stringify(raw))
     try {
@@ -245,19 +266,21 @@ mqttService.clearPermission = function (raw) {
     }
 }
 
-// 查询密钥
+// Query security keys
 mqttService.getSecurity = function (raw) {
     //  log.info("{mqttService} [getSecurity] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
     if (!data || typeof data != 'object') {
-        reply(raw, "data should not be empty", CODE.E_100)
+        reply(raw, "data should not be empty", CODE.E_200)
         return
     }
-    if (typeof data.page != 'number') {
-        data.page = 0
+    if (typeof data.page !== 'number' || data.page < 1) {
+        reply(raw, "Invalid parameter: 'page' must be a number >= 1", CODE.E_200);
+        return;
     }
-    if (typeof data.size != 'number' || data.size > 200) {
-        data.size = 10
+    if (typeof data.size !== 'number' || data.size <= 0 || data.size > 20) {
+        reply(raw, "Invalid parameter: 'size' must be a number between 1 and 20", CODE.E_200);
+        return;
     }
     try {
         let res = sqliteFuncs.securityFindAll(data.page, data.size, data.key, data.type, data.id)
@@ -269,19 +292,19 @@ mqttService.getSecurity = function (raw) {
     }
 }
 
-// 添加密钥
+// Add security keys
 mqttService.insertSecurity = function (raw) {
     //  log.info("{mqttService} [insertSecurity] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
     if (!Array.isArray(data)) {
-        reply(raw, "data shoulde be an array", CODE.E_100)
+        reply(raw, "data shoulde be an array", CODE.E_200)
         return
     }
-    // 校验
+    // Validation
     for (let i = 0; i < data.length; i++) {
         let secret = data[i];
         if (utils.isEmpty(secret.id) || utils.isEmpty(secret.type) || utils.isEmpty(secret.key) || utils.isEmpty(secret.value) || typeof secret.startTime != 'number' || typeof secret.endTime != 'number') {
-            reply(raw, "id,type,key,value,startTime,endTime shoulde not be empty", CODE.E_100)
+            reply(raw, "id,type,key,value,startTime,endTime shoulde not be empty", CODE.E_200)
             return
         }
     }
@@ -300,7 +323,7 @@ mqttService.insertSecurity = function (raw) {
     }
 }
 
-// 删除密钥
+// Delete security keys
 mqttService.delSecurity = function (raw) {
     //  log.info("{mqttService} [delSecurity] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
@@ -323,7 +346,7 @@ mqttService.delSecurity = function (raw) {
     }
 }
 
-// 清空密钥
+// Clear security keys
 mqttService.clearSecurity = function (raw) {
     //  log.info("{mqttService} [clearSecurity] req:" + JSON.stringify(raw))
     try {
@@ -341,77 +364,70 @@ mqttService.clearSecurity = function (raw) {
     }
 }
 
-// 远程控制
+// Remote control
 mqttService.control = function (raw) {
     //  log.info("{mqttService} [control] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
     if (!data || typeof data != 'object' || typeof data.command != 'number') {
-        reply(raw, "data.command should not be empty", CODE.E_100)
+        reply(raw, "data.command should not be empty", CODE.E_200)
         return
     }
     switch (data.command) {
         case 0:
-            // 重启
+            // Restart
             driver.screen.warning({ msg: config.get("sysInfo.language") == 1 ? "Rebooting" : "重启中", beep: false })
             driver.pwm.success()
             common.asyncReboot(2)
             break
         case 1:
-            // 远程开门
+            // Remote door opening
             accessService.access({ type: 900 })
             break
-        case 2:
-            // 启用
-            config.setAndSave("sysInfo.status", "1")
-            break
-        case 3:
-            // 禁用
-            config.setAndSave("sysInfo.status", "2")
-            break
         case 4:
-            // 重置
-            // 删除配置文件和数据库
+            // Reset
+            // Delete configuration files and database
             common.systemBrief("rm -rf /app/data/config/* && rm -rf /app/data/db/app.db")
             common.asyncReboot(2)
             break
         case 5:
-            // 远程控制展示弹窗
+            // Remote control display popup
             if (data.extra) {
                 driver.audio.doPlay(data.extra.wavFileName)
                 driver.screen.showMsg({ msg: data.extra.msg, time: data.extra.msgTimeout })
             } else {
-                reply(raw, "data.extra should not be empty", CODE.E_100)
+                reply(raw, "data.extra should not be empty", CODE.E_200)
                 return
             }
             break
         default:
-            reply(raw, "Illegal instruction", CODE.E_100)
+            reply(raw, "Illegal instruction", CODE.E_201)
             return;
     }
     reply(raw)
 }
 
-// 升级固件
+// Firmware upgrade
 mqttService.upgradeFirmware = function (raw) {
     //  log.info("{mqttService} [upgradeFirmware] req:" + JSON.stringify(raw))
     let data = JSON.parse(raw.payload).data
     if (!data || typeof data != 'object' || typeof data.type != 'number' || typeof data.url != 'string' || (data.type == 0 && typeof data.md5 != 'string')) {
-        reply(raw, "data's params error", CODE.E_100)
+        reply(raw, "data's params error", CODE.E_200)
         return
     }
     if (data.type == 0) {
         try {
             driver.pwm.warning()
-            codeService.updateBegin()
+            codeService.showUpdateStatus('begin');
             ota.updateHttp(data.url, data.md5, 300)
-            codeService.updateEnd()
+            codeService.showUpdateStatus('success');
             driver.pwm.success()
         } catch (error) {
-            reply(raw, "upgrade failure", CODE.E_100)
-            codeService.updateFailed(error.message)
+            reply(raw, "upgrade failure", CODE.E_201)
+            codeService.showUpdateStatus('failed', error.message);
             driver.pwm.fail()
             return
         }
+        reply(raw)
         common.asyncReboot(3)
     } else if (data.type == 1) {
         try {
@@ -419,7 +435,7 @@ mqttService.upgradeFirmware = function (raw) {
             if (lockMap.get("ble_lock")) {
                 driver.screen.warning({ msg: "正在处理，请勿重复操作", beep: false })
                 reply(raw, "Upgrading in progress", CODE.E_100)
-                return 
+                return
             }
             driver.pwm.warning()
             bus.fire("bleupgrade", { "url": data.url })
@@ -432,7 +448,7 @@ mqttService.upgradeFirmware = function (raw) {
     }
 }
 
-// 通行记录回复
+// Access record reply
 mqttService.access_reply = function (raw) {
     // log.info("{mqttService} [access_reply] req:" + JSON.stringify(raw))
     let payload = JSON.parse(raw.payload)
@@ -445,7 +461,7 @@ mqttService.access_reply = function (raw) {
 }
 
 /**
- * 在线验证结果
+ * Online verification result
  */
 mqttService.access_online_reply = function (raw) {
     // log.info("{mqttService} [access_online_reply] req:" + JSON.stringify(raw))
@@ -459,18 +475,14 @@ mqttService.access_online_reply = function (raw) {
 }
 
 //-----------------------private-------------------------
-// mqtt请求统一回复
+// MQTT request unified reply
 function reply(raw, data, code) {
     let topicReply = raw.topic.replace("/" + config.get("sysInfo.sn"), '') + "_reply"
     let payloadReply = JSON.stringify(mqttReply(JSON.parse(raw.payload).serialNo, data, (code == null || code == undefined) ? CODE.S_000 : code))
-    let prefix = config.get("mqttInfo.prefix")
-    if (prefix) {
-        topicReply = topicReply.startsWith(prefix) ? topicReply.replace(prefix, '') : topicReply
-    }
-    driver.mqtt.send({ topic: topicReply, payload: payloadReply })
+    driver.mqtt.send(topicReply, payloadReply)
 }
 
-// mqtt回复格式构建
+// MQTT reply format construction
 function mqttReply(serialNo, data, code) {
     return {
         serialNo: serialNo,
@@ -484,41 +496,28 @@ function mqttReply(serialNo, data, code) {
 mqttService.mqttReply = mqttReply
 
 const CODE = {
-    // 成功
+    // Success
     S_000: "000000",
-    // 未知错误
+    // Unknown error
     E_100: "100000",
-    // 设备已被禁用	
+    // Device disabled	
     E_101: "100001",
-    // 设备正忙，请稍后再试	
+    // Device busy, please try again later	
     E_102: "100002",
-    // 签名检验失败	
+    // Signature verification failed	
     E_103: "100003",
-    // 超时错误
+    // Timeout error
     E_104: "100004",
-    // 设备离线	
+    // Device offline	
     E_105: "100005",
+    // Parameter error
+    E_200: "200000",
+    // Parameter format error
+    E_201: "200001"
 }
 mqttService.CODE = CODE
 
-// 获取所有订阅的topic
-function getTopics() {
-    let sn = config.get("sysInfo.sn")
-    const topics = [
-        "control", "getConfig", "setConfig", "upgradeFirmware", "test",
-        "getPermission", "insertPermission", "delPermission", "clearPermission",
-        "getUser", "insertUser", "delUser", "clearUser",
-        "getKey", "insertKey", "delKey", "clearKey",
-        "getSecurity", "insertSecurity", "delSecurity", "clearSecurity"
-    ]
-    const eventReplies = ["connect_reply", "alarm_reply", "access_reply", "access_online_reply"]
-
-    let flag = 'access_device/v1/cmd/' + sn + "/"
-    let eventFlag = 'access_device/v1/event/' + sn + "/"
-    return topics.map(item => flag + item).concat(eventReplies.map(item => eventFlag + item));
-}
-
-// 获取net连接配置
+// Get network connection configuration
 mqttService.getNetOptions = function () {
     let dhcp = config.get("netInfo.dhcp")
     dhcp = utils.isEmpty(dhcp) ? dxNet.DHCP.DYNAMIC : (dhcp + 1)
@@ -527,7 +526,7 @@ mqttService.getNetOptions = function () {
     let ip = config.get("netInfo.ip")
     let type = config.get("netInfo.type")
     if (utils.isEmpty(ip)) {
-        // 如果ip未设置，则使用动态ip
+        // If IP is not set, use dynamic IP
         dhcp = dxNet.DHCP.DYNAMIC
     }
     let options = {
@@ -538,51 +537,29 @@ mqttService.getNetOptions = function () {
         netmask: config.get("netInfo.subnetMask"),
         dns0: dns[0],
         dns1: dns[1],
-        macAddr: config.get("netInfo.fixed_macaddr_enable") == 2 ? config.get("netInfo.netMac") : common.getUuid2mac(),
-    }
-    return options
-}
-
-// 获取mqtt连接配置freeSpace
-mqttService.getOptions = function () {
-    let qos = config.get("mqttInfo.qos")
-    qos = utils.isEmpty(qos) ? 1 : qos
-    let options = {
-        mqttAddr: "tcp://" + config.get("mqttInfo.mqttAddr"),
-        clientId: config.get("mqttInfo.clientId"),
-        username: config.get("mqttInfo.mqttName") || 'admin',
-        password: config.get("mqttInfo.password") || 'password',
-        prefix: config.get("mqttInfo.prefix"),
-        qos: qos,
-        // 订阅
-        subs: getTopics(),
-        // 遗嘱
-        willTopic: 'access_device/v1/event/offline',
-        willMessage: JSON.stringify({
-            serialNo: utils.genRandomStr(10),
-            uuid: config.get("sysInfo.sn"),
-            sign: "",
-            time: Math.floor(new Date().getTime() / 1000)
-        })
+        macAddr: config.get("netInfo.netMac")
     }
     return options
 }
 
 /**
- * 连接上报(在线上报/在线后的通行记录上报)
+ * Connection reporting (online reporting/access record reporting after online)
  */
 mqttService.report = function () {
     let bleInfo = driver.uartBle.getConfig()
-    // 在线上报
+    let prefix = config.get("mqttInfo.prefix") || ''
+    // Online reporting
     let payloadReply = JSON.stringify(mqttReply(utils.genRandomStr(10), {
         sysVersion: config.get("sysInfo.appVersion") || '',
         appVersion: config.get("sysInfo.appVersion") || '',
         createTime: config.get("sysInfo.createTime") || '',
-        btMac: bleInfo.mac || '',
+        btMac: bleInfo && bleInfo.mac ? bleInfo.mac : '',
         mac: config.get("sysInfo.mac") || '',
-        clientId: config.get("mqttInfo.clientId") || '',
+        clientId: dxMap.get("CLIENT").get("CLIENT_ID") || '',
         name: config.get("sysInfo.deviceName") || '',
         type: config.get("netInfo.type") || 1,
+        ssid:config.get("netInfo.ssid") || '',
+        psk:config.get("netInfo.psk") || '',
         dhcp: config.get("netInfo.dhcp") || 1,
         ip: config.get("netInfo.ip") || '',
         gateway: config.get("netInfo.gateway") || '',
@@ -591,30 +568,53 @@ mqttService.report = function () {
         netMac: config.get("netInfo.netMac") || '',
     }, CODE.S_000))
 
-    driver.mqtt.send({ topic: "access_device/v1/event/connect", payload: payloadReply })
+    driver.mqtt.send(prefix + "access_device/v1/event/connect", payloadReply)
 
-    //通行记录上报
-    let res = sqliteFuncs.passRecordFindAll()
-    if (res && res.length != 0) {
-        let reportCount = config.get('sysInfo.reportCount') || 50; // 定义每批处理的大小
-        let reportInterval = config.get('sysInfo.reportInterval') || 5000; // 定义每次上报的间隔时间（毫秒）
-        for (let i = 0; i < res.length; i += reportCount) {
-            let batch = res.slice(i, i + reportCount);
-            let serialNo = utils.genRandomStr(10)
-            let map = dxMap.get("REPORT")
+    // Access record reporting
+    reportPassRecords()
+}
+
+async function reportPassRecords() {
+    let page = 1;
+    let hasMore = true;
+    let reportCount = config.get('sysInfo.reportCount') || 50;
+    let reportInterval = config.get('sysInfo.reportInterval') || 5000;
+    let prefix = config.get("mqttInfo.prefix") || ''
+    let mqtt_map = dxMap.get("MQTT")
+    while (hasMore) {
+        try {
+            if (mqtt_map.get("MQTT_STATUS") == "disconnected") {
+                hasMore = false;
+                break;
+            }
+            let batch = await sqliteFuncs.passRecordFindByPage(page, reportCount);
+            if (!batch || batch.length === 0) {
+                hasMore = false;
+                break;
+            }
+            let serialNo = utils.genRandomStr(10);
+            let map = dxMap.get("REPORT");
             let list = batch.map(obj => obj.time);
-            batch = batch.map(obj => {
-                obj.error = obj.result === 0 ? "无权限" : ""
-                let formattedExtra = JSON.parse(obj.extra)
-                return { ...obj, extra: formattedExtra };
+            let processedBatch = batch.map(obj => {
+                let formattedExtra = JSON.parse(obj.extra);
+                return {
+                    ...obj,
+                    error: obj.result === 0 ? "无权限" : "",
+                    extra: formattedExtra
+                };
             });
-            map.put(serialNo, { list: list, time: new Date().getTime() })
-            driver.mqtt.send({ topic: "access_device/v1/event/access", payload: JSON.stringify(mqttReply(serialNo, batch, CODE.S_000)) })
-            os.sleep(reportInterval)
+            map.put(serialNo, { list: list, time: new Date().getTime() });
+            driver.mqtt.send(
+                prefix + "access_device/v1/event/access", 
+                JSON.stringify(mqttReply(serialNo, processedBatch, CODE.S_000))
+            );
+            page++;
+            await new Promise(resolve => dxStd.setTimeout(resolve, reportInterval));
+        } catch (error) {
+            hasMore = false;
+            break;
         }
-
     }
-
 }
 
 export default mqttService

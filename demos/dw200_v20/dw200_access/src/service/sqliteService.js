@@ -1,4 +1,4 @@
-import sqliteObj from '../../dxmodules/dxSqlite.js'
+import sqliteDB from '../../dxmodules/dxSqliteDB.js'
 import common from '../../dxmodules/dxCommon.js'
 import std from '../../dxmodules/dxStd.js'
 import log from '../../dxmodules/dxLogger.js'
@@ -6,9 +6,34 @@ import log from '../../dxmodules/dxLogger.js'
 
 const sqliteService = {}
 //-------------------------public-------------------------
-
-//初始化数据库
-sqliteService.init = function (path) {
+let sqliteObj = null;
+const DB_PATH ='/app/data/db/app.db'
+function _instance() {
+    if (sqliteObj == null) {
+        sqliteObj = sqliteDB.init(DB_PATH)
+    }
+    return sqliteObj
+}
+function exec(sql) {
+    try {
+        _instance().exec(sql)
+        return 0;
+    } catch (error) {
+        log.error('sqliteService exec error', error);
+        return -1;
+    }
+}
+function select(sql) {
+    try {
+        return _instance().select(sql)
+    } catch (error) {
+        log.error('sqliteService query error', error);
+        return -1;
+    }
+}
+// Initialize database
+sqliteService.init = function () {
+    const path = DB_PATH
     if (!path) {
         throw ("path should not be null or empty")
     }
@@ -17,7 +42,7 @@ sqliteService.init = function (path) {
         std.mkdir(newPath)
     }
 
-    sqliteObj.init(path)
+    sqliteObj = sqliteDB.init(path)
     let passRecordSql = `CREATE TABLE IF NOT EXISTS d1_pass_record (
         id VARCHAR(128),
         type VARCHAR(128),
@@ -27,10 +52,11 @@ sqliteService.init = function (path) {
         result bigint,
         extra TEXT,
         message TEXT )`
-    let execPassRecordSql = sqliteObj.exec(passRecordSql)
+    let execPassRecordSql = exec(passRecordSql)
     if (execPassRecordSql != 0) {
-        throw ("d1_pass_Record creation exception:" + execPassRecordSql)
+        throw ("d1_pass_record creation exception:" + execPassRecordSql)
     }
+    exec('CREATE INDEX IF NOT EXISTS idx_passrecord_time ON d1_pass_record(time)')
     let permissionSql = `CREATE TABLE IF NOT EXISTS d1_permission (
         id VARCHAR(128) PRIMARY KEY,
         type bigint,
@@ -43,12 +69,12 @@ sqliteService.init = function (path) {
         repeatBeginTime bigint,
         repeatEndTime bigint,
         period TEXT ) `
-    let execpermissionSql = sqliteObj.exec(permissionSql)
+    let execpermissionSql = exec(permissionSql)
     if (execpermissionSql != 0) {
         throw ("Table permissionSql creation exception" + execpermissionSql)
     }
-    //创建索引
-    sqliteObj.exec('CREATE INDEX idx_code ON d1_permission (code)')
+    // Create index
+    exec('CREATE INDEX IF NOT EXISTS idx_permission_code_type ON d1_permission (code, type)')
     let securitySql = `create table if not exists d1_security(
         id VARCHAR(128) PRIMARY KEY,
         type VARCHAR(128),
@@ -56,40 +82,40 @@ sqliteService.init = function (path) {
         value TEXT,
         startTime bigint,
         endTime bigint )`
-    let execSecuritySql = sqliteObj.exec(securitySql)
+    let execSecuritySql = exec(securitySql)
     if (execSecuritySql != 0) {
         throw ("The securitySql table is not created properly" + execSecuritySql)
     }
 }
-//获取方法
+// Get methods
 sqliteService.getFunction = function () {
     return funcs(sqliteObj)
 }
 function funcs (sqliteObj) {
     const dbFuncs = {}
-    //权限表：查询所有权限并且分页的方法
+    // Permission table: method to query all permissions with pagination
     dbFuncs.permissionFindAll = function (page, size, code, type, id, index) {
         return permissionFindAllPage(page, size, code, type, id, index, sqliteObj)
     }
-    //权限表：条件查询
+    // Permission table: conditional query
     dbFuncs.permissionFindAllByCodeAndType = function (code, type, id, index) {
         return selectPermission(sqliteObj, code, type, id, index)
     }
-    //权限表:查询总条数
+    // Permission table: query total count
     dbFuncs.permissionFindAllCount = function () {
-        return sqliteObj.select('SELECT COUNT(*) FROM d1_permission')
+        return select('SELECT COUNT(*) FROM d1_permission')
     }
-    //权限表：根据凭证值与类型查询是否可以通行
+    // Permission table: query if access is allowed based on credential value and type
     dbFuncs.permissionVerifyByCodeAndType = function (code, type, index) {
         let permissions = selectPermission(sqliteObj, code)
-        //code和type连插很慢，单独查询后判断 type
+        // Querying code and type together is slow, so query separately and then filter by type
         let filteredData = permissions.filter(obj => obj.type == type);
         if (!filteredData && filteredData.length <= 0) {
-            //无权限
+            // No permission
             return false
         }
-        //处理是否在权限时间内
-        //这里的会是权限不在时间段， 需要定一下是否需要对应文字返回
+        // Process whether within permission time period
+        // Here would be permission not in time period, need to decide if corresponding text return is needed
         try {
             return judgmentPermission(filteredData)
         } catch (error) {
@@ -98,91 +124,95 @@ function funcs (sqliteObj) {
         }
 
     }
-    //权限表：新增权限
+    // Permission table: add permissions
     dbFuncs.permisisonInsert = function (datas) {
-        //组装新增权限的 sql
+        // Assemble SQL for adding permissions
         let sql = insertSql(datas)
-        let res = sqliteObj.exec(sql.substring(0, sql.length - 1))
+        let res = exec(sql.substring(0, sql.length - 1))
         if (res != 0) {
-            //出现新增失败
-            //0、根据 ids批量查询出
+            // Addition failed
+            // 0. Batch query based on ids
             let ids = datas.map(obj => obj.id);
-            let findAllByIds = sqliteObj.select("select * from d1_permission where id in (" + ids.map(item => `'${item}'`).join(',') + ")")
+            let findAllByIds = select("select * from d1_permission where id in (" + ids.map(item => `'${item}'`).join(',') + ")")
             if (findAllByIds.length == 0) {
-                //没查出来直接返回失败
+                // If nothing found, directly return failure
                 throw ("Parameter error Please check and try again")
             }
 
-            //删除
+            // Delete
             let deleteIds = findAllByIds.map(obj => obj.id);
-            res = sqliteObj.exec("delete from d1_permission where id in (" + deleteIds.map(item => `'${item}'`).join(',') + ")")
+            res = exec("delete from d1_permission where id in (" + deleteIds.map(item => `'${item}'`).join(',') + ")")
             if (res != 0) {
                 throw ("Failed to add - Failed to delete permissions in the first step")
             }
-            //再次新增
-            res = sqliteObj.exec(sql.substring(0, sql.length - 1))
+            // Add again
+            res = exec(sql.substring(0, sql.length - 1))
             if (res != 0) {
                 throw ("Failed to add - Failed to add permissions in step 2")
             }
         }
         return res
     }
-    //权限表：根据 id 删除权限
+    // Permission table: delete permissions by id
     dbFuncs.permisisonDeleteByIdIn = function (ids) {
         verifyData({ "ids": ids })
-        return sqliteObj.exec("delete from d1_permission where id in (" + ids.map(item => `'${item}'`).join(',') + ")")
+        return exec("delete from d1_permission where id in (" + ids.map(item => `'${item}'`).join(',') + ")")
     }
 
-    //权限表：清空权限
+    // Permission table: clear permissions
     dbFuncs.permissionClear = function () {
-        return sqliteObj.exec('delete FROM d1_permission')
+        return exec('delete FROM d1_permission')
     }
-    //权限表:查询总条数
+    // Permission table: query total count
     dbFuncs.permissionFindAllCount = function () {
-        return sqliteObj.select('SELECT COUNT(*) FROM d1_permission')
+        return select('SELECT COUNT(*) FROM d1_permission')
     }
-    //通行记录表:查询总条数
+    // Pass record table: query total count
     dbFuncs.passRecordFindAllCount = function () {
-        return sqliteObj.select('SELECT COUNT(*) FROM d1_pass_record')
+        return select('SELECT COUNT(*) FROM d1_pass_record')
     }
-    //通行记录表:查询所有
+    // Pass record table: query all
     dbFuncs.passRecordFindAll = function () {
-        return sqliteObj.select('SELECT * FROM d1_pass_record')
+        return select('SELECT * FROM d1_pass_record')
     }
-    //通行记录表：根据时间删除
+    // Pass record table: query with pagination
+    dbFuncs.passRecordFindByPage = function (page, size) {
+        return passRecordFindByPage(page, size, sqliteObj)
+    }
+    // Pass record table: delete by time
     dbFuncs.passRecordDeleteByTimeIn = function (times) {
         verifyData({ "times": times })
-        return sqliteObj.exec("delete from d1_pass_record where time in (" + times.map(item => `${item}`).join(',') + ")")
+        return exec("delete from d1_pass_record where time in (" + times.map(item => `${item}`).join(',') + ")")
     }
-    //通行记录表:删除所有
+    // Pass record table: delete all
     dbFuncs.passRecordClear = function () {
-        return sqliteObj.exec("delete from d1_pass_record ")
+        return exec("delete from d1_pass_record ")
     }
-    //通行记录表:根据 id 删除记录
+    // Pass record table: delete record by id
     dbFuncs.passRecordDeleteById = function (id) {
         verifyData({ "id": id })
-        return sqliteObj.exec("delete from d1_pass_record where  id = '" + id + "'")
+        return exec("delete from d1_pass_record where  id = '" + id + "'")
     }
 
-    //通行记录表:删除最后一条记录
+    // Pass record table: delete last record
     dbFuncs.passRecordDelLast = function () {
-        return sqliteObj.exec("DELETE FROM d1_pass_record WHERE time = (SELECT MIN(time) FROM d1_pass_record LIMIT 1);")
+        return exec("DELETE FROM d1_pass_record WHERE time = (SELECT MIN(time) FROM d1_pass_record LIMIT 1);")
     }
-    //通行记录表:新增
+    // Pass record table: add
     dbFuncs.passRecordInsert = function (data) {
         verifyData(data, ["id", "type", "code", "time", "result", "extra", "message", "index"])
-        return sqliteObj.exec("INSERT INTO d1_pass_record values('" + data.id + "','" + data.type + "','" + data.code + "','" + data.index + "'," + data.time + "," + data.result + ",'" + data.extra + "','" + data.message + "' )")
+        return exec("INSERT INTO d1_pass_record values('" + data.id + "','" + data.type + "','" + data.code + "','" + data.index + "'," + data.time + "," + data.result + ",'" + data.extra + "','" + data.message + "' )")
 
     }
-    //密钥表：条件查询
+    // Security table: conditional query
     dbFuncs.securityFindAllByCodeAndTypeAndTimeAndkey = function (code, type, id, time, key, index) {
         return selectSecurity(sqliteObj, code, type, id, time, key, index)
     }
-    //密钥表:查询所有密钥带分页
+    // Security table: query all security keys with pagination
     dbFuncs.securityFindAll = function (page, size, key, type, id, index) {
         return securityFindAllPage(page, size, key, type, id, index, sqliteObj)
     }
-    //密钥表:新增密钥
+    // Security table: add security keys
     dbFuncs.securityInsert = function (datas) {
         let sql = "INSERT INTO d1_security values"
         for (let data of datas) {
@@ -190,41 +220,41 @@ function funcs (sqliteObj) {
             sql += "('" + data.id + "','" + data.type + "','" + data.key + "','" + data.value + "'," + data.startTime + "," + data.endTime + "),"
         }
 
-        let res = sqliteObj.exec(sql.substring(0, sql.length - 1))
+        let res = exec(sql.substring(0, sql.length - 1))
         if (res != 0) {
-            //出现新增失败
-            //0、根据 ids批量查询出
+            // Addition failed
+            // 0. Batch query based on ids
             let ids = datas.map(obj => obj.id);
-            let findAllByIds = sqliteObj.select("select * from d1_security where id in (" + ids.map(item => `'${item}'`).join(',') + ")")
+            let findAllByIds = select("select * from d1_security where id in (" + ids.map(item => `'${item}'`).join(',') + ")")
             if (findAllByIds.length == 0) {
-                //没查出来直接返回失败
+                // If nothing found, directly return failure
                 throw ("Parameter error Please check and try again")
             }
 
-            //删除
+            // Delete
             let deleteIds = findAllByIds.map(obj => obj.id);
-            res = sqliteObj.exec("delete from d1_security where id in (" + deleteIds.map(item => `'${item}'`).join(',') + ")")
+            res = exec("delete from d1_security where id in (" + deleteIds.map(item => `'${item}'`).join(',') + ")")
             if (res != 0) {
                 throw ("Failed to add - Failed to delete security in the first step")
             }
-            //再次新增
-            res = sqliteObj.exec(sql.substring(0, sql.length - 1))
+            // Add again
+            res = exec(sql.substring(0, sql.length - 1))
             if (res != 0) {
                 throw ("Failed to add - Failed to add security in step 2")
             }
-            // throw ("入库错误，新增失败")
+            // throw ("Database error, addition failed")
         }
         return res
     }
-    //密钥表:根据 id 删除密钥
+    // Security table: delete security keys by id
     dbFuncs.securityDeleteByIdIn = function (ids) {
         verifyData({ "ids": ids })
-        return sqliteObj.exec("delete from d1_security where id in (" + ids.map(item => `'${item}'`).join(',') + ")")
+        return exec("delete from d1_security where id in (" + ids.map(item => `'${item}'`).join(',') + ")")
     }
 
-    //密钥表:清空密钥表
+    // Security table: clear security table
     dbFuncs.securityClear = function () {
-        return sqliteObj.exec('delete FROM d1_security')
+        return exec('delete FROM d1_security')
     }
 
 
@@ -233,7 +263,7 @@ function funcs (sqliteObj) {
 
 //-------------------------private-------------------------
 /**
- * 条件查询 
+ * Conditional query 
  * @param {*} sqliteObj 
  * @param {*} code 
  * @param {*} type 
@@ -260,16 +290,11 @@ function selectSecurity (sqliteObj, code, type, id, time, key, index) {
     if (time) {
         query += ` AND endTime >= '${time}'`
     }
-    let result = sqliteObj.select(query)
-    result = result.map(record => {
-        record.startTime = safeBigInt(record.startTime)
-        record.endTime = safeBigInt(record.endTime)
-        return record
-    })
+    let result = select(query)
     return result
 }
 function securityFindAllPage (page, size, key, type, id, index, sqliteObj) {
-    // 构建 SQL 查询
+    // Build SQL query
     let query = `SELECT * FROM d1_security WHERE 1=1`
     let where = ''
     if (key) {
@@ -281,32 +306,23 @@ function securityFindAllPage (page, size, key, type, id, index, sqliteObj) {
     if (id) {
         where += ` AND id = '${id}'`
     }
-    // 获取总记录数
+    // Get total record count
     const totalCountQuery = 'SELECT COUNT(*) AS count FROM d1_security WHERE 1=1' + where
-    const totalCountResult = sqliteObj.select(totalCountQuery)
+    const totalCountResult = select(totalCountQuery)
 
     const total = totalCountResult[0].count
 
-    // 计算总页数
+    // Calculate total pages
     const totalPage = Math.ceil(total / size)
 
-    // 构建分页查询
+    // Build pagination query
     const offset = (page - 1) * size
     query += where
     query += ` LIMIT ${size} OFFSET ${offset}`
 
-    // 执行查询
-    const result = sqliteObj.select(query)
-    // 构建返回结果
-    const content = result.map(record => ({
-        id: record.id,
-        type: record.type,
-        key: record.key,
-        key: record.key,
-        value: record.value,
-        startTime: safeBigInt(record.startTime),
-        endTime: safeBigInt(record.endTime)
-    }))
+    // Execute query
+    const content = select(query)
+    // Build return result
     return {
         content: content,
         page: page,
@@ -318,7 +334,7 @@ function securityFindAllPage (page, size, key, type, id, index, sqliteObj) {
 }
 
 /**
- * 查询所有权限 
+ * Query all permissions 
  * @param {*} page 
  * @param {*} size 
  * @param {*} code 
@@ -327,7 +343,7 @@ function securityFindAllPage (page, size, key, type, id, index, sqliteObj) {
  * @returns 
  */
 function permissionFindAllPage (page, size, code, type, id, index, sqliteObj) {
-    // 构建 SQL 查询
+    // Build SQL query
     let query = `SELECT * FROM d1_permission WHERE 1=1`
     let where = ''
     if (code) {
@@ -342,23 +358,23 @@ function permissionFindAllPage (page, size, code, type, id, index, sqliteObj) {
     if (index) {
         where += ` AND door = '${index}'`
     }
-    // 获取总记录数
+    // Get total record count
     const totalCountQuery = 'SELECT COUNT(*) AS count FROM d1_permission WHERE 1=1' + where
 
-    const totalCountResult = sqliteObj.select(totalCountQuery)
+    const totalCountResult = select(totalCountQuery)
 
     const total = totalCountResult[0].count || 0
 
-    // 计算总页数
+    // Calculate total pages
     const totalPage = Math.ceil(total / size)
 
-    // 构建分页查询
-    const offset = page * size
+    // Build pagination query
+    const offset = (page - 1) * size
     query += where
     query += ` LIMIT ${size} OFFSET ${offset}`
-    // 执行查询
-    let result = sqliteObj.select(query)
-    // 构建返回结果
+    // Execute query
+    let result = select(query)
+    // Build return result
     let content = result.map(record => ({
         id: record.id,
         type: record.type,
@@ -366,9 +382,9 @@ function permissionFindAllPage (page, size, code, type, id, index, sqliteObj) {
         extra: JSON.parse(record.extra),
         time: {
             type: parseInt(record.tiemType),
-            beginTime: parseInt(record.timeType) != 2 ? undefined : safeBigInt(record.repeatBeginTime),
-            endTime: parseInt(record.timeType) != 2 ? undefined : safeBigInt(record.repeatEndTime),
-            range: parseInt(record.tiemType) === 0 ? undefined : { beginTime: safeBigInt(parseInt(record.beginTime)), endTime: safeBigInt(parseInt(record.endTime)) },
+            beginTime: parseInt(record.timeType) != 2 ? undefined : record.repeatBeginTime,
+            endTime: parseInt(record.timeType) != 2 ? undefined : record.repeatEndTime,
+            range: parseInt(record.tiemType) === 0 ? undefined : { beginTime: parseInt(record.beginTime), endTime: parseInt(record.endTime) },
             weekPeriodTime: parseInt(record.tiemType) != 3 ? undefined : JSON.parse(record.period)
         }
 
@@ -384,7 +400,7 @@ function permissionFindAllPage (page, size, code, type, id, index, sqliteObj) {
 }
 
 /**
- * 条件查询 
+ * Conditional query 
  * @param {*} sqliteObj 
  * @param {*} code 
  * @param {*} type 
@@ -405,19 +421,20 @@ function selectPermission (sqliteObj, code, type, id, index) {
     if (index) {
         query += ` AND door = '${index}'`
     }
-    let result = sqliteObj.select(query)
-    result = result.map(record => {
-        record.beginTime = safeBigInt(record.beginTime)
-        record.endTime = safeBigInt(record.endTime)
-        record.repeatBeginTime = safeBigInt(record.repeatBeginTime)
-        record.repeatEndTime = safeBigInt(record.repeatEndTime)
-        return record
-    })
+    let result = select(query)
     return result
 }
 
 
-//校验多参数,第二个参数如果不传，则遍历所有field
+function passRecordFindByPage (page, size) {
+    let query = `SELECT * FROM d1_pass_record WHERE 1=1`
+    const offset = (page - 1) * size
+    query += ` LIMIT ${size} OFFSET ${offset}`
+    return select(query)
+}
+
+
+// Validate multiple parameters, if second parameter not passed, traverse all fields
 function verifyData (data, fields) {
     if (!data) {
         throw ("data should not be null or empty")
@@ -437,7 +454,7 @@ function verifyData (data, fields) {
 
 
 /**
- * 校验权限时间是否可以通行
+ * Validate if permission time allows access
  * @param {*} permissions 
  * @returns 
  */
@@ -445,28 +462,28 @@ function judgmentPermission (permissions) {
     let currentTime = Math.floor(Date.now() / 1000)
     for (let permission of permissions) {
         if (permission.tiemType == '0') {
-            //如果是永久权限直接为 true
+            // If permanent permission, directly true
             return true
         }
         if (permission.tiemType == '1') {
             if (checkTimeValidity(permission, currentTime)) {
-                //在时间段内的权限啧可以通行其他 false
+                // Permission within time period can access, others false
                 return true
             }
         }
         if (permission.tiemType == '2') {
             if (checkTimeValidity(permission, currentTime)) {
-                //确定是在年月日的时间段内了，继续判断是否在每日权限内
+                // Confirmed within year-month-day time period, continue to check if within daily permission
                 let totalSeconds = secondsSinceMidnight()
                 if (parseInt(permission.repeatBeginTime) <= totalSeconds && totalSeconds <= parseInt(permission.repeatEndTime)) {
-                    //在秒数时间段内的权限可以通行其他
+                    // Permission within second time period can access, others
                     return true
                 }
             }
         }
         if (permission.tiemType == '3') {
             if (checkTimeValidity(permission, currentTime)) {
-                //判断周期性权限
+                // Check periodic permission
                 let week = (new Date().getDay() + 6) % 7 + 1;
                 if (!permission.period) {
                     return false
@@ -474,7 +491,7 @@ function judgmentPermission (permissions) {
                 let weekPeriodTime = JSON.parse(permission.period)
 
                 if (!weekPeriodTime[week]) {
-                    //没有这一天的权限 直接返回
+                    // No permission for this day, directly return
                     return false
                 }
                 let times = weekPeriodTime[week].split("|");
@@ -501,64 +518,59 @@ function insertSql (permssionss) {
 }
 
 /**
- * 获取从 0 点到当前时间的秒数
+ * Get seconds from 00:00 to current time
  * @returns 
  */
 function secondsSinceMidnight () {
-    // 创建一个表示当前时间的 Date 对象
+    // Create a Date object representing current time
     const now = new Date();
-    // 获取当前时间的小时、分钟和秒数
+    // Get current hour, minute, and second
     const hours = now.getHours();
     const minutes = now.getMinutes();
     const seconds = now.getSeconds();
-    // 计算从 0 点到当前时间的总秒数
+    // Calculate total seconds from 00:00 to current time
     const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
     return totalSeconds;
 }
 
 /**
- * 校验当前时间是否在时间段内  周期性权限校验
+ * Check if current time is within time period - periodic permission validation
  * @param {*} timeRangeString 
  * @returns 
  */
 function isCurrentTimeInTimeRange (timeRangeString) {
-    // 分割开始时间和结束时间
+    // Split start time and end time
     var [startTime, endTime] = timeRangeString.split('-');
-    // 获取当前时间
+    // Get current time
     var currentTime = new Date();
-    // 解析开始时间的小时和分钟
+    // Parse start time hour and minute
     var [startHour, startMinute] = startTime.split(':');
-    // 解析结束时间的小时和分钟
+    // Parse end time hour and minute
     var [endHour, endMinute] = endTime.split(':');
-    // 创建开始时间的日期对象
+    // Create start time date object
     var startDate = new Date();
     startDate.setHours(parseInt(startHour, 10));
     startDate.setMinutes(parseInt(startMinute, 10));
-    // 创建结束时间的日期对象
+    // Create end time date object
     var endDate = new Date();
     endDate.setHours(parseInt(endHour, 10));
     endDate.setMinutes(parseInt(endMinute, 10));
-    // 检查当前时间是否在时间范围内
+    // Check if current time is within time range
     return currentTime >= startDate && currentTime < endDate;
 }
 function checkTimeValidity (permission, currentTime) {
     return parseInt(permission.beginTime) <= currentTime && currentTime <= parseInt(permission.endTime)
 }
-//获取路径文件夹
+// Get path folder
 function getLastSegment (path) {
     let lastIndex = path.lastIndexOf('/');
-    if (lastIndex > 0) { // 如果找到了 `/` 并且不是在字符串的第一个位置
+    if (lastIndex > 0) { // If `/` found and not at first position of string
         return path.substring(0, lastIndex);
     } else {
-        return undefined; // 如果没有找到 `/` 或者 `/` 在第一个位置，直接返回原始字符串
+        return undefined; // If `/` not found or at first position, return original string directly
     }
 }
-// 将数据库中解析出来的负数（因类型溢出）转回无符号整数
-function safeBigInt (val) {
-    const num = Number(val);
-    const fixed = num < 0 ? num >>> 0 : num;
-    return fixed; // 返回普通 Number 类型
-}
+
 export default sqliteService
 
 

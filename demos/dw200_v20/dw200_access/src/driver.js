@@ -5,9 +5,8 @@ import dxNet from '../dxmodules/dxNet.js'
 import dxGpio from '../dxmodules/dxGpio.js'
 import dxCode from '../dxmodules/dxCode.js'
 import dxNfc from '../dxmodules/dxNfc.js'
-import dxAlsaplay from '../dxmodules/dxAlsaplay.js'
+import dxAlsaplay from '../dxmodules/dxAudio.js'
 import dxGpioKey from '../dxmodules/dxGpioKey.js'
-import dxMqtt from '../dxmodules/dxMqtt.js'
 import dxNtp from '../dxmodules/dxNtp.js'
 import dxMap from '../dxmodules/dxMap.js'
 import config from '../dxmodules/dxConfig.js'
@@ -22,33 +21,34 @@ import eid from '../dxmodules/dxEid.js'
 import dxHttp from '../dxmodules/dxHttp.js'
 import CryptoES from '../dxmodules/crypto-es/index.js';
 import * as qStd from "std"
+import dxmqttclient from '../dxmodules/dxMqttClient.js'
 let lockMap = dxMap.get("ble_lock")
 
 const driver = {}
 driver.pwm = {
     init: function () {
-        // 初始化蜂鸣
+        // Initialize buzzer
         dxPwm.request(4);
         dxPwm.setPeriodByChannel(4, 366166)
         dxPwm.enable(4, true)
     },
-    // 按键音
+    // Button sound
     press: function () {
         dxPwm.beep({ channel: 4, time: 30, volume: utils.getVolume1(this.getVolume2()), interval: 0 })
     },
-    //失败音
+    // Failure sound
     fail: function () {
         dxPwm.beep({ channel: 4, time: 500, volume: utils.getVolume1(this.getVolume3()), interval: 0 })
     },
-    //成功音
+    // Success sound
     success: function () {
         dxPwm.beep({ channel: 4, time: 30, count: 2, volume: utils.getVolume1(this.getVolume3()) })
     },
-    //警告音
+    // Warning sound
     warning: function () {
         dxPwm.beep({ channel: 4, volume: utils.getVolume1(this.getVolume3()), interval: 0 })
     },
-    // 按键音量
+    // Button volume
     getVolume2: function () {
         if (utils.isEmpty(this.volume2)) {
             let volume2 = config.get("sysInfo.volume2")
@@ -56,7 +56,7 @@ driver.pwm = {
         }
         return this.volume2
     },
-    // 蜂鸣提示音量
+    // Buzzer prompt volume
     getVolume3: function () {
         if (utils.isEmpty(this.volume3)) {
             let volume3 = config.get("sysInfo.volume3")
@@ -68,7 +68,7 @@ driver.pwm = {
 driver.net = {
     init: function () {
         if (config.get("netInfo.type") == 0) {
-            // 关闭网络
+            // Close network
             return
         }
         dxNet.worker.beforeLoop(mqttService.getNetOptions())
@@ -78,7 +78,7 @@ driver.net = {
     },
     loop: function () {
         if (config.get("netInfo.type") == 0) {
-            // 关闭网络
+            // Close network
             this.loop = () => { }
             return
         }
@@ -101,20 +101,24 @@ driver.gpio = {
     init: function () {
         dxGpio.init()
         dxGpio.request(35)
+        let openMode = config.get("doorInfo.openMode")
+        if(openMode == 1) {
+            dxGpio.setValue(35, 1)
+        }
     },
     open: function () {
-        // 判断开门模式
+        // Determine door opening mode
         let openMode = config.get("doorInfo.openMode")
         if (utils.isEmpty(openMode)) {
             openMode = 0
         }
-        // 常闭不允许开
+        // Normally closed does not allow opening
         if (openMode != 2) {
             dxGpio.setValue(35, 1)
         }
         if (openMode == 0) {
-            // 正常模式记录关继电器的时间
-            // 定时关继电器
+            // Normal mode records relay close time
+            // Timed relay close
             let openTime = config.get("doorInfo.openTime")
             openTime = utils.isEmpty(openTime) ? 2000 : openTime
             let map = dxMap.get("GPIO")
@@ -127,8 +131,8 @@ driver.gpio = {
     },
     close: function () {
         let openMode = config.get("doorInfo.openMode")
-        // 判断开门模式
-        // 常开不允许关
+        // Determine door opening mode
+        // Normally open does not allow closing
         if (openMode != 1) {
             dxGpio.setValue(35, 0)
         }
@@ -138,8 +142,15 @@ driver.code = {
     options1: { id: 'capturer1', path: '/dev/video11', capturerDogId: "watchdog" },
     options2: { id: 'decoder1', name: "decoder v4", width: 800, height: 600 },
     init: function () {
-        dxCode.worker.beforeLoop(this.options1, this.options2)
-        dxCode.decoderUpdateConfig({ de_type: config.get('scanInfo.de_type') })
+        try {
+            dxCode.worker.beforeLoop(this.options1, this.options2)
+            let deType = config.get('scanInfo.de_type')
+            // Special handling: Even if all code systems or QR codes are disabled, also allow config codes (QR codes)
+            deType = deType | 1;
+            dxCode.decoderUpdateConfig({ deType })
+        } catch (error) {
+            common.asyncReboot(1)
+        }
     },
     loop: function () {
         dxCode.worker.loop(config.get('scanInfo.sMode'), config.get('scanInfo.interval'))
@@ -147,32 +158,33 @@ driver.code = {
 }
 driver.nfc = {
     options: { id: 'nfc1', m1: true, psam: false },
+    nfcEnable: utils.isEmpty(config.get("nfcInfo.nfc")) ? 1 : config.get("nfcInfo.nfc"),
     init: function () {
-        if (!config.get('sysInfo.nfc')) {
+        if (!this.nfcEnable) {
             log.debug("刷卡已关闭")
             return
         }
-        this.options.useEid = config.get("sysInfo.nfc_identity_card_enable") == 3 ? 1 : 0
+        this.options.useEid = config.get("nfcInfo.nfc_identity_card_enable") == 3 ? 1 : 0
         dxNfc.worker.beforeLoop(this.options)
     },
     eidInit: function () {
-        if (!config.get('sysInfo.nfc')) {
+        if (!this.nfcEnable) {
             log.debug("刷卡已关闭")
             return
         }
-        if (config.get("sysInfo.nfc_identity_card_enable") == 3) {
+        if (config.get("nfcInfo.nfc_identity_card_enable") == 3) {
             dxNfc.eidUpdateConfig({ appid: "1621503", sn: config.get("sysInfo.sn"), device_model: config.get("sysInfo.appVersion") })
         }
     },
     loop: function () {
-        if (!config.get('sysInfo.nfc')) {
+        if (!this.nfcEnable) {
             log.debug("刷卡已关闭")
             this.loop = () => { }
         } else {
             this.loop = () => dxNfc.worker.loop(this.options)
         }
     },
-    //读M1  卡多块数据
+    // Read M1 card multi-block data
     m1cardReadSector: function (taskFlg, secNum, logicBlkNum, blkNums, key, keyType) {
         return dxNfc.m1cardReadSector(taskFlg, secNum, logicBlkNum, blkNums, key, keyType, this.options.id)
     }
@@ -180,14 +192,14 @@ driver.nfc = {
 driver.audio = {
     init: function () {
         dxAlsaplay.init()
-        // 语音播报音量
+        // Voice broadcast volume
         let volume = Math.ceil(config.get("sysInfo.volume") / 10)
         if (utils.isEmpty(volume)) {
             volume = 6
         }
         dxAlsaplay.setVolume(volume)
     },
-    // 获取/设置音量，范围（[0,6]）
+    // Get/set volume, range ([0,6])
     volume: function (volume) {
         if (volume && typeof volume == 'number') {
             dxAlsaplay.setVolume(volume)
@@ -218,7 +230,7 @@ driver.gpiokey = {
         let map = dxMap.get("GPIO")
         let relayCloseTime = map.get("relayCloseTime") || 0
         if (value == 1 && new Date().getTime() > parseInt(relayCloseTime)) {
-            // gpio 在关的情况在打开门磁代表非法开门上报
+            // When GPIO is off and door sensor opens, it represents illegal door opening report
             // driver.mqtt.alarm(2, value)
         }
         driver.mqtt.alarm(0, value)
@@ -226,7 +238,7 @@ driver.gpiokey = {
         if (value == 0) {
             map1.del("alarmOpenTimeoutTime")
         } else if (value == 1) {
-            // 记录开门超时时间
+            // Record door open timeout time
             let openTimeout = config.get("doorInfo.openTimeout") * 1000
             openTimeout = utils.isEmpty(openTimeout) ? 10000 : openTimeout
             map1.put("alarmOpenTimeoutTime", new Date().getTime() + openTimeout)
@@ -235,7 +247,7 @@ driver.gpiokey = {
     loop: function () {
         dxGpioKey.worker.loop()
         if (utils.isEmpty(this.checkTime) || new Date().getTime() - this.checkTime > 200) {
-            // 降低检查频率，间隔200毫秒检查一次
+            // Reduce check frequency, check once every 200ms
             this.checkTime = new Date().getTime()
             let map = dxMap.get("GPIOKEY")
             let alarmOpenTimeoutTime = map.get("alarmOpenTimeoutTime")
@@ -247,36 +259,36 @@ driver.gpiokey = {
     },
 }
 driver.ntp = {
-    loop: function () {
+    init: function () {
         if (!config.get('netInfo.ntp')) {
             log.debug("自动对时已关闭")
-            this.loop = () => { }
             let time = config.get('sysInfo.time')
             if (time) {
                 common.systemBrief(`date -s "@${time}"`)
             }
         } else {
-            bus.on("ntpUpdate", () => {
-                dxNtp.beforeLoop(config.get("netInfo.ntpAddr"), 9999999999999)
-            })
-            dxNtp.beforeLoop(config.get('netInfo.ntpAddr'), 9999999999999)
-            this.ntpHour = config.get('netInfo.ntpHour')
-            this.flag = true
-            this.loop = () => {
-                dxNtp.loop()
-                //定时同步
-                if (new Date().getHours() == this.ntpHour && this.flag) {
-                    // 定时同步，立即同步一次时间
-                    dxNtp.syncnow = true
-                    this.flag = false
+            bus.on("ntpUpdate", driver.ntp.syncNow)
+            driver.ntp.syncNow()
+
+            let ntpHour = config.get('netInfo.ntpHour')
+            let flag = true
+            std.setInterval(() => {
+                // Scheduled sync
+                if (new Date().getHours() == ntpHour && flag) {
+                    // Scheduled sync, sync time immediately
+                    driver.ntp.syncNow()
+                    flag = false
                 }
-                if (new Date().getHours() != this.ntpHour) {
-                    // 等过了这个小时再次允许对时
-                    this.flag = true
+                if (new Date().getHours() != ntpHour) {
+                    // After this hour, allow time sync again
+                    flag = true
                 }
-            }
+            }, 1000)
         }
     },
+    syncNow: function () {
+        dxNtp.startSync(config.get('netInfo.ntpAddr'), 9999999999999)
+    }
 }
 driver.screen = {
     accessFail: function (type) {
@@ -285,11 +297,11 @@ driver.screen = {
     accessSuccess: function (type) {
         bus.fire('displayResults', { type: type, flag: true })
     },
-    // 自定义弹窗
+    // Custom popup
     customPopWin: function (msg, time) {
         bus.fire('customPopWin', { msg, time })
     },
-    // 重新加载屏幕，对于ui配置生效的修改
+    // Reload screen, for UI config modifications to take effect
     reload: function () {
         bus.fire('reload')
     },
@@ -320,13 +332,8 @@ driver.system = {
     },
     setTime: function (time) {
         common.systemBrief('date  "' + utils.formatUnixTimestamp(time) + '"')
-        let map = dxMap.get('workerId')
-        let workerIds = map.get('workerId')
         driver.watchdog.feed("controller", 300)
         driver.watchdog.feed('main', 10)
-        for (let element of workerIds) {
-            driver.watchdog.feed(element, 300)
-        }
     },
 }
 driver.uartBle = {
@@ -362,20 +369,20 @@ driver.uartBle = {
     },
     setConfig: function (param) {
         uartBleService.setBleConfig(param)
-        // 设置成功返回true
+        // Return true on successful configuration
         return driver.sync.request("uartBle.setConfig", 2000)
     },
     setConfigReply: function (data) {
         driver.sync.response("uartBle.setConfig", data)
     },
     /**
-     * 生成蓝牙串口的校验字，和一般校验字计算不一样
+     * Generate Bluetooth serial checksum, different from general checksum calculation
      * @param {*} pack eg:{ "head": "55aa", "cmd": "0f", "result": "90", "dlen": 1, "data": "01" }
      * @returns 
      */
     genCrc: function (pack) {
         let bcc = 0;
-        let dlen = pack.dlen - 1;//去掉index
+        let dlen = pack.dlen - 1;// Remove index
         bcc ^= 0x55;
         bcc ^= 0xaa;
         bcc ^= parseInt(pack.cmd, 16);
@@ -395,17 +402,17 @@ driver.uartBle = {
         }
         return bcc;
     },
-    // 1、开始升级
+    // 1. Start upgrade
     upgrade: function (data) {
         driver.screen.warning({ msg: "升级包下载中...", beep: false })
-        // 创建临时目录
+        // Create temporary directory
         const tempDir = "/app/data/.temp"
         const sourceFile = "/app/data/.temp/file"
-        // 确保临时目录存在
+        // Ensure temporary directory exists
         if (!std.exist(tempDir)) {
             common.systemBrief(`mkdir -p ${tempDir}`)
         }
-        // 下载文件到临时目录
+        // Download file to temporary directory
         let downloadRet = dxHttp.download(data.url, sourceFile, null, 60000)
         let fileExist = (std.stat(sourceFile)[1] === 0)
         if (!fileExist) {
@@ -445,7 +452,7 @@ driver.uartBle = {
             }
         }
     },
-    handleCmd01Response (pack) {
+    handleCmd01Response(pack) {
         if (pack[0] == 0x03 && pack[1] == 0x01 && pack[2] == 0x80 && pack[3] == 0x01) {
             if (pack[5] == 0x00) {
                 driver.screen.warning({ msg: "蓝牙升级中...", beep: false })
@@ -459,7 +466,7 @@ driver.uartBle = {
         }
         return false
     },
-    // 2、发送升级包描述信息
+    // 2. Send upgrade package description information
     sendDiscCommand: function (sourceFile, fileSha256, buffer) {
         let fileSize = this.getFileSize(sourceFile)
         let littleEndianHex = this.toLittleEndianHex(fileSize, 4)
@@ -486,20 +493,20 @@ driver.uartBle = {
         }
         return false
     },
-    // 3、发送升级包
+    // 3. Send upgrade package
     sendSubPackage: function (fileSize, buffer) {
         let chunkSize = 512
         let totality = Math.floor(fileSize / chunkSize)
         let remainder = fileSize % chunkSize
         let totalCount = 0
         for (let index = 0; index < totality + 1; index++) {
-            // 计算当前分包的起始和结束位置
+            // Calculate start and end positions of current sub-package
             let start = index * chunkSize;
-            let end = Math.min(start + chunkSize, buffer.byteLength); // 防止越界
-            // 创建当前分包数据的 ArrayBuffer (关键步骤)
+            let end = Math.min(start + chunkSize, buffer.byteLength); // Prevent out of bounds
+            // Create ArrayBuffer for current sub-package data (key step)
             let sendBuffer = buffer.slice(start, end);
             if (index == totality) {
-                // 最后一个分包，需要填充剩余字节
+                // Last sub-package, need to fill remaining bytes
                 let padding = new Uint8Array(chunkSize - remainder);
                 sendBuffer = new Uint8Array([...sendBuffer, ...padding]);
                 console.log("最后一字节数据: ", sendBuffer.byteLength, common.arrayBufferToHexString(sendBuffer))
@@ -535,7 +542,7 @@ driver.uartBle = {
         }
         return false
     },
-    // 4、发送升级结束指令
+    // 4. Send upgrade end command
     sendUpgradeFinishCommand: function () {
         let cmd04_1 = "55aa600006000301000400fe"
         let cmd04_2 = cmd04_1 + this.genStrCrc(cmd04_1).toString(16)
@@ -557,7 +564,7 @@ driver.uartBle = {
         }
         return false
     },
-    // 5、发送安装指令
+    // 5. Send installation command
     sendInstallCommand: function () {
         let cmd05_1 = "55aa600006000301000500fe"
         let cmd05_2 = cmd05_1 + this.genStrCrc(cmd05_1).toString(16)
@@ -584,37 +591,37 @@ driver.uartBle = {
         if (!file) {
             throw new Error("Failed to open file");
         }
-        file.seek(0, qStd.SEEK_END);  // 移动到文件末尾
-        let size = file.tell();      // 获取当前位置（即文件大小）
+        file.seek(0, qStd.SEEK_END);  // Move to end of file
+        let size = file.tell();      // Get current position (i.e. file size)
         file.close();
         return size;
     },
     toLittleEndianHex: function (number, byteLength) {
         const bigNum = BigInt(number);
-        // 参数验证
-        if (!Number.isInteger(byteLength)) throw new Error("byteLength必须是整数");
-        if (byteLength < 1) throw new Error("byteLength必须大于0");
-        if (byteLength > 64) throw new Error("暂不支持超过8字节的处理");
-        // 数值范围检查
+        // Parameter validation
+        if (!Number.isInteger(byteLength)) throw new Error("byteLength must be an integer");
+        if (byteLength < 1) throw new Error("byteLength must be greater than 0");
+        if (byteLength > 64) throw new Error("Processing over 8 bytes not supported yet");
+        // Value range check
         const bitWidth = BigInt(byteLength * 8);
         const maxValue = (1n << bitWidth) - 1n;
         if (bigNum < 0n || bigNum > maxValue) {
-            throw new Error(`数值超出${byteLength}字节范围`);
+            throw new Error(`Value exceeds ${byteLength} byte range`);
         }
-        // 小端字节提取
+        // Little-endian byte extraction
         const bytes = new Uint8Array(byteLength);
         for (let i = 0; i < byteLength; i++) {
             const shift = BigInt(i * 8);
-            bytes[i] = Number((bigNum >> shift) & 0xFFn); // 确保使用BigInt掩码
+            bytes[i] = Number((bigNum >> shift) & 0xFFn); // Ensure using BigInt mask
         }
-        // 格式转换
+        // Format conversion
         return Array.from(bytes, b =>
             b.toString(16).padStart(2, '0')
         ).join('');
     }
 }
 driver.sync = {
-    // 异步转同步小实现
+    // Async to sync mini implementation
     request: function (topic, timeout) {
         let map = dxMap.get("SYNC")
         let count = 0
@@ -634,26 +641,35 @@ driver.sync = {
     }
 }
 driver.mqtt = {
-    id: "mqtt1",
+    REINIT: "__MQTT_REINIT__",
+    SEND_MSG: "__MQTT_SEND_MSG__",
+    RECEIVE_MSG: "__MQTT_RECEIVE_MSG__",
+    CONNECTED_CHANGED: "__MQTT_CONNECTED_CHANGED__",
+    RESTART_HEARTBEAT: "__MQTT_RESTART_HEARTBEAT__",
+    UNSUBSCRIBE: "__MQTT_UNSUBSCRIBE__",
     init: function () {
-        let options = mqttService.getOptions()
-        options.id = this.id
-        dxMqtt.run(options)
+        bus.newWorker('mqttWorker', '/app/code/src/worker/mqttWorker.js')
     },
-    send: function (data) {
-        if (driver.net.getStatus() && driver.mqtt.isConnected()) {
-            dxMqtt.send(data.topic, data.payload, this.id)
-            log.info("[driver.mqtt] send:", JSON.stringify(data))
-        } else {
-            log.info('[driver.mqtt] send: 未连接网络或mqtt本次发送跳过')
-        }
-
+    reinit: () => {
+        // Reconnect MQTT, needs to be executed when MQTT connection info is changed, no need to reconnect if not changed
+        bus.fire(driver.mqtt.REINIT)
     },
-    isConnected: function () {
-        return dxMqtt.isConnected(this.id)
+    send: function (topic, payload) {
+        log.info("[driver.mqtt] send:", topic, payload)
+        bus.fire(driver.mqtt.SEND_MSG, {
+            topic, payload
+        })
+    },
+    // Modified heartbeat related config, need to restart heartbeat timer, call this
+    restartHeartbeat: () => {
+        bus.fire(driver.mqtt.RESTART_HEARTBEAT)
+    },
+    isConnected: () => {
+        return dxmqttclient.getNative() && dxmqttclient.isConnected()
     },
     alarm: function (type, value) {
-        this.send({ topic: "access_device/v1/event/alarm", payload: JSON.stringify(mqttService.mqttReply(utils.genRandomStr(10), { type: type, value: value }, mqttService.CODE.S_000)) })
+        let prefix = config.get("mqttInfo.prefix") || ''
+        driver.mqtt.send(prefix + "access_device/v1/event/alarm", JSON.stringify(mqttService.mqttReply(utils.genRandomStr(10), { type: type, value: value }, mqttService.CODE.S_000)))
     },
     getOnlinecheck: function () {
         let timeout = config.get("doorInfo.timeout")
@@ -667,23 +683,7 @@ driver.mqtt = {
     },
     getOnlinecheckReply: function (data) {
         driver.sync.response("mqtt.getOnlinecheck", data)
-    },
-    heartbeat: function () {
-        if (utils.isEmpty(this.heart_en)) {
-            let heart_en = config.get('sysInfo.heart_en')
-            this.heart_en = utils.isEmpty(heart_en) ? 0 : heart_en
-            let heart_time = config.get('sysInfo.heart_time')
-            this.heart_time = utils.isEmpty(heart_time) ? 30 : heart_time < 30 ? 30 : heart_time
-        }
-        if (utils.isEmpty(this.lastHeartbeat)) {
-            this.lastHeartbeat = 0
-        }
-        if (this.heart_en === 1 && (new Date().getTime() - this.lastHeartbeat >= (this.heart_time * 1000))) {
-            this.lastHeartbeat = new Date().getTime()
-            this.send({ topic: "access_device/v1/event/heartbeat", payload: JSON.stringify(mqttService.mqttReply(utils.genRandomStr(10), config.get('sysInfo.heart_data'), mqttService.CODE.S_000)) })
-        }
     }
-
 }
 driver.config = {
     init: function () {
@@ -696,7 +696,7 @@ driver.config = {
         if (!config.get('sysInfo.uuid') && uuid) {
             config.set('sysInfo.uuid', uuid)
         }
-        //如果 sn 为空先用设备 uuid
+        // If sn is empty, use device uuid first
         if (!config.get('sysInfo.sn') && uuid) {
             config.set('sysInfo.sn', uuid)
         }
@@ -719,7 +719,7 @@ driver.watchdog = {
     },
     feed: function (flag, timeout) {
         // if (utils.isEmpty(this.feedTime) || new Date().getTime() - this.feedTime > 2000) {
-        //     // 降低喂狗频率，间隔2秒喂一次
+        //     // Reduce watchdog feed frequency, feed once every 2 seconds
         //     this.feedTime = new Date().getTime()
         //     watchdog.feed(flag, timeout)
         // }
@@ -734,17 +734,18 @@ driver.eid = {
 }
 
 driver.autoRestart = {
-    lastRestartCheck: new Date().getHours(),  // 初始化为当前小时数，而不是0
+    lastRestartCheck: new Date().getHours(),  // Initialize to current hour, not 0
     init: function () {
-        std.setInterval(() => {        // 检查是否需要整点重启
+        std.setInterval(() => {        // Check if restart at specific hour is needed
             const now = new Date()
             const currentHour = now.getHours()
-            // 只有当小时数等于设定值，且不是上次检查过的小时时才执行
+            // Only execute when hour equals set value and not the hour checked last time
             let autoRestart = utils.isEmpty(config.get("sysInfo.autoRestart")) ? 3 : config.get("sysInfo.autoRestart")
             if (currentHour === autoRestart && currentHour !== this.lastRestartCheck && now.getMinutes() === 0) {
+                log.info("[driver.autoRestart] 自动重启")
                 common.systemBrief('reboot')
             }
-            // 更新上次检查的小时数
+            // Update last check hour
             this.lastRestartCheck = currentHour
         }, 60000)
     }

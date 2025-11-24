@@ -1,23 +1,26 @@
 {
-    // mqtt连接标识
+    // MQTT connection identifier
     "mqttInfo.clientId": "",
-    // mqtt服务地址
-    "mqttInfo.mqttAddr": "101.200.139.97:51883",
+    // ClientId suffix
+    "mqttInfo.clientIdSuffix": 0,
+    // MQTT server address
+    "mqttInfo.mqttAddr": "123.57.175.193:61613",
     "mqttInfo.qos": 1,
     "mqttInfo.mqttName": "admin",
     "mqttInfo.password": "password",
     "mqttInfo.prefix": "",
-    // ntp开关
+    "mqttInfo.cleanSession": 0,
+    // NTP switch
     "netInfo.ntp": 2,
-    // ntp服务ip
+    // NTP service IP
     "netInfo.ntpAddr": "182.92.12.11",
-    // 对时时间
+    // Time synchronization hour
     "netInfo.ntpHour": 14,
-    // 系统时区
+    // System timezone
     "netInfo.ntpLocaltime": 8,
-    // 网络类型(1:以太网 2:wifi 4:4G)
+    // Network type (1:Ethernet 2:WiFi 4:4G)
     "netInfo.type": 1,
-    // 是否为DHCP(1:动态,0:静态)，c版配置工具是反的，已对扫码配置做相应处理
+    // Whether DHCP (1:Dynamic, 0:Static), C version config tool is reversed, corresponding processing has been done for QR code configuration
     "netInfo.dhcp": 1,
     "netInfo.ip": "",
     "netInfo.gateway": "",
@@ -26,100 +29,96 @@
     "netInfo.netMac": "",
     "netInfo.ssid": "admin",
     "netInfo.psk": "password",
-    // 0:默认mac 2:自定义mac
+    // 0:Default MAC 2:Custom MAC
     "netInfo.fixed_macaddr_enable": 0,
-    // ip/sn显示/隐藏
+    // IP/SN display/hide
     "uiInfo.sn_show": 1,
     "uiInfo.ip_show": 1,
-    // 状态栏显示/隐藏
+    // Status bar display/hide
     "uiInfo.statusBar": 1,
-    // 密码按钮显示和隐藏
+    // Password button display/hide
     "uiInfo.show_unlocking": 1,
     "uiInfo.buttonText": "密码",
-    // 修改系统字体
+    // Modify system font
     "uiInfo.fontPath": "/app/code/resource/font/PangMenZhengDaoBiaoTiTi-1.ttf",
     "uiInfo.rotation0BgImage": "/app/code/resource/image/background.png",
     "uiInfo.rotation1BgImage": "/app/code/resource/image/background_90.png",
     "uiInfo.rotation2BgImage": "/app/code/resource/image/background.png",
     "uiInfo.rotation3BgImage": "/app/code/resource/image/background_90.png",
-    // base64图片格式
+    // Base64 image format
     "uiInfo.horBgImage": "",
     "uiInfo.verBgImage": "",
     "uiInfo.rotation": 1,
-    // 开门模式，0-正常，1-常开模式，2-常闭模式，3-测试模式（暂不支持）
+    // Door opening mode, 0-Normal, 1-Always open mode, 2-Always closed mode, 3-Test mode (not supported yet)
     "doorInfo.openMode": 0,
-    // 开门时长，ms
+    // Door opening duration, ms
     "doorInfo.openTime": 2000,
-    // 开门超时时长，s
+    // Door opening timeout duration, s
     "doorInfo.openTimeout": 10,
-    // 0:不在线验证，1：离线验证失败走在线验证
+    // 0:No online verification, 1:Online verification when offline verification fails
     "doorInfo.onlinecheck": 0,
-    // 在线验证超时时长
+    // Online verification timeout duration
     "doorInfo.timeout": 2000,
-    // 数据库离线通行最大存储数量，默认2000条
+    // Maximum storage quantity for offline access in database, default 2000 entries
     "doorInfo.offlineAccessNum": 2000,
-    // 语音音量0-60
+    // Voice volume 0-60
     "sysInfo.volume": 60,
-    // 按键音量0-100
+    // Button volume 0-100
     "sysInfo.volume2": 100,
-    // 蜂鸣提示音量0-100
+    // Beep prompt volume 0-100
     "sysInfo.volume3": 100,
-    // 心跳开关
+    // Heartbeat switch
     "sysInfo.heart_en": 1,
-    // 心跳间隔，秒
+    // Heartbeat interval, seconds
     "sysInfo.heart_time": 60,
-    // 心跳数据
+    // Heartbeat data
     "sysInfo.heart_data": "",
-    // mac地址
+    // MAC address
     "sysInfo.mac": "",
     "sysInfo.uuid": "",
     "sysInfo.sn": "",
-    // 设备状态，0-未激活，1-正常，2-禁用
-    "sysInfo.status": 1,
-    // 应用版本号
+    // Application version number
     "sysInfo.appVersion": "dw200_v20_access_2.0.0",
-    // 版本显示/隐藏
-    "sysInfo.version_show": 0,
-    // 应用发布日期
+    // Application release date
     "sysInfo.createTime": "2024-08-23 10:49:00",
-    // 设备名称
+    // Device name
     "sysInfo.deviceName": "欢迎使用",
-    // 设备号
+    // Device number
     "sysInfo.deviceNum": 0,
-    // ui语言，0中文1英文
+    // UI language, 0 Chinese 1 English
     "sysInfo.language": 0,
-    // 设置系统时间，秒级
+    // Set system time, in seconds
     "sysInfo.time": "",
-    // 配置码密码校验
+    // Config code password verification
     "sysInfo.com_passwd": "1234567887654321",
-    // 通行记录上报，批处理数量，默认50条
+    // Access record reporting, batch processing quantity, default 50 entries
     "sysInfo.reportCount": 50,
-    // 通行记录上报时间间隔，默认5秒
+    // Access record reporting time interval, default 5 seconds
     "sysInfo.reportInterval": 5000,
-    //云证开关 3:云证获取 1:物理卡号
-    "sysInfo.nfc_identity_card_enable": 1,
-    //1打开0关闭
-    "sysInfo.nfc": 1,
-    //日期格式 1 年/月/日 2 日/月/年
+    // Date format 1 Year/Month/Day 2 Day/Month/Year
     "sysInfo.dateFormat": 1,
-    //时间格式 1 24小时制 2 12小时制
+    // Time format 1 24-hour format 2 12-hour format
     "sysInfo.timeFormat": 1,
-    //-1 关闭自动重启 0-23 整点重启
-    "sysInfo.autoRestart": 3,
-    // 码制
+    // -1 Disable auto restart 0-23 Restart at specific hour
+    "sysInfo.autoRestart": -1,
+    // Code system
     "scanInfo.de_type": 64511,
-    //扫码模式 0是间隔 1是单次
+    // Scan mode 0 interval 1 single
     "scanInfo.sMode": 0,
-    // 扫码间隔模式间隔时间
+    // Scan interval mode interval time
     "scanInfo.interval": 1000,
-    // 读卡方式 1: 读物理卡号 2: 固定扇区 3: 一卡一密
+    // 1 enabled 0 disabled
+    "nfcInfo.nfc": 1,
+    // Cloud certificate switch 3:Cloud certificate acquisition 1:Physical card number
+    "nfcInfo.nfc_identity_card_enable": 1,
+    // Card reading method 1: Read physical card number 2: Fixed sector 3: One card one key
     "nfcInfo.nfcType": 1,
-    // 读卡扇区号
+    // Card reading sector number
     "nfcInfo.sectorNumber": 0,
-    // 读卡块号
+    // Card reading block number
     "nfcInfo.blockNumber": 0,
-    // 密钥类型 1:0x60 2:0x61
+    // Key type 1:0x60 2:0x61
     "nfcInfo.secretkeyType": 1,
-    // 密钥
+    // Key
     "nfcInfo.secretkey": "FFFFFFFFFFFF"
 }

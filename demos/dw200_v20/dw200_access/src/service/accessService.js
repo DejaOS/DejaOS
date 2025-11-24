@@ -6,19 +6,20 @@ import utils from '../common/utils/utils.js'
 import mqttService from "./mqttService.js";
 import sqliteService from "./sqliteService.js";
 let sqliteFuncs = sqliteService.getFunction()
+const mqtt_map = dxMap.get("MQTT")
 
 const accessService = {}
 
-// 通行认证逻辑
+// Access authentication logic
 accessService.access = function (data) {
-    // 认证结果
+    // Authentication result
     let res = false
-    // 是否上报通行记录
+    // Whether to report access record
     let isReport = true
-    // 通行验证
+    // Access verification
     let type = data.type
     let code = data.code
-    //组装 mqtt 上报通信记录报文
+    // Assemble MQTT access record report message
     let record = {
         id: "-1",
         type: parseInt(type),
@@ -28,45 +29,42 @@ accessService.access = function (data) {
         extra: { "srcData": code },
         error: "无权限"
     }
-    if (type == 900) {
-        // 远程开门
+    if (type == 800 || type == 900) {
+       // Button/remote open door
         res = true
-        isReport = false
-    } else if (type == 800) {
-        // 按键开门
-        res = true
-        // 不上报通行记录
         isReport = false
     } else if (type == 103 && code.length > 16) {
-        // 解码失败
-        res = false
         record.error = '解码失败'
-    }else if(type == 600 && code == null) {
-        // type == 600 && 海外蓝牙
+    } else if (type == 600 && code == null) {
+        // Overseas Bluetooth
         res = true
+        isReport = false
     } else {
-        //查询是否有这个凭证值的权限
+        // Check if this credential has permission
         res = sqliteFuncs.permissionVerifyByCodeAndType(code, type)
         if (res) {
             let permissions = sqliteFuncs.permissionFindAllByCodeAndType(code)
             let permission = permissions.filter(obj => obj.type == type)[0]
             record.id = permission.id
-            record.extra = JSON.parse(permission.extra)
+            try {
+                record.extra = JSON.parse(permission.extra);
+            } catch (e) {
+                log.error('[accessService] JSON parse failed for extra:', permission.extra);
+            }
         }
     }
     if (res) {
         record.result = 1
         record.error = ""
-    } else if (config.get("doorInfo.onlinecheck") === 1) {
-        // 在线验证 直接上报内容 按照回复结果反馈
+    } else if (config.get("doorInfo.onlinecheck") === 1 && mqtt_map.get("MQTT_STATUS") == "connected") {
+        // Online verification, directly report content and feedback according to reply result
         let map = dxMap.get("VERIFY")
         let serialNo = utils.genRandomStr(10)
+        let prefix = config.get("mqttInfo.prefix") || ''
         map.put(serialNo, { time: new Date().getTime() })
-        driver.mqtt.send({
-            topic: "access_device/v1/event/access_online", payload: JSON.stringify(mqttService.mqttReply(serialNo, record, undefined))
-        })
+        driver.mqtt.send(prefix + "access_device/v1/event/access_online", JSON.stringify(mqttService.mqttReply(serialNo, record, undefined)))
 
-        // 等待在线验证结果
+        // Wait for online verification result
         let payload = driver.mqtt.getOnlinecheck()
         if (payload && payload.serialNo == serialNo && payload.code == '000000') {
             res = true
@@ -75,70 +73,60 @@ accessService.access = function (data) {
         }
         isReport = false
     }
-    // ui弹窗，蜂鸣且语音播报成功或失败
+    // UI popup, beep and voice broadcast success or failure
     if (res) {
         driver.audio.success()
         driver.screen.accessSuccess(type)
-        // 继电器开门
+        // Relay open door
         driver.gpio.open()
-        // 蓝牙回复
+        // Bluetooth reply
         if (type == 600) {
-            if(code == null){
+            if (code == null) {
                 driver.uartBle.accessControl(data.index)
-            }else{
+            } else {
                 driver.uartBle.accessSuccess(data.index)
             }
         }
     } else {
-        if (config.get("doorInfo.openMode") == 3) {
-            driver.audio.success()
-            driver.screen.accessSuccess()
-            driver.gpio.open()
-        } else {
-            driver.audio.fail()
-            driver.screen.accessFail(type)
-            // 蓝牙回复
-            if (type == 600) {
-                if(code == null){
-                    driver.uartBle.accessControl(data.index)
-                }else{
-                    driver.uartBle.accessFail(data.index)
-                }
+        driver.audio.fail()
+        driver.screen.accessFail(type)
+        // Bluetooth reply
+        if (type == 600) {
+            if (code == null) {
+                driver.uartBle.accessControl(data.index)
+            } else {
+                driver.uartBle.accessFail(data.index)
             }
         }
     }
     if (isReport) {
-        // 通信记录上报
+        // Access record reporting
         accessReport(record);
     }
 }
 
-// 上报时实通行记录
+// Report real-time access record
 function accessReport(record) {
-    // 存储通行记录，判断上限
+    // Store access record, check upper limit
     let count = sqliteFuncs.passRecordFindAllCount()
     let configNum = config.get("doorInfo.offlineAccessNum");
+    let prefix = config.get("mqttInfo.prefix") || ''
     configNum = utils.isEmpty(configNum) ? 2000 : configNum;
     if (configNum > 0) {
         if (parseInt(count[0]["COUNT(*)"]) >= configNum) {
-            // 达到最大存储数量
-            // 删除最远的那条
+            // Reached maximum storage capacity, delete the oldest record
             sqliteFuncs.passRecordDelLast()
         }
-        // if (record.result === 0) {
-        //     record.error = '无权限'
-        // }
-        let data = JSON.parse(JSON.stringify(record))
-        data.extra = JSON.stringify(data.extra)
+        let data = {...record, extra: JSON.stringify(record.extra)}
         sqliteFuncs.passRecordInsert(data)
     }
     let map = dxMap.get("REPORT")
     let serialNo = utils.genRandomStr(10)
     map.del(serialNo)
     map.put(serialNo, { time: new Date().getTime(), list: [record.time] })
-    driver.mqtt.send({
-        topic: "access_device/v1/event/access", payload: JSON.stringify(mqttService.mqttReply(serialNo, [record], mqttService.CODE.S_000))
-    })
+    if (mqtt_map.get("MQTT_STATUS") == "connected") {
+        driver.mqtt.send(prefix + "access_device/v1/event/access", JSON.stringify(mqttService.mqttReply(serialNo, [record], mqttService.CODE.S_000)))
+    }
 }
 
 export default accessService

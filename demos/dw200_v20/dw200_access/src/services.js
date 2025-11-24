@@ -12,8 +12,8 @@ import dxNet from '../dxmodules/dxNet.js'
 import dxCode from '../dxmodules/dxCode.js'
 import dxNfc from '../dxmodules/dxNfc.js'
 import dxGpioKey from '../dxmodules/dxGpioKey.js'
-import dxMqtt from '../dxmodules/dxMqtt.js'
 import dxUart from '../dxmodules/dxUart.js'
+import bus from '../dxmodules/dxEventBus.js'
 
 pool.callback((data) => {
     let topic = data.topic
@@ -31,10 +31,13 @@ pool.callback((data) => {
         case dxNet.STATUS_CHANGE:
             netService.netStatusChanged(msg)
             break;
-        case dxMqtt.CONNECTED_CHANGED + driver.mqtt.id:
-            mqttService.connectedChanged(msg)
+        case driver.mqtt.CONNECTED_CHANGED:
+            bus.fire('mqttConnectedChange', msg)
+            if (msg == "connected") {
+                mqttService.report()
+            }
             break;
-        case dxMqtt.RECEIVE_MSG + driver.mqtt.id:
+        case driver.mqtt.RECEIVE_MSG:
             mqttService.receiveMsg(msg)
             break;
         case dxCode.RECEIVE_MSG:

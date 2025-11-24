@@ -1,133 +1,121 @@
-
 const configConst = {}
 configConst.setConfig = {
-    // mqttip+端口
+    // mqtt ip + port
     mqttaddr: "mqttInfo.mqttAddr",
-    // mqtt 账号
+    // mqtt username
     mqttusername: "mqttInfo.mqttName",
-    //mqtt 密码
+    // mqtt password
     mqttpassword: "mqttInfo.password",
-    //mqtt前缀
+    // mqtt prefix
     mqttprefix: "mqttInfo.prefix",
-    //qosmqtt
+    // qos for mqtt
     mqttqos: "mqttInfo.qos",
-    // 客户端ID
+    // client ID
     mqttclientid: "mqttInfo.clientId",
-    //ntp对时服务地址
+    // append random number
+    clientIdSuffix: "mqttInfo.clientIdSuffix",
+    // clean session
+    cleanSession: "mqttInfo.cleanSession",
+    // NTP time synchronization server address
     ntpAddr: "netInfo.ntpAddr",
-    //对时模式
+    // time synchronization mode
     ntp: "netInfo.ntp",
-    //网络时间同步间隔	
+    // network time synchronization interval (hours)
     ntpHour: "netInfo.ntpHour",
-    //net_type 
+    // network type
     net_type: "netInfo.type",
-    //DHCP 
+    // DHCP
     ip_mode: "netInfo.dhcp",
-    //ip
+    // IP address
     ip: "netInfo.ip",
-    //网关
+    // gateway
     gateway: "netInfo.gateway",
-    //dns
+    // DNS
     dns: "netInfo.dns",
-    //macaddr
+    // MAC address
     macaddr: "netInfo.netMac",
-    // fixed_macaddr_enable 0:默认mac 2:自定义mac
+    // fixed MAC address enable: 0 for default MAC, 2 for custom MAC
     fixed_macaddr_enable: "netInfo.fixed_macaddr_enable",
-    //子网掩码
+    // subnet mask
     mask: "netInfo.subnetMask",
-    //设备号
+    // device number
     devnum: "sysInfo.deviceNum",
-    //公司名称
+    // company name
     devname: "sysInfo.deviceName",
-    //喇叭音量
+    // speaker volume
     volume: "sysInfo.volume",
-    //按键音量
+    // button click volume
     volume2: "sysInfo.volume2",
-    //蜂鸣音量
+    // buzzer volume
     volume3: "sysInfo.volume3",
-    //心跳开关
+    // heartbeat switch
     heart_en: "sysInfo.heart_en",
-    //心跳间隔
+    // heartbeat interval
     heart_time: "sysInfo.heart_time",
-    //心跳内容
+    // heartbeat content
     heart_data: "sysInfo.heart_data",
-    //设备状态
-    dev_sta: "sysInfo.status",
-    //云证开关 3:云证获取 1:物理卡号
-    nfc_identity_card_enable: "sysInfo.nfc_identity_card_enable",
-    //日期格式 1 年/月/日 2 日/月/年
+    // date format: 1 for YYYY/MM/DD, 2 for DD/MM/YYYY
     dateFormat: "sysInfo.dateFormat",
-    //时间格式 1 24小时制 2 12小时制
+    // time format: 1 for 24-hour, 2 for 12-hour
     timeFormat: "sysInfo.timeFormat",
-    //-1 关闭自动重启   0-23 整点重启
+    // auto restart: -1 to disable, 0-23 for restart at the specified hour
     autoRestart: "sysInfo.autoRestart",
-    //sn是否隐藏 1 显示 0 隐藏
+    // SN display: 1 to show, 0 to hide
     sn_show: "uiInfo.sn_show",
-    //ip是否隐藏 1 显示 0 隐藏
+    // IP display: 1 to show, 0 to hide
     ip_show: "uiInfo.ip_show",
-    //version是否隐藏 1 显示 0 隐藏
-    version_show: "sysInfo.version_show",
-    //设备配置密码
+    // device configuration password
     com_passwd: "sysInfo.com_passwd",
-    //语言
+    // language
     language: "sysInfo.language",
-    //系统时间
+    // system time
     time: "sysInfo.time",
-    blhorc: "sysInfo.blhorc", //蓝牙前后缀 1char 2hex
-    blpri: "sysInfo.blpri", //蓝牙前缀 
-    blpos: "sysInfo.blpos", //蓝牙后缀
-    blcr: "sysInfo.blcr", //蓝牙加回车 0不加1加
-    blnl: "sysInfo.blnl", //蓝牙加换行  0不加1加
-    ble_name: "sysInfo.ble_name", //蓝牙名称
-    ble_mac: "sysInfo.ble_mac", //蓝牙 mac
-    blft: "sysInfo.blft", //蓝牙输出格式 0直接输出
-    //开门模式
+    // door opening mode
     openMode: "doorInfo.openMode",
-    //开门时长
+    // door opening duration
     openTime: "doorInfo.openTime",
-    //开门超时时间
+    // door opening timeout
     openTimeout: "doorInfo.openTimeout",
-    //在线验证开关 1开 0 关
+    // online verification switch: 1 for on, 0 for off
     onlinecheck: "doorInfo.onlinecheck",
-    //在线验证超时时间
+    // online verification timeout
     onlineTimeout: "doorInfo.timeout",
     buttonText: "uiInfo.buttonText",
-    // 显示开锁按钮 1 显示 0 隐藏
+    // show unlock button: 1 to show, 0 to hide
     show_unlocking: "uiInfo.show_unlocking",
-    // 屏幕旋转
+    // screen rotation
     rotation: "uiInfo.rotation",
-    rotation0BgImage: "uiInfo.rotation0BgImage",
-    rotation1BgImage: "uiInfo.rotation1BgImage",
-    rotation2BgImage: "uiInfo.rotation2BgImage",
-    rotation3BgImage: "uiInfo.rotation3BgImage",
-    //1打开0关闭
-    nfc: "sysInfo.nfc",
-    // 时区
+    // timezone
     ntpLocaltime: "netInfo.ntpLocaltime",
-    //
-    ntpInterval: "netInfo.ntpInterval",
-    // 码制
+    // barcode type
     de_type: "scanInfo.de_type",
-    //扫码模式 0是间隔 1是单次
+    // scan mode: 0 for interval, 1 for single shot
     s_mode: "scanInfo.sMode",
-    //间隔生效  间隔时间
+    // interval setting: interval time
     interval: "scanInfo.interval",
-    //wifi用户名
+    // Wi-Fi SSID
     ssid: "netInfo.ssid",
-    //wifi 密码
+    // Wi-Fi password
     psk: "netInfo.psk",
-    // 读卡方式 1: 读物理卡号 2: 固定扇区 3: 一卡一密
+    // NFC: 1 for on, 0 for off
+    nfc: "nfcInfo.nfc",
+    // cloud ID card switch: 3 for cloud ID, 1 for physical card number
+    nfc_identity_card_enable: "nfcInfo.nfc_identity_card_enable",
+    // card reading method: 1 for physical card number, 2 for fixed sector, 3 for one-card-one-key
     nfcType: "nfcInfo.nfcType",
-    // 读卡扇区号
+    // card sector number
     sectorNumber: "nfcInfo.sectorNumber",
-    // 读卡块号
+    // card block number
     blockNumber: "nfcInfo.blockNumber",
-    // 读卡密钥类型 1:0x60 2:0x61
+    // card key type: 1 for 0x60, 2 for 0x61
     secretkeyType: "nfcInfo.secretkeyType",
-    // 读卡密钥
-    secretkey: "nfcInfo.secretkey"
+    // card key
+    secretkey: "nfcInfo.secretkey",
+    // status bar at bottom
+    statusBar:"uiInfo.statusBar"
 }
-//根据 key 获取 setCofig中的 value
+
+// Get value from setConfig by key
 configConst.getValueByKey = function (key) {
     return this.setConfig[key] || undefined;
 }

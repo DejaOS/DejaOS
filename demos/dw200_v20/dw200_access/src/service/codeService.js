@@ -12,62 +12,72 @@ import utils from '../common/utils/utils.js';
 import configConst from '../common/consts/configConst.js';
 import configService from './configService.js';
 import accessService from './accessService.js';
-import * as os from 'os';
-import bus from '../../dxmodules/dxEventBus.js';
 let sqliteFuncs = sqliteService.getFunction()
 const codeService = {}
 
 codeService.receiveMsg = function (data) {
     log.info('[codeService] receiveMsg :' + JSON.stringify(data.data))
     let str = common.utf8HexToStr(common.arrayBufferToHexString(data.data))
-    this.code(str)
+    this.code(str, data.type)
 }
-// 比较两个字符串的前N个字符是否相等
-function comparePrefix(str1, str2, N) {
-    let substring1 = str1.substring(0, N);
-    let substring2 = str2.substring(0, N);
-    return substring1 === substring2;
-}
-codeService.code = function (data) {
+
+codeService.code = function (data, type) {
     log.info('[codeService] code :' + data)
     data = qrRule.formatCode(data, sqliteFuncs)
-    if (data.type == 'config') {
-        // 配置码
-        configCode(data.code, "old")
-    } else if(data.type == 100) {
-        if(comparePrefix(data.code, "__VGS__0", "__VGS__0".length)) {
-            configCode(data.code,"new")
-        } else if(comparePrefix(data.code, "___VBAR_ID_ACTIVE_V", "___VBAR_ID_ACTIVE_V".length)) {
-            //云证激活
-            driver.pwm.warning()
-            let activeResute = driver.eid.active(config.get("sysInfo.sn"), config.get("sysInfo.appVersion"), config.get("sysInfo.mac"), data.code);
-            log.info("[codeService] code: activeResute " + activeResute)
-            if (activeResute === 0) {
-                log.info("[codeService] code: 云证激活成功")
-                driver.pwm.success()
-            } else {
-                log.info("[codeService] code: 云证激活失败")
-                driver.pwm.fail()
-            }
-        } else {
-            // 通行码
-            log.info("[codeService] code: 解析通行码 ", JSON.stringify(data))
-            accessService.access(data)
-        }
+    const de_type = config.get('scanInfo.de_type');
+    // 1. Process always allowed code types (configuration codes, activation codes)
+    if (data.type == 'config' || data.code.startsWith("__VGS__0") || data.code.startsWith("___VBAR_ID_ACTIVE_V")) {
+        handleSpecialCodes(data);
+        return;
+    }
+    // 2. Process access codes that need to check code system
+    if (shouldProcessCode(de_type, type)) {
+        log.info("处理通行码:", JSON.stringify(data));
+        accessService.access(data);
     } else {
-        // 通行码
-        log.info("[codeService] code: 解析通行码 ", JSON.stringify(data))
-        accessService.access(data)
+        log.error(`码制被禁用，类型: ${type}, 配置: ${de_type}`);
     }
 }
 
-// 配置码处理
-function configCode(code,type) {
-    if (!checkConfigCode(code,type)) {
+function handleSpecialCodes (data) {
+    if (data.code.startsWith("___VBAR_ID_ACTIVE_V")) {
+        // Cloud certificate activation
+        driver.pwm.warning()
+        let activeResute = driver.eid.active(config.get("sysInfo.sn"), config.get("sysInfo.appVersion"), config.get("sysInfo.mac"), data.code);
+        if (activeResute === 0) {
+            log.info("[codeService] code: activeResute " + activeResute + " 云证激活成功")
+            driver.pwm.success()
+        } else {
+            log.info("[codeService] code: activeResute " + activeResute + " 云证激活失败")
+            driver.pwm.fail()
+        }
+    } else {
+        // Configuration code
+        const configType = data.code.startsWith("__VGS__0") ? "new" : "old";
+        configCode(data.code, configType);
+    }
+}
+
+function shouldProcessCode (de_type, type) {
+    // Special handling: even if all are disabled or QR is disabled, still allow processing (for configuration codes, but configuration codes are handled separately)
+    // Here mainly handles ordinary access codes
+    if (type == 1) { // QR code
+        return (de_type & 1) !== 0;
+    } else { // Other code systems
+        const bitPosition = type - 1;
+        return (de_type & (1 << bitPosition)) !== 0;
+    }
+}
+
+// Configuration code processing
+function configCode (code, type) {
+    // 1. Verify signature
+    if (!checkConfigCode(code, type)) {
         driver.pwm.fail()
         log.error("[codeService] configCode: 配置码校验失败")
         return
     }
+    // 2. Parse JSON
     let json = utils.parseString(code)
     if (Object.keys(json).length <= 0) {
         try {
@@ -77,227 +87,263 @@ function configCode(code,type) {
         }
     }
     log.info("[codeService] configCode: 解析配置码 ", JSON.stringify(json))
-    //切换模式
-    if (!utils.isEmpty(json.w_model)) {
-        try {
-            common.setMode(json.w_model)
-            driver.pwm.success()
-            common.asyncReboot(1)
-        } catch (error) {
-            log.error(error, error.stack)
-            log.info('[codeService] configCode: 切换失败不做任何处理');
-            driver.pwm.fail()
-        }
-        return
+    // 3. Execute various operations
+    if (!utils.isEmpty(json.w_model)) { // Switch mode
+        return handleModeSwitch(json);
     }
-    let map = dxMap.get("UPDATE")
-    // 扫码升级相关
-    if (json.update_flag === 1) {
-        if (!driver.net.getStatus()) {
-            codeService.updateFailed("Please check the network")
-            driver.pwm.fail()
-            return
-        }
-        if (map.get("updateFlag")) {
-            return
-        }
 
-        map.put("updateFlag", true)
-        driver.pwm.warning()
-        try {
-            codeService.updateBegin()
-            ota.updateHttp(json.update_addr, json.update_md5, 300)
-            codeService.updateEnd()
-            driver.pwm.success()
-            common.asyncReboot(1)
-        } catch (error) {
-            codeService.updateFailed(error.message)
-            driver.pwm.fail()
-        }
-        map.del("updateFlag")
-        return
-
-    } else if ([2, 3].includes(json.update_flag)) {
-        if (utils.isEmpty(json.update_name) || utils.isEmpty(json.update_path)) {
-            driver.pwm.fail()
-            return
-        }
-        let downloadPath = "/app/data/upgrades/" + json.update_name
-        if (json.update_flag === 2) {
-            // 下载图片、SO等
-            return resourceDownload(json.update_addr, json.update_md5, downloadPath, () => {
-                common.systemBrief(`mv "${downloadPath}" "${json.update_path}"`)
-            })
-        } else if (json.update_flag === 3) {
-            // 下载压缩包
-            return resourceDownload(json.update_addr, json.update_md5, downloadPath, () => {
-                common.systemBrief(`unzip -o "${downloadPath}" -d "${json.update_path}"`)
-            })
-        }
+    if (json.update_flag === 1) { // OTA update
+        return handleOtaUpdate(json);
     }
-    if (!utils.isEmpty(json.update_flg)) {
-        if (map.get("updateFlag")) {
-            return
-        }
-        if (!driver.net.getStatus()) {
-            codeService.updateFailed("Please check the network")
-            driver.pwm.fail()
-            return
-        }
-        map.put("updateFlag", true)
-        // 兼容旧的升级格式
-        if (utils.isEmpty(json.update_haddr) || utils.isEmpty(json.update_md5)) {
-            driver.pwm.fail()
-            map.del("updateFlag")
-            return
-        }
-        try {
-            driver.pwm.warning()
-            codeService.updateBegin()
-            const temp = ota.OTA_ROOT + '/temp'
-            ota.updateResource(json.update_haddr, json.update_md5, utils.getUrlFileSize(json.update_haddr) / 1024, `
-                source=${temp}/vgapp/res/image/*
-                target=/app/code/resource/image/
-                cp "\\$source" "\\$target"
-                source=${temp}/vgapp/res/font/*
-                target=/app/code/resource/font/
-                cp "\\$source" "\\$target"
-                source=${temp}/vgapp/wav/*
-                target=/app/code/resource/wav/
-                cp "\\$source" "\\$target"
-                 rm -rf ${ota.OTA_ROOT}
-                `)
-            codeService.updateEnd()
-            driver.pwm.success()
-            common.asyncReboot(3)
-        } catch (error) {
-            codeService.updateFailed(error.message)
-            driver.pwm.fail()
-        }
-        map.del("updateFlag")
-        return
 
+    if ([2, 3].includes(json.update_flag)) { // Resource download
+        return handleResourceDownload(json);
     }
-    // 设备配置相关
+
+    if (!utils.isEmpty(json.update_flg)) { // Compatible with old update format
+        return handleLegacyUpdate(json);
+    }
+    // 4. Device configuration related
+    processDeviceConfig(json, type)
+    
+}
+
+function processDeviceConfig(json, type) {
     let configData = {}
-    for (let key in json) {
-        let transKey
-        if (type == "new") {
-            transKey = key.indexOf(".") >= 0 ? key.split(".")[0] + "Info." + key.split(".")[1] : configConst.getValueByKey(key)
+    for (const [key, value] of Object.entries(json)) {
+        let transKey;
+        if (type === "new" && key.includes(".")) {
+            const parts = key.split(".");
+            transKey = `${parts[0]}Info.${parts[1]}`;
         } else {
-            transKey = configConst.getValueByKey(key)
+            transKey = configConst.getValueByKey(key);
         }
-        if (transKey == undefined) {
-            continue
+        if (!transKey) continue;
+        const [parentKey, childKey] = transKey.split('.');
+        if (!configData[parentKey]) {
+            configData[parentKey] = {};
         }
-        let keys = transKey.split(".")
-        if (transKey == 'netInfo.dhcp') {
-            json[key] = json[key] == 1 ? 0 : 1
+        configData[parentKey][childKey] = json[key];
+    }
+    const handleConfigResult = (success) => {
+        if (success) {
+            driver.pwm.success();
+            log.info("[codeService] configCode: 配置成功");
+        } else {
+            driver.pwm.fail();
+            log.error("[codeService] configCode: 配置失败");
         }
-        if (transKey == 'sysInfo.time') {
-            driver.system.setTime(json[key])
-            //同步给控制主机
-            driver.pwm.success()
+        if (json.reboot === 1) {
+            const message = config.get("sysInfo.language") === 1 ? "Rebooting" : "重启中";
+            driver.screen.warning({ msg: message, beep: false });
+            common.asyncReboot(1);
+        }
+    };
+    if (Object.keys(configData).length > 0) {
+        const result = configService.configVerifyAndSave(configData)
+        if (typeof result != 'boolean') {
+            log.error(result)
+            driver.pwm.fail()
             return
         }
-        if (utils.isEmpty(configData[keys[0]])) {
-            configData[keys[0]] = {}
-        }
-        configData[keys[0]][keys[1]] = json[key]
-    }
-    let res = false
-    if (Object.keys(configData).length > 0) {
-        res = configService.configVerifyAndSave(configData)
-    }
-
-    if (typeof res != 'boolean') {
-        log.error(res)
-        driver.pwm.fail()
-        return
-    }
-    if (res) {
-        driver.pwm.success()
-        log.info("[codeService] configCode: 配置成功")
+        handleConfigResult(result);
     } else {
-        driver.pwm.fail()
-        log.error("[codeService] configCode: 配置失败")
-    }
-    if (json.reboot === 1) {
-        driver.screen.warning({ msg: config.get("sysInfo.language") == 1 ? "Rebooting" : "重启中", beep: false })
-        common.asyncReboot(1)
+        handleConfigResult(false);
     }
 }
 
-// 下载通用方法
-function resourceDownload(url, md5, path, cb) {
-    // 本机升级
+// Mode switching
+function handleModeSwitch (json) {
+    try {
+        common.setMode(json.w_model)
+        driver.pwm.success()
+        common.asyncReboot(1)
+    } catch (error) {
+        log.error(error, error.stack)
+        driver.pwm.fail()
+    }
+}
+
+// OTA update
+function handleOtaUpdate (json) {
+    let map = dxMap.get("UPDATE")
+    if (!driver.net.getStatus()) {
+        codeService.showUpdateStatus('failed', "Please check the network")
+        driver.pwm.fail()
+        return
+    }
+    if (map.get("updateFlag")) return
+    map.put("updateFlag", true)
+    driver.pwm.warning()
+    try {
+        codeService.showUpdateStatus('begin')
+        ota.updateHttp(json.update_addr, json.update_md5, 300)
+        codeService.showUpdateStatus('success')
+        driver.pwm.success()
+        common.asyncReboot(1)
+    } catch (error) {
+        codeService.showUpdateStatus('failed', error.message);
+        driver.pwm.fail()
+    } finally {
+        map.del("updateFlag")
+    }
+}
+
+// Resource download (images/SO/compressed packages)
+function handleResourceDownload (json) {
+    if (utils.isEmpty(json.update_name) || utils.isEmpty(json.update_path)) {
+        driver.pwm.fail()
+        return
+    }
+    let downloadPath = "/app/data/upgrades/" + json.update_name
+    const isZip = json.update_flag === 3;
+    const command = isZip
+        ? `unzip -o "${downloadPath}" -d "${json.update_path}"`
+        : `mv "${downloadPath}" "${json.update_path}"`;
+    return resourceDownload(json.update_addr, json.update_md5, downloadPath, () => {
+        common.systemBrief(command)
+    })
+}
+
+// Compatible with old update format
+function handleLegacyUpdate (json) {
+    let map = dxMap.get("UPDATE")
+    if (map.get("updateFlag")) return
+    if (!driver.net.getStatus()) {
+        codeService.showUpdateStatus('failed', "Please check the network");
+        driver.pwm.fail()
+        return
+    }
+    map.put("updateFlag", true)
+    if (utils.isEmpty(json.update_haddr) || utils.isEmpty(json.update_md5)) {
+        driver.pwm.fail()
+        map.del("updateFlag")
+        return
+    }
+    try {
+        driver.pwm.warning()
+        codeService.showUpdateStatus('begin');
+        const temp = ota.OTA_ROOT + '/temp'
+        ota.updateResource(json.update_haddr, json.update_md5, utils.getUrlFileSize(json.update_haddr) / 1024, `
+            source=${temp}/vgapp/res/image/*
+            target=/app/code/resource/image/
+            cp "\\$source" "\\$target"
+            source=${temp}/vgapp/res/font/*
+            target=/app/code/resource/font/
+            cp "\\$source" "\\$target"
+            source=${temp}/vgapp/wav/*
+            target=/app/code/resource/wav/
+            cp "\\$source" "\\$target"
+             rm -rf ${ota.OTA_ROOT}
+            `)
+        codeService.showUpdateStatus('success');
+        driver.pwm.success()
+        common.asyncReboot(3)
+    } catch (error) {
+        codeService.showUpdateStatus('failed', error.message);
+        driver.pwm.fail()
+    } finally {
+        map.del("updateFlag")
+    }
+}
+
+// General download method
+function resourceDownload (url, md5, path, cb) {
+    // Local upgrade
     if (utils.isEmpty(url) || utils.isEmpty(md5)) {
         driver.pwm.fail()
         return false
     }
 
-    codeService.updateBegin()
+    codeService.showUpdateStatus('begin');
     driver.pwm.warning()
 
     let ret = utils.waitDownload(url, path, 60 * 1000, md5, utils.getUrlFileSize(url))
     if (!ret) {
-        codeService.updateFailed()
+        codeService.showUpdateStatus('failed');
         driver.pwm.fail()
         return false
     } else {
-        codeService.updateEnd()
+        codeService.showUpdateStatus('success');
         driver.pwm.success()
     }
     if (cb) {
         cb()
     }
-    // 下载完成，1秒后重启
+    // Download completed, restart after 1 second
     common.asyncReboot(0)
     std.sleep(2000)
     return true
 }
 
-//校验配置码
-function checkConfigCode(code,type) {
+// Verify configuration code
+function checkConfigCode (code, type) {
     let password = config.get('sysInfo.com_passwd') || '1234567887654321'
-    let firstPart
-    let secondPart
-    if(type == "new") {
-        let lastIndex = code.lastIndexOf("__");
-        firstPart = code.substring(0, lastIndex);
-        secondPart = code.substring(lastIndex + 2);
-    } else {
-        let lastIndex = code.lastIndexOf("--");
-        firstPart = code.substring(0, lastIndex);
-        secondPart = code.substring(lastIndex + 2);
+    const DELIMITER = type === 'new' ? '__' : '--';
+    const lastIndex = code.lastIndexOf(DELIMITER);
+    // Delimiter not found
+    if (lastIndex === -1) {
+        log.error(`Delimiter "${DELIMITER}" not found in code: ${code}`);
+        return false;
     }
-    let res
+    const dataPart = code.substring(0, lastIndex);
+    const signaturePart = code.substring(lastIndex + DELIMITER.length);
+    let expectedSignature
     try {
-        res = base64.fromHexString(common.arrayBufferToHexString(common.hmac(firstPart, password)))
+        expectedSignature = base64.fromHexString(common.arrayBufferToHexString(common.hmac(dataPart, password)))
     } catch (error) {
         log.error(error)
         return false
     }
-
-    return res == secondPart;
+    return expectedSignature == signaturePart;
 }
 
-
-codeService.updateBegin = function () {
-    if (config.get("sysInfo.language") == 1) {
-        driver.screen.warning({ msg: "Start Upgrading", beep: false })
-    } else {
-        driver.screen.warning({ msg: "开始升级", beep: false })
+const UPDATE_MESSAGES = {
+    begin: {
+        en: "Start Upgrading",
+        zh: "开始升级"
+    },
+    success: {
+        en: "Upgrade Successfully",
+        zh: "升级成功"
+    },
+    failed: {
+        en: (detail) => `Upgrade Failed: ${detail || "Upgrade package download failed"}`,
+        zh: (detail) => `升级失败: ${codeService.errorMsgMap[detail] || "下载失败，请检查网址"}`
     }
-}
+};
 
-codeService.updateEnd = function () {
-    if (config.get("sysInfo.language") == 1) {
-        driver.screen.warning({ msg: "Upgrade Successfully", beep: false })
-    } else {
-        driver.screen.warning({ msg: "升级成功", beep: false })
+/**
+ * Display upgrade status prompt
+ * @param {string} status - Status type: 'begin' | 'success' | 'failed'
+ * @param {string} [errorMsg] - Error message when failed (only valid when status='failed')
+ */
+codeService.showUpdateStatus = function (status, errorMsg) {
+    let defaultErrorMsg = 'Upgrade package download failed';
+    if (status !== 'failed') {
+        errorMsg = null;
     }
-}
+    // Get current language (0: Chinese, 1: English)
+    const isEn = config.get("sysInfo.language") === 1;
+    const langKey = isEn ? 'en' : 'zh';
+    // Get message template or text for corresponding status
+    const msgConfig = UPDATE_MESSAGES[status];
+    if (!msgConfig) {
+        return;
+    }
+    let message;
+    if (typeof msgConfig[langKey] === 'function') {
+        // For failed status, use function to generate dynamic message
+        const displayError = errorMsg && errorMsg.includes("Download failed")
+            ? defaultErrorMsg
+            : errorMsg;
+        message = msgConfig[langKey](displayError);
+    } else {
+        // Other statuses directly get text
+        message = msgConfig[langKey];
+    }
+    driver.screen.warning({ msg: message, beep: false });
+};
 
 codeService.errorMsgMap = {
     "The 'url' and 'md5' param should not be null": "“url”和“md5”参数不能为空",
@@ -308,17 +354,6 @@ codeService.errorMsgMap = {
     "Build shell file failed": "构建 shell 文件失败",
     "Upgrade package download failed": "升级包下载失败",
     "Please check the network": "请检查网络"
-}
-
-codeService.updateFailed = function (errorMsg) {
-    if (!errorMsg || errorMsg.includes("Download failed, please check the url")) {
-        errorMsg = 'Upgrade package download failed'
-    }
-    if (config.get("sysInfo.language") == 1) {
-        driver.screen.warning({ msg: "Upgrade Failed: " + (errorMsg ? errorMsg : "Upgrade package download failed"), beep: false })
-    } else {
-        driver.screen.warning({ msg: "升级失败: " + (codeService.errorMsgMap[errorMsg] ? codeService.errorMsgMap[errorMsg] : "下载失败，请检查网址"), beep: false })
-    }
 }
 
 export default codeService

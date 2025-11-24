@@ -31,6 +31,7 @@ function initController() {
     driver.nfc.eidInit()
     driver.code.init()
     driver.net.init()
+    driver.ntp.init()
 }
 
 
@@ -39,6 +40,4 @@ function loop() {
     driver.code.loop()
     driver.nfc.loop()
     driver.gpiokey.loop()
-    driver.ntp.loop()
-    driver.mqtt.heartbeat()
 }

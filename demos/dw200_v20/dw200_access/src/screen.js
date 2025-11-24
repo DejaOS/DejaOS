@@ -42,7 +42,7 @@ function subscribe () {
     })
 }
 
-// 网络连接状态监听
+// Network connection status listener
 screen.netStatusChange = function (data) {
     if (data.connected) {
         let ip = dxNet.getModeByCard(config.get("netInfo.type")).param.ip
@@ -74,7 +74,7 @@ screen.netStatusChange = function (data) {
     mainView.bottom_ip.longMode(dxui.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
 }
 
-// tcp连接状态监听
+// TCP connection status listener
 screen.tcpConnectedChange = function (data) {
     if (data == "connected") {
         mainView.top_tcp.show()
@@ -83,7 +83,7 @@ screen.tcpConnectedChange = function (data) {
     }
 }
 
-// 获取ui相关配置
+// Get UI related configuration
 screen.getUIConfig = function () {
     let configAll = config.getAll()
     return {
@@ -105,25 +105,24 @@ screen.getUIConfig = function () {
         show_unlocking: configAll["uiInfo.show_unlocking"],
         buttonText: configAll["uiInfo.buttonText"],
         version: configAll["sysInfo.appVersion"],
-        version_show: configAll["sysInfo.version_show"],
         netInfo_type: configAll["netInfo.type"],
         dateFormat: configAll["sysInfo.dateFormat"],
         timeFormat: configAll["sysInfo.timeFormat"],
     }
 }
 
-// 按键音
+// Button sound
 screen.press = function () {
     driver.pwm.press()
 }
 
-// 密码校验
+// Password validation
 screen.password = function (password) {
     bus.fire('password', { "type": 400, "code": password })
 }
 
 let popTimer
-// 成功
+// Success
 screen.success = function (msg, beep) {
     if (popTimer) {
         std.clearTimeout(popTimer)
@@ -154,7 +153,7 @@ screen.success = function (msg, beep) {
     }
 }
 
-// 失败
+// Failure
 screen.fail = function (msg, beep) {
     if (popTimer) {
         std.clearTimeout(popTimer)
@@ -183,7 +182,7 @@ screen.fail = function (msg, beep) {
         }, 100)
     }
 }
-// 警告
+// Warning
 screen.warning = function (data) {
     if (popTimer) {
         std.clearTimeout(popTimer)
@@ -213,7 +212,7 @@ screen.warning = function (data) {
     }
 }
 
-// 自定义弹窗内容
+// Custom popup content
 screen.customPopWin = function (msg, time) {
     if (popTimer) {
         std.clearTimeout(popTimer)
@@ -238,11 +237,11 @@ screen.customPopWin = function (msg, time) {
     popTimer = std.setTimeout(() => {
         popWin.center_background.hide()
         popWin.center_img.show()
-        popWin.center_label.text("这是一个弹窗--这是一个弹窗--这是一个弹窗--")
+        popWin.center_label.text("This is a popup--This is a popup--This is a popup--")
     }, time ? time : (time1 > 2000 ? time1 : 2000))
 }
 
-// 直接展示文字和图片
+// Directly display text and image
 screen.customShowMsgAndImg = function (msg, msgTimeout, img, imgTimeout) {
     if (msg || img) {
         popWin.center_background.show()
@@ -280,7 +279,7 @@ screen.customShowMsgAndImg = function (msg, msgTimeout, img, imgTimeout) {
     }
 }
 
-// mqtt连接状态
+// MQTT connection status
 screen.mqttConnectedChange = function (data) {
     if (data == "connected") {
         mainView.top_mqtt.show()
@@ -290,8 +289,8 @@ screen.mqttConnectedChange = function (data) {
 }
 
 /**
- * 显示弹窗
- * @param {*} param param.flag:true|false成功|失败；param.type:类型
+ * Display popup
+ * @param {*} param param.flag:true|false success|failure; param.type:type
  * @returns 
  */
 screen.displayResults = function (param) {
@@ -299,7 +298,7 @@ screen.displayResults = function (param) {
         return
     }
     let res = "失败"
-    // 除非language为1,否则默认中文
+    // Unless language is 1, default to Chinese
     let isEn = config.get("sysInfo.language") == 1
     if (isEn) {
         res = param.flag ? "success!" : "fail!"
@@ -335,11 +334,7 @@ screen.displayResults = function (param) {
         default:
             break;
     }
-    if (msg === "" && param.type == "disable") {
-        msg = isEn ? "Device disabled" : "设备已禁用"
-    } else {
-        msg += res
-    }
+    msg += res
     if (param.flag) {
         screen.success(msg)
     } else {
@@ -347,19 +342,19 @@ screen.displayResults = function (param) {
     }
 }
 
-// 展示文字
+// Display text
 // eg:{msg:'',time:1000}
 screen.showMsg = function (param) {
     screen.customPopWin(param.msg, param.time)
 }
 
-// 展示图片
+// Display image
 // eg:{time:1000,img:'a'}
 screen.showPic = function (param) {
     this.customShowMsgAndImg(null, null, param.img, param.time)
 }
 
-// 重新加载当前ui，会根据配置调整ui内容显示
+// Reload current UI, will adjust UI content display according to configuration
 screen.reload = function () {
     let dir = config.get('uiInfo.rotation')
     if (![0, 1, 2, 3].includes(dir)) {
