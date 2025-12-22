@@ -74,21 +74,21 @@ driver.mqtt = {
 driver.gpio = {
     init: function () {
         dxGpio.init()
-        dxGpio.request(105)
+        dxGpio.request(35)
     },
     open: function () {
-        dxGpio.setValue(105, 1)
+        dxGpio.setValue(35, 1)
     },
     close: function () {
-        dxGpio.setValue(105, 0)
+        dxGpio.setValue(35, 0)
     },
     toggle: function (delay) {//先开继电器等待一下再关
         if (!delay || typeof delay !== 'number' || isNaN(delay)) {
             delay = 2000; // 默认 2000
         }
-        dxGpio.setValue(105, 1)
+        dxGpio.setValue(35, 1)
         std.sleep(Math.max(delay, 50))//最少也要sleep 50毫秒
-        dxGpio.setValue(105, 0)
+        dxGpio.setValue(35, 0)
     }
 }
 driver.code = {

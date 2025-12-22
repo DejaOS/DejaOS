@@ -43,21 +43,21 @@ driver.net = {
 driver.gpio = {
     init: function () {
         dxGpio.init()
-        dxGpio.request(105)
+        dxGpio.request(35)
     },
     open: function () {
-        dxGpio.setValue(105, 1)
+        dxGpio.setValue(35, 1)
     },
     close: function () {
-        dxGpio.setValue(105, 0)
+        dxGpio.setValue(35, 0)
     },
     toggle: function (delay) {//First turn on relay, wait a bit, then turn off
         if (!delay || typeof delay !== 'number' || isNaN(delay)) {
             delay = 2000; // Default 2000
         }
-        dxGpio.setValue(105, 1)
+        dxGpio.setValue(35, 1)
         std.sleep(Math.max(delay, 50))//Minimum sleep 50 milliseconds
-        dxGpio.setValue(105, 0)
+        dxGpio.setValue(35, 0)
     }
 }
 driver.code = {

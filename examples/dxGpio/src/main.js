@@ -4,7 +4,7 @@ import gpio from '../dxmodules/dxGpio.js'
 import std from '../dxmodules/dxStd.js'
 import * as os from "os";
 //dw200 管脚号 默认
-const gpio_id_dw200 = 105
+const gpio_id_dw200 = 35
 
 //初始化 gpio
 let res = gpio.init()
