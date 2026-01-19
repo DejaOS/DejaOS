@@ -1,0 +1,1 @@
+For detailed information, please refer to https://dejaos.com/apps/solutions/smart_locker_offline/
