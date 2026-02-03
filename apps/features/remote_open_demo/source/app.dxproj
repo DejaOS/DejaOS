@@ -1,0 +1,55 @@
+{
+  "name": "remote_open_demo",
+  "model": "DW200_V20",
+  "version": "1.0.0",
+  "components": [
+    {
+      "component": "dxCommonUtils",
+      "version": "1.0.4"
+    },
+    {
+      "component": "dxDriver",
+      "version": "1.1.2"
+    },
+    {
+      "component": "dxEventBus",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxGpio",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxHttpServer",
+      "version": "1.0.3"
+    },
+    {
+      "component": "dxLogger",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxMap",
+      "version": "2.0.2"
+    },
+    {
+      "component": "dxNetwork",
+      "version": "1.0.3"
+    },
+    {
+      "component": "dxOs",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxStd",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxUi",
+      "version": "1.0.0"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp",
+    "file": "md5s.json,md5snew.json"
+  }
+}
