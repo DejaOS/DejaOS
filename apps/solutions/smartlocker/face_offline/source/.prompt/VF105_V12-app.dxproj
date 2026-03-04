@@ -1,0 +1,93 @@
+{
+  "name": "test",
+  "model": "VF105_V12",
+  "components": [
+    {
+      "component": "dxAudio",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxChannel",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxCommonUtils",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxDriver",
+      "version": "1.1.6"
+    },
+    {
+      "component": "dxEventBus",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxFacial",
+      "version": "1.0.4"
+    },
+    {
+      "component": "dxGpio",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxHttpClient",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxLogger",
+      "version": "2.0.2"
+    },
+    {
+      "component": "dxMap",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxNetwork",
+      "version": "1.0.2"
+    },
+    {
+      "component": "dxNfcCard",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxNtp",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxOs",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxOta",
+      "version": "2.0.2"
+    },
+    {
+      "component": "dxPwm",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxSqliteDB",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxStd",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxUi",
+      "version": "1.0.2"
+    },
+    {
+      "component": "dxWatchdog",
+      "version": "1.0.1"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp",
+    "file": "md5s.json,md5snew.json"
+  },
+  "version": "1.0.0",
+  "folder": ".temp",
+  "file": "md5s.json,md5snew.json"
+}
