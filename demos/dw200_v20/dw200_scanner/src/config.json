@@ -56,10 +56,10 @@
     "sysInfo.decoder_delay": 1,
     "sysInfo.ocr_mode": 1,
     "sysInfo.ocr_template": "1&8&14&30&2&8&14&30&2&8&14&30&2&0",
-    "sysInfo.net_type": 2, //网络类型  1以太网 0关闭网络 2wifi
+    "sysInfo.net_type": 1, //网络类型  1以太网 0关闭网络 2wifi
     "sysInfo.ssid": "admin",
     "sysInfo.psk": "password",
-    "sysInfo.fixed_macaddr_enable": 1, //mac地址 0默认 2手动设置
+    "sysInfo.fixed_macaddr_enable": 0, //mac地址 0默认 2手动设置
     "sysInfo.macaddr": "00:00:00:00:00:00", //mac地址 手动设置
     "sysInfo.ip_mode": 0, //0 动态 1 静态
     "sysInfo.ip": "0.0.0.0",
@@ -98,7 +98,7 @@
     "sysInfo.userid": "userid", //userId
     "sysInfo.devnum": 0, //设备号
     "sysInfo.devname": "欢迎使用", //设备名称
-    "sysInfo.heart_en": 0, //心跳开关 0 关 1 开
+    "sysInfo.heart_en": 1, //心跳开关 0 关 1 开
     "sysInfo.heart_data": "www.vguang.cn", //心跳内容
     "sysInfo.heart_time": 60, //心跳间隔时间，秒
     "sysInfo.sn": "", //sn 只读
@@ -144,16 +144,18 @@
     "sysInfo.dateFormat": 1,
     //时间格式 1 24小时制 2 12小时制
     "sysInfo.timeFormat": 1,
-    // 读卡方式 1: 读物理卡号 2: 固定扇区 3: 一卡一密
+    // 读卡方式 1: 普通模式 2: 固定扇区 3: 一卡一密
     "sysInfo.nfcType": 1,
     // 读卡扇区号
-    "sysInfo.sectorNumber": 0,
+    "sysInfo.sectorNumber": "",
     // 读卡块号
-    "sysInfo.blockNumber": 0,
+    "sysInfo.blockNumber": "",
     // 密钥类型 1:0x60 2:0x61
     "sysInfo.secretkeyType": 1,
     // 密钥
     "sysInfo.secretkey": "FFFFFFFFFFFF",
     //-1 关闭自动重启   0-23 整点重启
-    "sysInfo.autoRestart": 3
+    "sysInfo.autoRestart": 3,
+    // 时区
+    "sysInfo.timeZone": "Asia/Shanghai"
 }

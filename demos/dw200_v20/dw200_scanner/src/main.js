@@ -32,7 +32,7 @@ function initController() {
 
 (function () {
     initController()
-    const appVersion = 'dw200_v20_scanner_v2.0.1'
+    const appVersion = 'dw200_v20_scanner_v2.0.4'
     config.setAndSave('sysInfo.version', appVersion)
     log.info("=================== version:" + appVersion + " ====================")
 

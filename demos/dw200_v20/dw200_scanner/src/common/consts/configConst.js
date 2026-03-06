@@ -159,6 +159,8 @@ configConst.setConfig = {
     "secretkey": "sysInfo.secretkey",
     //-1 关闭自动重启   0-23 整点重启
     "autoRestart": "sysInfo.autoRestart",
+    //时区
+    "timeZone": "sysInfo.timeZone",
 }
 //根据 key 获取 setCofig中的 value
 configConst.getValueByKey = function (key) {

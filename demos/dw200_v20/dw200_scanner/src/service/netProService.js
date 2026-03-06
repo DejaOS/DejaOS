@@ -54,7 +54,7 @@ netProService.netRes = function (data) {
         log.error("http/tcp协议格式错误")
         // 失败
         let awifi_f = config.get("sysInfo.awifi_f")
-        if (awifi_f & 1 == 1 ) {
+        if (awifi_f & 1 == 1) {
             std.setTimeout(() => {
                 // 为解决音画同步，蜂鸣晚一点执行，否则蜂鸣会阻塞ui
                 driver.pwm.beep(config.get("sysInfo.beepd"), null, 1)
@@ -99,7 +99,7 @@ netProService.netRes = function (data) {
         }
         // 成功
         let awifi_s = config.get("sysInfo.awifi_s")
-        if (awifi_s & 1 == 1 ) {
+        if (awifi_s & 1 == 1) {
             std.setTimeout(() => {
                 driver.pwm.beep(config.get("sysInfo.beepd"), null, 1)
             }, 100)
@@ -126,7 +126,7 @@ netProService.netRes = function (data) {
     if (code >= 1 && code <= 8) {
         // 成功
         let awifi_s = config.get("sysInfo.awifi_s")
-        if (awifi_s & 1 == 1 ) {
+        if (awifi_s & 1 == 1) {
             std.setTimeout(() => {
                 driver.pwm.beep(config.get("sysInfo.beepd"), null, 1)
             }, 100)
@@ -150,7 +150,7 @@ netProService.netRes = function (data) {
     } else if (code > 8) {
         // 失败
         let awifi_f = config.get("sysInfo.awifi_f")
-        if (awifi_f & 1 == 1 ) {
+        if (awifi_f & 1 == 1) {
             std.setTimeout(() => {
                 // 为解决音画同步，蜂鸣晚一点执行，否则蜂鸣会阻塞ui
                 driver.pwm.beep(config.get("sysInfo.beepd"), null, 1)
@@ -187,7 +187,16 @@ netProService.netRes = function (data) {
     // 展示文字内容
     if (code == 0x02ff && content[1].startsWith("msg=")) {
         let msg = content[1].substring(4).replaceAll("\"", "")
-        driver.screen.customPopWin(msg, 2000, false, false)
+        if (content[2].startsWith("play=")) {
+            let play = content[2].substring(5).replaceAll("\"", "")
+            driver.audio.play(parseInt(play) + 8)
+        }
+        let time = 2000
+        if (content[3].startsWith("msgTimeout=")) {
+            time = content[3].substring(11).replaceAll("\"", "")
+        }
+        driver.screen.customPopWin(msg, time, false, false)
+
     }
 
     // http升级静态资源

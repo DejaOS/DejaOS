@@ -1,0 +1,10 @@
+/.vscode
+**/**/node_modules/
+**/**/APP_1_0.zip
+**/**/package-lock.json
+**/bancheng_custom/test/download.zip
+**/bancheng_custom/test/ota.png
+**/bancheng_custom/test/ota.txt
+**/bancheng_custom/test/ota.zip
+**/dxmodules/
+**/**/.temp/

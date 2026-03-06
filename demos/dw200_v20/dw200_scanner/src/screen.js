@@ -131,7 +131,7 @@ screen.password = function (password) {
 // 成功
 screen.success = function (msg, beep) {
     popWin.center_background.show()
-    popWin.center_img.source.show()
+    popWin.center_img.show()
     popWin.center_img.source('/app/code/resource/image/hint_true.png')
     popWin.center_label.text(msg)
     popWin.center_label.textColor(0x46DE8D)
@@ -353,16 +353,20 @@ screen.showVersion = function () {
     if(screenTimer) {
         return
     }
+    let netMac = config.get("sysInfo.fixed_macaddr_enable") == 0 ? dxNet.getMacaddr(config.get("sysInfo.net_type")) : config.get("sysInfo.macaddr")
     let uiConfig = screen.getUIConfig()
     screenTimer = std.setInterval(() => {
         let count = dxui.Utils.GG.NativeDisp.lvDispGetInactiveTime()
         if (count > 15 * 1000) {
             mainView.version.hide()
+            mainView.netMac.hide()
             std.clearInterval(screenTimer)
             screenTimer = null
         } else {
             mainView.version.show()
             mainView.version.text(uiConfig.version)
+            mainView.netMac.show()
+            mainView.netMac.text(netMac ? netMac : " ")
         }
     }, 1000)
 }

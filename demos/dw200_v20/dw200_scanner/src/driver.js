@@ -20,6 +20,7 @@ import bus from '../dxmodules/dxEventBus.js'
 import http from '../dxmodules/dxHttp.js'
 import netProService from './service/netProService.js'
 import safeService from './service/safeService.js'
+import * as os from "os"
 const driver = {}
 
 driver.pwm = {
@@ -28,6 +29,7 @@ driver.pwm = {
         dxPwm.request(4);
         dxPwm.setPeriodByChannel(4, 366166)
         dxPwm.enable(4, true)
+        common.systemBrief("echo " + (config.get("sysInfo.backlight") <= 0 ? 1 : Math.floor(config.get("sysInfo.backlight") * 15 / 100)) + " > /sys/class/backlight/backlight/brightness")
     },
     // 按键音
     press: function () {
@@ -47,7 +49,19 @@ driver.pwm = {
     },
     //自定义蜂鸣
     beep: function (time, interval, count) {
-        dxPwm.beep({ channel: 4, time: time ? time : config.get('sysInfo.beepd'), volume: utils.getVolume1(config.get("sysInfo.volume1")), interval: interval ? interval : config.get('sysInfo.beepd'), count: count })
+        let volume = utils.getVolume1(config.get("sysInfo.volume1"))
+        time = time ? time : config.get('sysInfo.beepd')
+        std.setTimeout(() => {
+            for (let i = 0; i < count; i++) {
+                dxPwm.setDutyByChannel(4, 366166 * volume / 255)
+                os.sleep(time)
+                dxPwm.setDutyByChannel(4, 0)
+                if (i < (count - 1)) {
+                    // 最后一次蜂鸣无间隔
+                    os.sleep(interval)
+                }
+            }
+        }, 100)
     },
 }
 driver.net = {
@@ -146,8 +160,15 @@ driver.code = {
             log.debug("扫码已关闭")
             return
         }
-        dxCode.worker.beforeLoop(this.options1, this.options2)
-        dxCode.decoderUpdateConfig({ deType: config.get('sysInfo.de_type') })
+        try {
+            dxCode.worker.beforeLoop(this.options1, this.options2)
+            let deType = config.get('sysInfo.de_type')
+            // 特殊处理：即使禁用所有码制或禁用QR码，也要允许配置码（QR码）
+            deType = deType | 1;
+            dxCode.decoderUpdateConfig({ deType })
+        } catch (error) {
+            common.asyncReboot(1)
+        }
     },
     loop: function () {
         if (!config.get('sysInfo.codeSwitch')) {
@@ -593,16 +614,18 @@ driver.heartbeat = {
 driver.watchdog = {
     id: "watchdog",
     init: function () {
-        // watchdog.open(1 | 2, this.id)
-        // watchdog.enable(1, this.id)
-        // watchdog.enable(2, this.id)
-        // watchdog.start(20000, this.id)
+        watchdog.open(1 | 2, this.id)
+        watchdog.enable(1, this.id)
+        if (config.get('sysInfo.codeSwitch')) {
+            watchdog.enable(2, this.id)
+        }
+        watchdog.start(20000, this.id)
     },
     loop: function () {
-        // watchdog.loop(1, this.id)
+        watchdog.loop(1, this.id)
     },
     feed: function (flag, timeout) {
-        // watchdog.feed(flag, timeout)
+        watchdog.feed(flag, timeout)
     }
 }
 

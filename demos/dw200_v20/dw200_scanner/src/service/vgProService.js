@@ -72,11 +72,15 @@ vgProService.cmd03 = function (data) {
         send(data.source, { "cmd": "03", "length": 0, "result": "00", "data": "" })
     } else if (data1 == '02') {
         //设置时间 可能会导致看门狗重启
+        let map = dxMap.get('workerId')
         let time = common.littleEndianToDecimal(pack.data.substring(2))
         common.systemBrief('date  "' + utils.formatUnixTimestamp(time) + '"')
         driver.watchdog.feed("controller", 30)
         driver.watchdog.feed("main", 30)
-        driver.watchdog.feed("service", 30)
+        let workerIds = map.get('workerId')
+        workerIds.forEach(element => {
+            driver.watchdog.feed(element, 30)
+        });
         send(data.source, { "cmd": "03", "length": 0, "result": "00", "data": "" })
     }
 }
@@ -253,6 +257,8 @@ vgProService.cmd21 = function (data) {
     if ((firstByte >> 2) & 1 == 1) {
         dataInfo.sysInfo.de_type = 64510
     }
+    console.log('-------',JSON.stringify(dataInfo));
+    
     configService.configVerifyAndSave(dataInfo)
     common.asyncReboot(2)
     send(data.source, { "cmd": '21', "result": '00', 'length': 0, 'data': '' });
@@ -517,7 +523,7 @@ vgProService.cmd33 = function (data) {
     let codeReport = map.get('codeReport')
     if (config.get('sysInfo.report_mode') == '80' && codeReport) {
         //上报模式为 80上位机轮询0x33获取扫描器数据 才返回数据其他情况默认回复null
-        let reportTimeout = config.get('sysInfo.report_timeout')|| 2000
+        let reportTimeout = config.get('sysInfo.report_timeout') || 2000
         if (reportTimeout == 0 || reportTimeout == undefined || new Date().getTime() - codeReport.time <= reportTimeout) {
             // 数据有效
             let data1 = codeReport.sourceMark + codeReport.data

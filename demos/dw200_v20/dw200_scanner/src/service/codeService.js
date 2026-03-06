@@ -16,22 +16,34 @@ const codeService = {}
 codeService.receiveMsg = function (data) {
     // log.info('[codeService] receiveMsg :' + JSON.stringify(data))
     let str = common.utf8HexToStr(common.arrayBufferToHexString(data.data))
-    this.code({ source: 'code', code: str })
+    this.code({ source: 'code', code: str, type: data.type })
 }
 
 //密码上报和扫码走的一套
 codeService.code = function (data) {
     // log.info('[codeService]  code:' + JSON.stringify(data))
     let code = data.code
-    if (comparePrefix(code, "___VBAR_CONFIG_V1.1.0___", "___VBAR_CONFIG_V1.1.0___".length)) {
-        //配置码
-        configCode(code, "old")
-    } else if (comparePrefix(code, "__VGS__0", "__VGS__0".length)) {
-        //配置码
-        configCode(code, "new")
-    } else if (config.get('sysInfo.w_mode') == 2 || (config.get('sysInfo.w_mode') == 1 && (config.get('sysInfo.de_type') & 1)) || data.source == "password") {
-        // 协议模式下，QR/配置码一直开启，透传模式下，配置码一直开启，qr码根据配置来，密码不拦截
+    const de_type = config.get('sysInfo.de_type');
+    // 1. 处理始终允许的码类型（配置码）
+    if (code.startsWith("__VGS__0") || code.startsWith("___VBAR_CONFIG_V1.1.0___")) {
+        const configType = code.startsWith("__VGS__0") ? "new" : "old";
+        configCode(code, configType);
+        return;
+    }
+    // 2. 处理需要检查码制的
+    // 协议模式下，QR/配置码一直开启，透传模式下，配置码一直开启，qr码根据配置来，密码不拦截
+    if (shouldProcessCode(de_type, data.type) || data.source == "password") {
         formatCode(code, data.source)
+    }
+}
+
+function shouldProcessCode (de_type, type) {
+    // 特殊处理：即使禁用所有或禁用QR，也允许处理（为了配置码，但配置码已单独处理）
+    if (type == 1) { // QR码
+        return (de_type & 1) !== 0;
+    } else { // 其他码制
+        const bitPosition = type - 1;
+        return (de_type & (1 << bitPosition)) !== 0;
     }
 }
 

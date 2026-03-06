@@ -64,7 +64,7 @@ passwordView.init = function () {
     })
     /**************************************************创建按钮矩阵*****************************************************/
     let password_btnm = dxui.Buttons.build('password_btnm', screen_password)
-    let font30 = dxui.Font.build('/app/code/resource/font/PangMenZhengDaoBiaoTiTi-1.ttf', 30, dxui.Utils.FONT_STYLE.NORMAL)
+    let font30 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 30, dxui.Utils.FONT_STYLE.NORMAL)
     password_btnm.textFont(font30)
     clearStyle(password_btnm)
     password_btnm.padAll(5, dxui.Utils.ENUM._LV_STYLE_STATE_CMP_SAME)

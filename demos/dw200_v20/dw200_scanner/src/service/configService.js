@@ -7,6 +7,8 @@ import utils from '../common/utils/utils.js';
 import safeService from '../service/safeService.js'
 import log from '../../dxmodules/dxLogger.js'
 import dxMap from '../../dxmodules/dxMap.js'
+import std from '../../dxmodules/dxStd.js'
+import tz from "../../dxmodules/dxTimeZones.js";
 
 const configService = {}
 // 匹配以点分十进制形式表示的 IP 地址，例如：192.168.0.1。
@@ -278,12 +280,23 @@ const supported = {
         dateFormat: { rule: v => [1, 2].includes(v), callback: v => driver.screen.timeFormat() },
         timeFormat: { rule: v => [1, 2].includes(v), callback: v => driver.screen.timeFormat() },
         nfcType: { rule: v => [1, 2, 3].includes(v) },
-        sectorNumber: { rule: v => typeof v == 'number' && /^([0-9]|1[0-5])$/.test(v.toString())},
-        blockNumber: { rule: v => [0, 1, 2].includes(v) },
+        sectorNumber: { rule: v => v === "" || (typeof v == 'number' && /^([0-9]|1[0-5])$/.test(v.toString()))},
+        blockNumber: { rule: v => ["", 0, 1, 2].includes(v) },
         secretkeyType: { rule: v => [1, 2].includes(v) },
         secretkey: { rule: v => /^[0-9a-fA-F]{12}$/.test(v) },
         //-1 关闭自动重启 0-23 整点重启
-        autoRestart: { rule: v => typeof v == 'number' && /^(-1|[0-9]|1[0-9]|2[0-3])$/.test(v.toString()) }
+        autoRestart: { rule: v => typeof v == 'number' && /^(-1|[0-9]|1[0-9]|2[0-3])$/.test(v.toString()) },
+        timeZone: { rule: v => {
+            if (typeof v !== 'string') return false
+            const path = `${tz.root}${v}`
+            if (!std.exist(path)) {
+                return false
+            }
+            return true
+        }, callback: v => {
+            tz.updateTimeZone(v)
+            tz.reboot()
+        }},
     }
 }
 function rotation(rotation) {

@@ -40,11 +40,8 @@ mainView.init = function () {
                 screen_label_time.text(time)
                 mainView.lastMinutes = formatDate.minutes
             }
-            if (mainView.lastDay != formatDate.day) {
-                let date = screen.getUIConfig().dateFormat == 1 ? `${formatDate.year}/${formatDate.month}/${formatDate.day}` : `${formatDate.day}/${formatDate.month}/${formatDate.year}`
-                screen_label_data.text(date)
-                mainView.lastDay = formatDate.day
-            }
+            let date = screen.getUIConfig().dateFormat == 1 ? `${formatDate.year}/${formatDate.month}/${formatDate.day}` : `${formatDate.day}/${formatDate.month}/${formatDate.year}`
+            screen_label_data.text(date)
             // 十分钟设置一次
             if (!mainView.lastSec || (new Date().getTime() - mainView.lastSec > 600000)) {
                 screen_label_company.longMode(dxui.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
@@ -132,6 +129,11 @@ mainView.init = function () {
     mainView.version = version
     version.align(dxui.Utils.ALIGN.TOP_LEFT, 0, 30)
     version.hide()
+    /**************************************************创建网卡mac*****************************************************/
+    let netMac = buildLabel('netMac', screen_main, 12, "b2:a1:63:3f:99:b6")
+    mainView.netMac = netMac
+    netMac.align(dxui.Utils.ALIGN.TOP_LEFT, 0, 48)
+    netMac.hide()
     /**************************************************创建时间盒子*****************************************************/
     let date_box = dxui.View.build('date_box', screen_main)
     mainView.date_box = date_box
@@ -245,7 +247,7 @@ mainView.init = function () {
 
 function buildLabel (id, parent, size, text) {
     let label = dxui.Label.build(id, parent)
-    let font60 = dxui.Font.build('/app/code/resource/font/PangMenZhengDaoBiaoTiTi-1.ttf', size, dxui.Utils.FONT_STYLE.NORMAL)
+    let font60 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', size, dxui.Utils.FONT_STYLE.NORMAL)
     label.textFont(font60)
     label.textColor(0xFFFFFF)
     label.text(text)

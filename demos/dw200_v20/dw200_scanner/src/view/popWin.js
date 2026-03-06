@@ -30,6 +30,8 @@ popWin.init = function () {
         }
         center_cont.update()
         center_label.width(center_cont.width())
+        center_label.longMode(dxui.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
+        center_title.longMode(dxui.Utils.LABEL_LONG_MODE.SCROLL_CIRCULAR)
         center_img.alignTo(center_cont, dxui.Utils.ALIGN.OUT_TOP_MID, 0, 60)
         overwrite.call(center_background)
 
@@ -101,7 +103,7 @@ popWin.init = function () {
     /**************************************************展示文字*****************************************************/
     let showMsg = dxui.Label.build('showMsg', center_background)
     popWin.showMsg = showMsg
-    let font32 = dxui.Font.build('/app/code/resource/font/PangMenZhengDaoBiaoTiTi-1.ttf', 32, dxui.Utils.FONT_STYLE.NORMAL)
+    let font32 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', 32, dxui.Utils.FONT_STYLE.NORMAL)
     showMsg.textFont(font32)
     showMsg.align(dxui.Utils.ALIGN.CENTER, 0, 0);
     showMsg.textAlign(dxui.Utils.TEXT_ALIGN.CENTER)
@@ -238,7 +240,7 @@ function clearStyle(obj) {
 }
 function buildLabel(id, parent, size, text) {
     let label = dxui.Label.build(id, parent)
-    let font60 = dxui.Font.build('/app/code/resource/font/PangMenZhengDaoBiaoTiTi-1.ttf', size, dxui.Utils.FONT_STYLE.NORMAL)
+    let font60 = dxui.Font.build('/app/code/resource/font/AlibabaPuHuiTi-2-65-Medium.ttf', size, dxui.Utils.FONT_STYLE.NORMAL)
     label.textFont(font60)
     label.textColor(0x000000)
     label.text(text)

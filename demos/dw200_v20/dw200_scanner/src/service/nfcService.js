@@ -8,30 +8,34 @@ const nfcService = {}
 nfcService.receiveMsg = function (data) {
     log.info('[nfcService] receiveMsg:' + JSON.stringify(data))
     let nfcType = config.get("sysInfo.nfcType")
+    let sectorNumber = config.get('sysInfo.sectorNumber')
+    let blockNumber = config.get('sysInfo.blockNumber')
     let cardId = ""
-    if (nfcType == 1) {
-        cardId = data.id
-    } else {
-        // 加密：固定扇区、一卡一密
-        let sectorNumber = config.get('sysInfo.sectorNumber')
-        let blockNumber = config.get('sysInfo.blockNumber')
-        let secretkey = config.get('sysInfo.secretkey')
-        let keyType = config.get('sysInfo.secretkeyType')
-        if (nfcType == 3) {
-            let md5 = CryptoES.MD5(`${data.id}${secretkey}`).toString(CryptoES.enc.Hex)
-            let hmac = CryptoES.HmacMD5(md5, md5.slice(0, 16)).toString(CryptoES.enc.Hex)
-            secretkey = `${hmac.slice(-6)}000000`
-        }
-        let secretkeyArr = secretkey.match(/.{1,2}/g).map(item => '0x' + item)
-        let secretkeyType = keyType == 1 ? 0x60 : 0x61
-        let cardArray = driver.nfc.m1cardReadSector(0, sectorNumber, blockNumber, 1, secretkeyArr, secretkeyType)
-        if (cardArray) {
-            let code = common.uint8ArrayToHexString(cardArray).substring(0, 8)
-            if (nfcType == 2) {
-                cardId = code
-            } else {
-                cardId = code == data.id ? code : ""
+    if (data.card_type && data.id) {
+        if (sectorNumber !== "" && blockNumber !== "") {
+            if(data.card_type == 66 || data.card_type == 76) {
+                // 普通卡/加密卡：固定扇区、一卡一密
+                let secretkey = config.get('sysInfo.secretkey')
+                let keyType = config.get('sysInfo.secretkeyType')
+                if (nfcType == 3) {
+                    let md5 = CryptoES.MD5(`${(data.id).toUpperCase()}${secretkey}`).toString(CryptoES.enc.Hex)
+                    let hmac = CryptoES.HmacMD5(md5, md5.slice(0, 16)).toString(CryptoES.enc.Hex)
+                    secretkey = `${hmac.slice(-6)}000000`
+                }
+                let secretkeyArr = secretkey.match(/.{1,2}/g).map(item => '0x' + item)
+                let secretkeyType = keyType == 1 ? 0x60 : 0x61
+                let cardArray = driver.nfc.m1cardReadSector(0, sectorNumber, blockNumber, 1, secretkeyArr, secretkeyType)
+                if (cardArray) {
+                    let code = common.uint8ArrayToHexString(cardArray).substring(0, 8)
+                    if (nfcType == 1 || nfcType == 2) {
+                        cardId = code
+                    } else {
+                        cardId = code == data.id ? code : ""
+                    }
+                }
             }
+        } else {
+            cardId = data.id
         }
     }
     if (!cardId) {
@@ -110,14 +114,14 @@ nfcService.receiveMsg = function (data) {
 }
 
 //判断是否是 16 进制字符串不是跳过
-function isHexadecimal (str) {
+function isHexadecimal(str) {
     // 使用正则表达式匹配十六进制字符串的格式，即由0-9、a-f、A-F组成的字符串
     const hexRegex = /^[0-9a-fA-F]+$/;
     return hexRegex.test(str);
 }
 
 //4直接卡号处理方法
-function fourHandle (cardNumber, start, length) {
+function fourHandle(cardNumber, start, length) {
     start = start > 4 ? 4 : start
     length = length > 4 ? 4 : length
     let startChar = (start - 1) * 2; // 将字节起始位置转换为字符索引
