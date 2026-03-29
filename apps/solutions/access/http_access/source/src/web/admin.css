@@ -1,0 +1,572 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+body {
+  background: #111;
+  color: #e0e0e0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top bar */
+.topbar {
+  background: #1a1a1a;
+  border-bottom: 1px solid #2a2a2a;
+  padding: 0 24px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.topbar h1 {
+  color: #1e88e5;
+  font-size: 17px;
+  font-weight: 700;
+}
+.topbar .info {
+  color: #666;
+  font-size: 13px;
+}
+.logout-btn {
+  background: transparent;
+  border: 1px solid #444;
+  color: #aaa;
+  padding: 5px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.logout-btn:hover {
+  border-color: #f44336;
+  color: #f44336;
+}
+
+/* Main layout */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 180px;
+  background: #161616;
+  border-right: 1px solid #2a2a2a;
+  padding: 16px 0;
+  flex-shrink: 0;
+}
+.nav-item {
+  padding: 11px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #888;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-item:hover {
+  background: #1e1e1e;
+  color: #ccc;
+}
+.nav-item.active {
+  background: #1a2433;
+  color: #1e88e5;
+  border-left-color: #1e88e5;
+}
+
+/* Content area */
+.content {
+  flex: 1;
+  overflow: hidden;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable panels (device info, config) */
+.panel { display: none; }
+.panel.active { display: block; }
+.panel-scroll.active {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Table panels (users, access, events): fill height, layered inside */
+.panel-table.active {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+/* Card fills remaining space inside table panel */
+.panel-table .card-table {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  margin-bottom: 0;
+}
+/* Only tbl-wrap scrolls vertically */
+.panel-table .tbl-wrap {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+/* Sticky table header */
+.panel-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Card */
+.card {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ccc;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+/* Info grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.info-item {
+  background: #161616;
+  border-radius: 8px;
+  padding: 14px;
+}
+.info-item .lbl {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.info-item .val {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f5f5f5;
+  word-break: break-all;
+}
+
+/* Buttons */
+.btn {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: #1e88e5;
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #1565c0;
+}
+.btn-success {
+  background: #2e7d32;
+  color: #fff;
+}
+.btn-success:hover:not(:disabled) {
+  background: #1b5e20;
+}
+.btn-danger {
+  background: #b71c1c;
+  color: #fff;
+}
+.btn-danger:hover:not(:disabled) {
+  background: #7f0000;
+}
+.btn-warn {
+  background: #e65100;
+  color: #fff;
+}
+.btn-warn:hover:not(:disabled) {
+  background: #bf360c;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid #444;
+  color: #aaa;
+}
+.btn-ghost:hover:not(:disabled) {
+  border-color: #ccc;
+  color: #ccc;
+}
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+/* Forms */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.form-row.full {
+  grid-template-columns: 1fr;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.form-group label {
+  font-size: 12px;
+  color: #888;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #f5f5f5;
+  padding: 8px 10px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #1e88e5;
+}
+.form-group textarea {
+  resize: vertical;
+  min-height: 72px;
+  font-family: monospace;
+  font-size: 12px;
+}
+.form-group select option {
+  background: #2a2a2a;
+}
+
+/* Tables */
+.tbl-wrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+th {
+  background: #161616;
+  color: #888;
+  font-weight: 600;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #2a2a2a;
+  white-space: nowrap;
+}
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #222;
+  vertical-align: middle;
+}
+tr:hover td {
+  background: #1a1a1a;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-success {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+.badge-fail {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+.badge-warn {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+.badge-err {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+.badge-alarm {
+  background: rgba(156, 39, 176, 0.2);
+  color: #ce93d8;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.toolbar .right {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #666;
+}
+.pagination .page-btn {
+  background: #2a2a2a;
+  border: 1px solid #333;
+  color: #aaa;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.pagination .page-btn:hover {
+  border-color: #1e88e5;
+  color: #1e88e5;
+}
+.pagination .page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Alerts */
+.alert {
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  display: none;
+}
+.alert.show {
+  display: block;
+}
+.alert-ok {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+.alert-err {
+  background: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-overlay.show {
+  display: flex;
+}
+.modal {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 24px;
+  width: 480px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal h3 {
+  font-size: 16px;
+  color: #ccc;
+  margin-bottom: 18px;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Empty state */
+.empty {
+  text-align: center;
+  color: #444;
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+/* Field hint text */
+.hint {
+  font-size: 11px;
+  color: #555;
+  font-weight: 400;
+}
+
+/* Hamburger: small screens only (hidden by default) */
+.mobile-menu-btn {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  /*
+   * Small screens: page scrolls vertically.
+   * Desktop uses body 100vh + inner panel scroll; fixed sidebar breaks the flex chain, so overflow:hidden would clip.
+   */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .main {
+    display: block;
+    overflow: visible;
+    flex: 0 0 auto;
+  }
+  .content {
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+    padding: 12px;
+  }
+  .panel-scroll.active {
+    flex: none;
+    overflow: visible;
+    min-height: 0;
+  }
+  .panel-table.active {
+    flex: none;
+    overflow: visible;
+    min-height: 0;
+  }
+  .panel-table .card-table {
+    flex: none;
+    overflow: visible;
+    min-height: 0;
+  }
+  .panel-table .tbl-wrap {
+    flex: none;
+    overflow-x: auto;
+    overflow-y: visible;
+    min-height: 0;
+  }
+
+  .topbar {
+    padding: 0 12px;
+  }
+  .topbar h1 {
+    font-size: 15px;
+  }
+  .logout-btn {
+    padding: 5px 10px;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background: #151515;
+    color: #ddd;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  /* Sidebar as drawer */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 52px;
+    bottom: 0;
+    width: 220px;
+    z-index: 50;
+    transform: translateX(-102%);
+    transition: transform 0.2s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  }
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  /* Overlay */
+  body.sidebar-open::before {
+    content: "";
+    position: fixed;
+    left: 0;
+    top: 52px;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 40;
+  }
+
+  /* Table may scroll horizontally; vertical scroll is the page */
+  table {
+    min-width: 720px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

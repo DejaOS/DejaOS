@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Access Control Admin</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231e88e5'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='white'>🔒</text></svg>"
+    />
+    <link rel="stylesheet" href="admin.css" />
+    <script src="qrcode.min.js"></script>
+  </head>
+  <body>
+    <!-- Top bar -->
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleSidebar()">☰</button>
+        <h1 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Access Control Admin</h1>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px">
+        <span class="info" id="deviceSn"></span>
+        <button class="logout-btn" onclick="logout()">Log out</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- Sidebar -->
+      <div class="sidebar" id="sidebar">
+        <div class="nav-item active" data-panel="info">
+          <span>📟</span><span>Device</span>
+        </div>
+        <div class="nav-item" data-panel="config">
+          <span>⚙️</span><span>Configuration</span>
+        </div>
+        <div class="nav-item" data-panel="users">
+          <span>👤</span><span>Users</span>
+        </div>
+        <div class="nav-item" data-panel="access">
+          <span>📋</span><span>Access logs</span>
+        </div>
+        <div class="nav-item" data-panel="events">
+          <span>⚠️</span><span>Events</span>
+        </div>
+        <div class="nav-item" data-panel="qrcode">
+          <span>🔳</span><span>Access code</span>
+        </div>
+        <div
+          class="nav-item"
+          data-external-url="https://dejaos.com/apps/solutions/http_access/"
+        >
+          <span>📖</span><span>Help</span>
+        </div>
+      </div>
+
+      <!-- Main content -->
+      <div class="content">
+        <!-- ─── Device info ─── -->
+        <div class="panel panel-scroll active" id="panel-info">
+          <div class="card">
+            <div class="card-title">Device information</div>
+            <div class="info-grid" id="infoGrid">
+              <div class="info-item">
+                <div class="lbl">Serial number</div>
+                <div class="val" id="i-sn">—</div>
+              </div>
+              <div class="info-item">
+                <div class="lbl">Model</div>
+                <div class="val" id="i-model">—</div>
+              </div>
+              <div class="info-item">
+                <div class="lbl">Firmware</div>
+                <div class="val" id="i-fw">—</div>
+              </div>
+              <div class="info-item">
+                <div class="lbl">IP address</div>
+                <div class="val" id="i-ip">—</div>
+              </div>
+              <div class="info-item">
+                <div class="lbl">MAC address</div>
+                <div class="val" id="i-mac">—</div>
+              </div>
+              <div class="info-item">
+                <div class="lbl">Uptime</div>
+                <div class="val" id="i-uptime">—</div>
+              </div>
+              <div class="info-item">
+                <div class="lbl">Free memory</div>
+                <div class="val" id="i-freemem">—</div>
+              </div>
+              <div class="info-item">
+                <div class="lbl">Free storage</div>
+                <div class="val" id="i-freedisk">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Device control</div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap">
+              <button class="btn btn-success" onclick="remoteOpen()">
+                🔓 Remote unlock
+              </button>
+              <button class="btn btn-warn" onclick="rebootDevice()">
+                🔄 Reboot device
+              </button>
+              <button class="btn btn-danger" onclick="clearAllData()">
+                🗑 Erase data
+              </button>
+              <button class="btn btn-primary" onclick="openBgPicker()">
+                🖼 Update background
+              </button>
+            </div>
+            <div class="alert" id="ctrl-alert" style="margin-top: 12px"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Time sync</div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+              <button class="btn btn-ghost btn-sm" onclick="fetchDeviceTime()">
+                Fetch time
+              </button>
+              <div id="time-summary" style="font-size: 13px; color: #888; flex: 1; min-width: 260px">
+                Host time: <span style="color:#ccc;font-family:monospace">—</span>
+                &nbsp;&nbsp;Device time: <span style="color:#ccc;font-family:monospace">—</span>
+                &nbsp;&nbsp;Skew: <span style="color:#ccc;font-family:monospace">—</span>
+              </div>
+              <button class="btn btn-primary" onclick="syncTimeNow()">
+                Sync time
+              </button>
+            </div>
+            <div class="alert" id="time-alert" style="margin-top: 10px"></div>
+          </div>
+        </div>
+
+        <!-- ─── Configuration ─── -->
+        <div class="panel panel-scroll" id="panel-config">
+          <div class="card">
+            <div class="card-title">General</div>
+            <div class="alert" id="cfg-alert"></div>
+            <div class="form-row">
+              <div class="form-group">
+                <label
+                  >Screen title
+                  <span class="hint">(Title shown on the device home screen)</span></label
+                >
+                <input
+                  id="cfg-screenTitle"
+                  type="text"
+                  placeholder="Access app"
+                />
+              </div>
+              <div class="form-group">
+                <label
+                  >Webhook URL
+                  <span class="hint"
+                    >(Access logs and events are pushed when set; leave empty to disable)</span
+                  ></label
+                >
+                <input
+                  id="cfg-webhookUrl"
+                  type="text"
+                  placeholder="https://server/webhook"
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label
+                  >API key
+                  <span class="hint"
+                    >(Web admin login and API auth; leave empty to keep current)</span
+                  ></label
+                >
+                <input id="cfg-apiKey" type="text" placeholder="Leave empty to keep" />
+              </div>
+              <div class="form-group">
+                <label
+                  >Admin password
+                  <span class="hint"
+                    >(On-device admin PIN, 6 digits; leave empty to keep)</span
+                  ></label
+                >
+                <input
+                  id="cfg-adminPassword"
+                  type="text"
+                  placeholder="Leave empty to keep"
+                  maxlength="6"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">QR unlock</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label
+                  >Signing key
+                  <span class="hint"
+                    >(Secret for QR generation and device-side verification)</span
+                  ></label
+                >
+                <input
+                  id="cfg-barcodeKey"
+                  type="text"
+                  placeholder="Empty = no signature check"
+                />
+              </div>
+              <div class="form-group">
+                <label
+                  >Expiry (seconds)<span class="hint"
+                    >(QR validity window; 0 = do not check timestamp)</span
+                  ></label
+                >
+                <input
+                  id="cfg-barcodeTimeout"
+                  type="number"
+                  placeholder="10"
+                  min="0"
+                  style="width: 100%"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Network</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Network type</label>
+                <select id="cfg-netType" onchange="onNetTypeChange()">
+                  <option value="ETH">ETH (wired)</option>
+                  <option value="WIFI">WIFI (wireless)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>IP mode</label>
+                <select id="cfg-dhcp" onchange="onDhcpChange()">
+                  <option value="true">DHCP (automatic)</option>
+                  <option value="false">Static (manual)</option>
+                </select>
+              </div>
+            </div>
+            <div id="cfg-wifi-fields" style="display: none">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>WiFi name (SSID)</label>
+                  <input id="cfg-ssid" type="text" placeholder="SSID" />
+                </div>
+                <div class="form-group">
+                  <label>WiFi password</label>
+                  <input id="cfg-wifiPwd" type="text" placeholder="WiFi password" />
+                </div>
+              </div>
+            </div>
+            <div id="cfg-static-fields" style="display: none">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>IP address</label>
+                  <input id="cfg-ip" type="text" placeholder="192.168.1.100" />
+                </div>
+                <div class="form-group">
+                  <label>Subnet mask</label>
+                  <input
+                    id="cfg-netmask"
+                    type="text"
+                    placeholder="255.255.255.0"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Gateway</label>
+                  <input
+                    id="cfg-gateway"
+                    type="text"
+                    placeholder="192.168.1.1"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>DNS</label>
+                  <input id="cfg-dns" type="text" placeholder="8.8.8.8" />
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 8px">
+              <button class="btn btn-primary" onclick="saveConfig()">
+                Save configuration
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Access code (QR) ─── -->
+        <div class="panel panel-scroll" id="panel-qrcode">
+          <div class="card">
+            <div class="card-title">Generate access code (QR)</div>
+            <div class="alert" id="qrcode-alert"></div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>QR credential value <span class="hint">(same as type=qr value on device)</span></label>
+                <input id="qr-value" type="text" placeholder="e.g. QR0001A" />
+              </div>
+              <div class="form-group">
+                <label>Signing key <span class="hint">(defaults from Configuration → QR unlock; override here if needed)</span></label>
+                <input id="qr-key" type="text" placeholder="Empty = unsigned" />
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap">
+              <button class="btn btn-primary" onclick="generateQrCode()">Generate</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">QR preview</div>
+            <div
+              id="qr-box"
+              style="
+                background: #fff;
+                border-radius: 8px;
+                padding: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 220px;
+              "
+            >
+              <div id="qr-placeholder" style="color: #666; font-size: 13px; text-align: center; line-height: 1.8">
+                Enter the credential value and click Generate.<br />
+                <span style="color: #999; font-size: 11px">The QR code appears here</span>
+              </div>
+              <div id="qr-render" style="display: none"></div>
+            </div>
+            <div
+              id="qr-payload"
+              style="
+                margin-top: 12px;
+                background: #111;
+                border: 1px solid #2a2a2a;
+                border-radius: 8px;
+                padding: 10px 12px;
+                color: #7ecfff;
+                font-family: monospace;
+                font-size: 12px;
+                word-break: break-all;
+                white-space: pre-wrap;
+              "
+            ></div>
+          </div>
+        </div>
+
+        <!-- ─── Users ─── -->
+        <div class="panel panel-table" id="panel-users">
+          <div class="card card-table">
+            <!-- Filters -->
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin-bottom: 12px;
+                align-items: flex-end;
+              "
+            >
+              <div style="flex: 1; min-width: 120px">
+                <div style="font-size: 11px; color: #666; margin-bottom: 4px">
+                  User ID
+                </div>
+                <input
+                  id="uf-userId"
+                  type="text"
+                  placeholder="Search"
+                  onkeydown="
+                    if (event.key === 'Enter') {
+                      usersPage = 1;
+                      loadUsers(0);
+                    }
+                  "
+                  style="
+                    width: 100%;
+                    background: #1e1e1e;
+                    border: 1px solid #333;
+                    border-radius: 5px;
+                    color: #eee;
+                    padding: 6px 9px;
+                    font-size: 13px;
+                    outline: none;
+                  "
+                />
+              </div>
+              <div style="flex: 1; min-width: 120px">
+                <div style="font-size: 11px; color: #666; margin-bottom: 4px">
+                  Name
+                </div>
+                <input
+                  id="uf-name"
+                  type="text"
+                  placeholder="Search"
+                  onkeydown="
+                    if (event.key === 'Enter') {
+                      usersPage = 1;
+                      loadUsers(0);
+                    }
+                  "
+                  style="
+                    width: 100%;
+                    background: #1e1e1e;
+                    border: 1px solid #333;
+                    border-radius: 5px;
+                    color: #eee;
+                    padding: 6px 9px;
+                    font-size: 13px;
+                    outline: none;
+                  "
+                />
+              </div>
+              <div style="min-width: 110px">
+                <div style="font-size: 11px; color: #666; margin-bottom: 4px">
+                  Credential type
+                </div>
+                <select
+                  id="uf-type"
+                  style="
+                    width: 100%;
+                    background: #1e1e1e;
+                    border: 1px solid #333;
+                    border-radius: 5px;
+                    color: #eee;
+                    padding: 6px 9px;
+                    font-size: 13px;
+                    outline: none;
+                  "
+                >
+                  <option value="">All</option>
+                  <option value="nfc">NFC tap</option>
+                  <option value="pin">PIN</option>
+                  <option value="qr">QR code</option>
+                  <option value="ble">Bluetooth</option>
+                  <option value="face">Face</option>
+                </select>
+              </div>
+              <div style="flex: 1; min-width: 120px">
+                <div style="font-size: 11px; color: #666; margin-bottom: 4px">
+                  Credential value
+                </div>
+                <input
+                  id="uf-value"
+                  type="text"
+                  placeholder="Search"
+                  onkeydown="
+                    if (event.key === 'Enter') {
+                      usersPage = 1;
+                      loadUsers(0);
+                    }
+                  "
+                  style="
+                    width: 100%;
+                    background: #1e1e1e;
+                    border: 1px solid #333;
+                    border-radius: 5px;
+                    color: #eee;
+                    padding: 6px 9px;
+                    font-size: 13px;
+                    outline: none;
+                  "
+                />
+              </div>
+              <div
+                style="
+                  display: flex;
+                  gap: 6px;
+                  align-items: flex-end;
+                  padding-bottom: 1px;
+                "
+              >
+                <button
+                  class="btn btn-primary btn-sm"
+                  onclick="
+                    usersPage = 1;
+                    loadUsers(0);
+                  "
+                >
+                  Search
+                </button>
+                <button
+                  class="btn btn-ghost btn-sm"
+                  onclick="clearUsersFilter()"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+            <div class="toolbar">
+              <span style="font-size: 14px; color: #888"
+                ><b id="users-total" style="color: #ccc">0</b> total</span
+              >
+              <div class="right">
+                <button class="btn btn-primary btn-sm" onclick="showAddUser()">
+                  + Add user
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="clearUsers()">
+                  Clear all
+                </button>
+              </div>
+            </div>
+            <div class="alert" id="users-alert"></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                    <th>Validity</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody"></tbody>
+              </table>
+              <div class="empty" id="users-empty" style="display: none">
+                No users yet
+              </div>
+            </div>
+            <div class="pagination">
+              <button class="page-btn" id="users-prev" onclick="loadUsers(-1)">
+                Previous
+              </button>
+              <span id="users-page">Page 1</span>
+              <button class="page-btn" id="users-next" onclick="loadUsers(1)">
+                Next
+              </button>
+              <span style="margin-left: 8px"
+                >Per page
+                <select
+                  id="users-size"
+                  onchange="
+                    usersPage = 1;
+                    loadUsers(0);
+                  "
+                  style="
+                    background: #2a2a2a;
+                    border: 1px solid #333;
+                    color: #ccc;
+                    padding: 2px 4px;
+                    border-radius: 4px;
+                  "
+                >
+                  <option>20</option>
+                  <option selected>50</option>
+                  <option>100</option>
+                </select>
+                rows
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Access logs ─── -->
+        <div class="panel panel-table" id="panel-access">
+          <div class="card card-table">
+            <!-- Filters -->
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin-bottom: 12px;
+                align-items: flex-end;
+              "
+            >
+              <div style="flex: 1; min-width: 100px">
+                <div style="font-size: 11px; color: #666; margin-bottom: 4px">
+                  User ID
+                </div>
+                <input
+                  id="af-userId"
+                  type="text"
+                  placeholder="Search"
+                  onkeydown="
+                    if (event.key === 'Enter') {
+                      accessPage = 1;
+                      loadAccess();
+                    }
+                  "
+                  style="
+                    width: 100%;
+                    background: #1e1e1e;
+                    border: 1px solid #333;
+                    border-radius: 5px;
+                    color: #eee;
+                    padding: 6px 9px;
+                    font-size: 13px;
+                    outline: none;
+                  "
+                />
+              </div>
+              <div style="flex: 1; min-width: 100px">
+                <div style="font-size: 11px; color: #666; margin-bottom: 4px">
+                  Name
+                </div>
+                <input
+                  id="af-name"
+                  type="text"
+                  placeholder="Search"
+                  onkeydown="
+                    if (event.key === 'Enter') {
+                      accessPage = 1;
+                      loadAccess();
+                    }
+                  "
+                  style="
+                    width: 100%;
+                    background: #1e1e1e;
+                    border: 1px solid #333;
+                    border-radius: 5px;
+                    color: #eee;
+                    padding: 6px 9px;
+                    font-size: 13px;
+                    outline: none;
+                  "
+                />
+              </div>
+              <div style="min-width: 110px">
+                <div style="font-size: 11px; color: #666; margin-bottom: 4px">
+                  Credential type
+                </div>
+                <select
+                  id="af-type"
+                  style="
+                    width: 100%;
+                    background: #1e1e1e;
+                    border: 1px solid #333;
+                    border-radius: 5px;
+                    color: #eee;
+                    padding: 6px 9px;
+                    font-size: 13px;
+                    outline: none;
+                  "
+                >
+                  <option value="">All</option>
+                  <option value="nfc">NFC tap</option>
+                  <option value="pin">PIN</option>
+                  <option value="qr">QR code</option>
+                  <option value="ble">Bluetooth</option>
+                  <option value="face">Face</option>
+                  <option value="remote">Remote unlock</option>
+                </select>
+              </div>
+              <div style="flex: 1; min-width: 100px">
+                <div style="font-size: 11px; color: #666; margin-bottom: 4px">
+                  Credential value
+                </div>
+                <input
+                  id="af-value"
+                  type="text"
+                  placeholder="Search"
+                  onkeydown="
+                    if (event.key === 'Enter') {
+                      accessPage = 1;
+                      loadAccess();
+                    }
+                  "
+                  style="
+                    width: 100%;
+                    background: #1e1e1e;
+                    border: 1px solid #333;
+                    border-radius: 5px;
+                    color: #eee;
+                    padding: 6px 9px;
+                    font-size: 13px;
+                    outline: none;
+                  "
+                />
+              </div>
+              <div style="min-width: 90px">
+                <div style="font-size: 11px; color: #666; margin-bottom: 4px">
+                  Result
+                </div>
+                <select
+                  id="af-result"
+                  style="
+                    width: 100%;
+                    background: #1e1e1e;
+                    border: 1px solid #333;
+                    border-radius: 5px;
+                    color: #eee;
+                    padding: 6px 9px;
+                    font-size: 13px;
+                    outline: none;
+                  "
+                >
+                  <option value="">All</option>
+                  <option value="1">OK</option>
+                  <option value="0">Fail</option>
+                </select>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  gap: 6px;
+                  align-items: flex-end;
+                  padding-bottom: 1px;
+                "
+              >
+                <button
+                  class="btn btn-primary btn-sm"
+                  onclick="
+                    accessPage = 1;
+                    loadAccess();
+                  "
+                >
+                  Search
+                </button>
+                <button
+                  class="btn btn-ghost btn-sm"
+                  onclick="clearAccessFilter()"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+            <div class="toolbar">
+              <span style="font-size: 14px; color: #888"
+                ><b id="access-total" style="color: #ccc">0</b> total, per page
+                <select
+                  id="access-size"
+                  onchange="
+                    accessPage = 1;
+                    loadAccess();
+                  "
+                  style="
+                    background: #2a2a2a;
+                    border: 1px solid #333;
+                    color: #ccc;
+                    padding: 2px 4px;
+                    border-radius: 4px;
+                  "
+                >
+                  <option>50</option>
+                  <option selected>100</option>
+                  <option>200</option>
+                </select>
+                rows
+              </span>
+              <div class="right">
+                <button
+                  class="btn btn-danger btn-sm"
+                  onclick="deleteSelectedAccess()"
+                >
+                  Delete selected
+                </button>
+                <button class="btn btn-ghost btn-sm" onclick="clearAccess()">
+                  Clear all
+                </button>
+              </div>
+            </div>
+            <div class="alert" id="access-alert"></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        id="access-all"
+                        onchange="toggleAllAccess(this)"
+                      />
+                    </th>
+                    <th>ID</th>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                    <th>Result</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody id="access-tbody"></tbody>
+              </table>
+              <div class="empty" id="access-empty" style="display: none">
+                No access logs yet
+              </div>
+            </div>
+            <div class="pagination">
+              <button
+                class="page-btn"
+                id="access-prev"
+                onclick="loadAccessPage(-1)"
+              >
+                Previous
+              </button>
+              <span id="access-page">Page 1</span>
+              <button
+                class="page-btn"
+                id="access-next"
+                onclick="loadAccessPage(1)"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Events ─── -->
+        <div class="panel panel-table" id="panel-events">
+          <div class="card card-table">
+            <!-- Filters -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end">
+              <div style="min-width:120px">
+                <div style="font-size:11px;color:#666;margin-bottom:4px">Event type</div>
+                <select id="ef-type"
+                  style="width:100%;background:#1e1e1e;border:1px solid #333;border-radius:5px;color:#eee;padding:6px 9px;font-size:13px;outline:none">
+                  <option value="">All</option>
+                  <option value="info">info</option>
+                  <option value="warning">warning</option>
+                  <option value="error">error</option>
+                </select>
+              </div>
+              <div style="flex:1;min-width:160px">
+                <div style="font-size:11px;color:#666;margin-bottom:4px">Description (search)</div>
+                <input id="ef-message" type="text" placeholder="Keyword"
+                  onkeydown="if(event.key==='Enter'){eventsPage=1;loadEvents();}"
+                  style="width:100%;background:#1e1e1e;border:1px solid #333;border-radius:5px;color:#eee;padding:6px 9px;font-size:13px;outline:none">
+              </div>
+              <div style="display:flex;gap:6px;align-items:flex-end;padding-bottom:1px">
+                <button class="btn btn-primary btn-sm" onclick="eventsPage=1;loadEvents()">Search</button>
+                <button class="btn btn-ghost btn-sm" onclick="clearEventsFilter()">Reset</button>
+              </div>
+            </div>
+            <div class="toolbar">
+              <span style="font-size:14px;color:#888"><b id="events-total" style="color:#ccc">0</b> total, per page
+                <select id="events-size" onchange="eventsPage=1;loadEvents()" style="background:#2a2a2a;border:1px solid #333;color:#ccc;padding:2px 4px;border-radius:4px">
+                  <option>50</option><option selected>100</option><option>200</option>
+                </select> rows
+              </span>
+              <div class="right">
+                <button class="btn btn-danger btn-sm" onclick="deleteSelectedEvents()">Delete selected</button>
+                <button class="btn btn-ghost btn-sm" onclick="clearEvents()">Clear all</button>
+              </div>
+            </div>
+            <div class="alert" id="events-alert"></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        id="events-all"
+                        onchange="toggleAllEvents(this)"
+                      />
+                    </th>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody id="events-tbody"></tbody>
+              </table>
+              <div class="empty" id="events-empty" style="display: none">
+                No events yet
+              </div>
+            </div>
+            <div class="pagination">
+              <button class="page-btn" id="events-prev" onclick="loadEventsPage(-1)">Previous</button>
+              <span id="events-page">Page 1</span>
+              <button class="page-btn" id="events-next" onclick="loadEventsPage(1)">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /content -->
+    </div>
+    <!-- /main -->
+
+    <!-- Add user modal -->
+    <!-- Background image modal -->
+    <div class="modal-overlay" id="bgModal">
+      <div class="modal" style="width: 560px; max-width: 95vw">
+        <h3>Update background image</h3>
+        <div
+          style="
+            background: #111;
+            border-radius: 6px;
+            overflow: hidden;
+            text-align: center;
+            margin-bottom: 10px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <img
+            id="bg-preview"
+            style="max-width: 100%; max-height: 260px; display: block"
+          />
+        </div>
+        <div
+          id="bg-info"
+          style="
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 8px;
+            text-align: center;
+          "
+        >
+          —
+        </div>
+        <div
+          id="bg-warn"
+          class="alert alert-err"
+          style="margin-bottom: 8px"
+        ></div>
+        <div style="font-size: 12px; color: #555; margin-bottom: 4px">
+          PNG, 480×320. If the size differs, use Compress to resize.
+        </div>
+        <div style="font-size: 12px; color: #e65100; margin-bottom: 12px">
+          ⚠️ The device reboots automatically after upload (~3 s). Notify on-site staff.
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeBgModal()">Cancel</button>
+          <button
+            class="btn btn-warn"
+            id="bg-compress-btn"
+            style="display: none"
+            onclick="compressBg()"
+          >
+            Compress to 480×320
+          </button>
+          <button
+            class="btn btn-primary"
+            id="bg-confirm-btn"
+            disabled
+            onclick="uploadBg()"
+          >
+            Upload
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="addUserModal">
+      <div class="modal">
+        <h3>Add / update user</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>User ID *</label>
+            <input id="u-userId" type="text" placeholder="e.g. 1001 (any identifier)" />
+          </div>
+          <div class="form-group">
+            <label>Name</label>
+            <input id="u-name" type="text" placeholder="e.g. Jane Doe" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Credential type *</label>
+            <select id="u-type">
+              <option value="nfc">NFC</option>
+              <option value="pin">PIN</option>
+              <option value="qr">QR code</option>
+              <option value="ble">Bluetooth</option>
+              <option value="face">Face</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Credential value *</label>
+            <input id="u-value" type="text" placeholder="e.g. AABBCCDD" />
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Validity type</label>
+            <select id="u-periodType" onchange="togglePeriodFields()">
+              <option value="0">No expiry</option>
+              <option value="1">Fixed range</option>
+            </select>
+          </div>
+        </div>
+        <div id="period-range-fields" style="display: none">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Start</label>
+              <input id="u-beginTime" type="datetime-local" />
+            </div>
+            <div class="form-group">
+              <label>End</label>
+              <input id="u-endTime" type="datetime-local" />
+            </div>
+          </div>
+        </div>
+        <div class="alert" id="adduser-alert"></div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeAddUser()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitAddUser()">
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="admin.js"></script>
+  </body>
+</html>

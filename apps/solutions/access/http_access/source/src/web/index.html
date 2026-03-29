@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access Control — Sign in</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231e88e5'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='white'>🔒</text></svg>">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+body{background:#111;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:12px;padding:40px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+.logo{text-align:center;margin-bottom:32px}
+.logo h1{color:#1e88e5;font-size:22px;font-weight:700;letter-spacing:.5px}
+.logo p{color:#666;font-size:13px;margin-top:6px}
+label{display:block;color:#aaa;font-size:13px;margin-bottom:6px}
+input[type=password]{width:100%;padding:12px 14px;background:#2a2a2a;border:1px solid #333;border-radius:8px;color:#f5f5f5;font-size:15px;outline:none;transition:border-color .2s}
+input[type=password]:focus{border-color:#1e88e5}
+button{width:100%;padding:13px;background:#1e88e5;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:24px;transition:background .2s}
+button:hover{background:#1565c0}
+button:active{background:#0d47a1}
+button:disabled{background:#444;cursor:not-allowed}
+.tip{margin-top:14px;padding:10px 14px;border-radius:6px;font-size:13px;text-align:center;display:none}
+.tip.err{background:rgba(244,67,54,.15);color:#f44336;border:1px solid rgba(244,67,54,.3)}
+.tip.ok{background:rgba(76,175,80,.15);color:#4caf50;border:1px solid rgba(76,175,80,.3)}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h1>Access Control</h1>
+    <p>DW200 Access Control</p>
+  </div>
+  <form id="form">
+    <div style="margin-bottom:20px">
+      <label for="pwd">Access key</label>
+      <input type="password" id="pwd" placeholder="Enter access key" autofocus autocomplete="current-password">
+    </div>
+    <button type="submit" id="btn">Sign in</button>
+  </form>
+  <div class="tip" id="tip"></div>
+  <div style="margin-top:18px;padding:10px 14px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.25);border-radius:7px;font-size:12px;color:#b8860b;line-height:1.6">
+    ⚠️ Default key is <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:3px;color:#ffc107">password</code>. After sign-in, change the API key under <b>Configuration</b>.
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('form');
+const btn  = document.getElementById('btn');
+const tip  = document.getElementById('tip');
+
+function showTip(msg, isErr) {
+  tip.textContent = msg;
+  tip.className = 'tip ' + (isErr ? 'err' : 'ok');
+  tip.style.display = 'block';
+}
+
+form.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const pwd = document.getElementById('pwd').value.trim();
+  if (!pwd) return showTip('Please enter the access key', true);
+
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+  tip.style.display = 'none';
+
+  try {
+    const r = await fetch('/web/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await r.json();
+    if (data.code === 0) {
+      sessionStorage.setItem('apiKey', pwd);
+      showTip('Signed in, redirecting...', false);
+      setTimeout(() => { window.location.href = 'admin.html'; }, 600);
+    } else {
+      showTip(data.message || 'Invalid key', true);
+      btn.disabled = false;
+      btn.textContent = 'Sign in';
+    }
+  } catch (err) {
+    showTip('Network error — check your connection', true);
+    btn.disabled = false;
+    btn.textContent = 'Sign in';
+  }
+});
+</script>
+</body>
+</html>
