@@ -5,6 +5,7 @@ import topView from '../topView.js'
 import mainView from '../mainView.js'
 import identityVerificationView from './identityVerificationView.js'
 import screen from '../../screen.js'
+import configView from './configView.js'
 const newPwdView = {}
 newPwdView.init = function () {
     /**************************************************创建屏幕*****************************************************/
@@ -12,9 +13,9 @@ newPwdView.init = function () {
     newPwdView.screenMain = screenMain
     screenMain.scroll(false)
     screenMain.bgColor(0xffffff)
-    screenMain.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
-        topView.changeTheme(true)
 
+    // 界面加载时的生命周期函数
+    screenMain.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_LOADED, () => {
         newPwdView.timer = std.setInterval(() => {
             let count = dxui.Utils.GG.NativeDisp.lvDispGetInactiveTime()
             if (count > 15 * 1000) {
@@ -23,12 +24,14 @@ newPwdView.init = function () {
                 dxui.loadMain(mainView.screenMain)
             }
         }, 1000)
-        // 如果管理员密码为空,则弹出此界面,否则直接进入认证界面
+        // 如果不是初次登录，则直接进入认证界面
         if (screen.getConfig()['base.firstLogin'] == 1) {
             std.clearInterval(newPwdView.timer)
             dxui.loadMain(identityVerificationView.screenMain)
         }
     })
+
+    // 界面卸载时的生命周期函数
     screenMain.on(dxui.Utils.ENUM.LV_EVENT_SCREEN_UNLOADED, () => {
         if (newPwdView.timer) {
             std.clearInterval(newPwdView.timer)
@@ -86,6 +89,7 @@ newPwdView.init = function () {
     tipLbl.dataI18n = 'newPwdView.tip'
     tipLbl.align(dxui.Utils.ALIGN.TOP_MID, 0, 530)
 
+    // 跳过按钮
     const skipView = dxui.View.build('skipView', screenMain)
     viewUtils._clearStyle(skipView)
     const skipLbl = dxui.Label.build('skipLbl', skipView)
@@ -102,33 +106,44 @@ newPwdView.init = function () {
     skipLbl.obj.setStyleBorderSide(dxui.Utils.ENUM.LV_BORDER_SIDE_BOTTOM, 0)
     skipLbl.setBorderColor(0x767676)
 
-    const pwdAccessBtn = viewUtils.bottomBtn(screenMain, screenMain.id + 'pwdAccessBtn', 'newPwdView.pwdAccess', () => {
-        if (pwdInput.text() != confirmPwdInput.text()) {
-            newPwdView.statusPanel.fail("newPwdView.pwdNotMatch")
-            return
-        }
-        const res = screen.saveConfig({
-            base: {
-                password: pwdInput.text()
+    // 保存按键
+    const pwdAccessBtn = viewUtils.bottomBtn(screenMain, screenMain.id + 'pwdAccessBtn', 'newPwdView.pwdAccess',
+        // 保存按键响应函数
+        () => {
+            // 两次密码输入不相同判定
+            if (pwdInput.text() != confirmPwdInput.text()) {
+                newPwdView.statusPanel.fail("newPwdView.pwdNotMatch")
+                return
+            }
+
+            // 向配置信息写入密码
+            const res = screen.saveConfig({ base: { password: pwdInput.text() } })
+
+            // 密码写入成功，提示成功
+            if (res === true) {
+                newPwdView.statusPanel.success()
+
+                // 将初次登录标志位置0
+                screen.saveConfig({ base: { firstLogin: 0 } })
+
+                std.clearInterval(newPwdView.timer)
+                dxui.loadMain(configView.screenMain)
+            }
+            // 密码写入失败，提示失败
+            else {
+                newPwdView.statusPanel.fail()
             }
         })
-        if (res === true) {
-            newPwdView.statusPanel.success()
-            std.clearInterval(newPwdView.timer)
-            dxui.loadMain(identityVerificationView.screenMain)
-        } else {
-            newPwdView.statusPanel.fail()
-        }
-    })
     pwdAccessBtn.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, -83)
 
     skipView.setSize(skipLbl.width(), skipLbl.height())
     skipView.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, -217)
+
+    // 跳过按键响应事件
     skipView.on(dxui.Utils.EVENT.CLICK, () => {
         //修改状态
-        screen.saveConfig({ base: { firstLogin: 1 } })
         std.clearInterval(newPwdView.timer)
-        dxui.loadMain(identityVerificationView.screenMain)
+        dxui.loadMain(configView.screenMain)
     })
 
     newPwdView.statusPanel = viewUtils.statusPanel(screenMain, 'newPwdView.success', 'newPwdView.fail')
