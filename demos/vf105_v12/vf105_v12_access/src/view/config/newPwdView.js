@@ -123,8 +123,8 @@ newPwdView.init = function () {
             if (res === true) {
                 newPwdView.statusPanel.success()
 
-                // 将初次登录标志位置0
-                screen.saveConfig({ base: { firstLogin: 0 } })
+                // 将初次登录标志置为1，表示已设置过密码
+                screen.saveConfig({ base: { firstLogin: 1 } })
 
                 std.clearInterval(newPwdView.timer)
                 dxui.loadMain(configView.screenMain)
