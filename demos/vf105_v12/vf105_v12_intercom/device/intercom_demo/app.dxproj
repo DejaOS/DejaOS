@@ -1,0 +1,64 @@
+{
+  "name": "vf203_intercom",
+  "model": "VF105_V12",
+  "components": [
+    {
+      "component": "dxAudio",
+      "version": "3.0.1"
+    },
+    {
+      "component": "dxCapturer",
+      "version": "3.0.0"
+    },
+    {
+      "component": "dxDisplay",
+      "version": "3.0.0"
+    },
+    {
+      "component": "dxDriver",
+      "version": "3.0.0"
+    },
+    {
+      "component": "dxEventBus",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxFacial",
+      "version": "3.0.0"
+    },
+    {
+      "component": "dxIntercom",
+      "version": "3.0.1"
+    },
+    {
+      "component": "dxIvcore",
+      "version": "3.0.0"
+    },
+    {
+      "component": "dxLogger",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxMap",
+      "version": "3.0.0"
+    },
+    {
+      "component": "dxNetwork",
+      "version": "3.0.0"
+    },
+    {
+      "component": "dxStd",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxUi",
+      "version": "2.0.0"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp",
+    "file": "md5s.json,md5snew.json"
+  },
+  "version": "1.0.0",
+  "sdkId": "2591b093c03043bba946f10bf709f322"
+}

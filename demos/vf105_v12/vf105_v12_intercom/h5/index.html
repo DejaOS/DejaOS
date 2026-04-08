@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="renderer" content="webkit">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WebRTC</title>
+
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+  <script>
+
+    if (parent && parent != window) {
+      parent.window.location.href = window.location.href;
+    }
+  </script>
+
+
+
+  <style>
+    body {
+      width: 100%;
+      height: 100%
+    }
+
+    .videos {
+      --width: 100%;
+      --height: 100%;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: calc(var(--height) * 1);
+      width: var(--width);
+    }
+
+    video {
+      --width: 100%;
+      --height: 100%;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 100%;
+      width: 100%;
+      max-height: 100%;
+      max-width: 100%;
+      background-color: rgb(0, 0, 0);
+      z-index: -9999;
+      -webkit-filter: grayscale(0%);
+    }
+
+    .divback {
+      width: 100%;
+      height: 100%;
+    }
+
+    input {
+      margin: 0 0 0 0;
+      width: 60px;
+      height: 60px;
+      outline: none;
+      -webkit-touch-allout: none;
+
+    }
+
+    input#fullScreenBtn {
+      --width: 100%;
+      position: absolute;
+      left: var(--width) -80;
+      right: 0;
+      bottom: 0;
+      width: 55px;
+      height: 55px;
+      outline: none;
+      -webkit-touch-allout: none;
+
+    }
+
+    input#closeButton {
+      --width: 100%;
+      position: absolute;
+      left: calc(var(--width)/2 - 60px);
+      right: 0;
+      top: 0;
+      width: 120px;
+      height: 120px;
+      outline: none;
+      -webkit-touch-allout: none;
+
+    }
+
+    input#muteButton {
+      --width: 100%;
+      position: absolute;
+      left: calc(var(--width)/2 - 150px);
+      right: 0;
+      top: 0;
+      width: 50px;
+      height: 50px;
+      outline: none;
+
+
+    }
+
+    input#speekButton {
+      --width: 100%;
+      position: absolute;
+      left: calc(var(--width)/2 + 100px);
+      right: 0;
+      top: 0;
+      width: 50px;
+      height: 50px;
+      outline: none;
+
+
+    }
+
+    .divbutton {
+      --height: 100%;
+      position: absolute;
+      left: 0px;
+      right: 0px;
+      bottom: 1px;
+      height: 60px;
+      background-color: rgb(248, 248, 255);
+    }
+
+    .arc {
+      --width: 100%;
+      --height: 100%;
+      position: absolute;
+      margin: auto;
+      left: calc(var(--width)/2 - 25px);
+      top: calc(var(--height)/2 - 25px);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border-top: 2px solid #ffea29;
+      border-left: 1px solid transparent;
+      border-right: 1px solid transparent;
+      animation: rt 2s infinite linear;
+    }
+
+    .arc::before {
+      position: absolute;
+      margin: auto;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      border-top: 2px solid #8d29ff;
+      border-left: 1px solid transparent;
+      border-right: 1px solid transparent;
+      animation: rt 4s infinite linear reverse;
+      content: "";
+    }
+
+    .arc::after {
+      position: absolute;
+      margin: auto;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      border-top: initial;
+      border-left: initial;
+      border-right: initial;
+      animation: cw 1s infinite;
+      content: "";
+      background: snow;
+    }
+
+    @keyframes rt {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes cw {
+      0% {
+        width: 0;
+        height: 0;
+      }
+
+      75% {
+        width: 20px;
+        height: 20px;
+      }
+
+      100% {
+        width: 0;
+        height: 0;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <div class="divback" id="divback">
+    <div class="videos" id="videos">
+
+      <video id="remoteVideo" style="object-fit:fill" preload="auto" autoplay="autoplay" x-webkit-airplay="true"
+        playsinline="true" webkit-playsinline="true" x5-video-player-type="h5" x5-video-player-fullscreen="true"
+        x5-video-orientation="portraint">
+      </video>
+      <div class="arc" id="loading">
+      </div>
+    </div>
+
+
+
+
+
+  </div>
+
+
+
+
+
+
+  <script src="/static/plugins/jquery.min.js"></script>
+
+
+
+  <script src="/static/plugins/vconsole.min.js"></script>
+
+  <script>
+
+    var vConsole = new VConsole();
+    console.log('Hello world');
+  </script>
+  <script src="/static/plugins/jquery-ui.min.js"></script>
+  <script src="/static/videocall/rhrtc.js"></script>
+  <script>
+
+
+    $(function () {
+      pageInit();
+    });
+
+    function pageInit() {
+      RHRTCLoad()
+    }
+
+    function RHRTCLoad() {
+      var toclientid = "KDZN-00-1K4V-HBNJ-00000004";
+      var host = "webrtc.dxiot.com:8443";
+      var conmode = "live";
+      var consource = "MainStream";
+      if (conmode === "live" || conmode === "play") {
+      } else {
+        conmode = "live"
+        consource = "MainStream"
+      }
+
+      document.addEventListener("WeixinJSBridgeReady", function () {
+        document.getElementById('remoteVideo').play();
+      }
+        , false);
+      var remoteVideoview = document.querySelector('#remoteVideo');
+      RHRTCStart(host, toclientid, remoteVideoview, conmode, consource, true, true);
+    }
+
+  </script>
+
+</body>
+
+</html>

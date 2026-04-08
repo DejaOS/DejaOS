@@ -7,6 +7,9 @@
 ## Component Description
 The components are used to assist business development, control hardware capabilities, and enhance development convenience.
 
+## Viewing Source Code
+The same component may be published in multiple versions. To inspect the implementation in a business project, select or identify the component your project depends on, then open the corresponding JavaScript source files under the `dxmodules` directory in that project.
+
 ## Component List
 | Component | Name | Description |
 | --- | --- | ---- |
