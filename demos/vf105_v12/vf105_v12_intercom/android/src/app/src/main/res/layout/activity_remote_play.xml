@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- tools:ignore is needed because lint thinks this can be replaced with a merge. Replacing this
+     with a merge causes the fullscreen SurfaceView not to be centered. -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:ignore="MergeRootFrame">
+    <FrameLayout
+        android:id="@+id/main_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white">
+        <FrameLayout
+            android:id="@+id/video_fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="200dp">
+            <org.webrtc.SurfaceViewRenderer
+                android:id="@+id/video_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            <ProgressBar
+                android:id="@+id/progressbar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center" />
+        </FrameLayout>>
+
+        <ImageButton
+            android:id="@+id/imageButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="5dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/top_back_normal"
+            android:background="#00000000"/>
+
+        <androidx.appcompat.widget.AppCompatSeekBar
+            android:id="@+id/sb_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="175dp"
+            android:max="100"
+            android:maxHeight="10dp"
+            android:minHeight="10dp"
+            android:progress="0"
+            android:progressDrawable="@drawable/progress_bar"
+            android:soundEffectsEnabled="false"
+            android:splitTrack="false"
+             />
+
+
+        <FrameLayout
+            android:id="@+id/call_fragment_container"
+            android:layout_marginTop="200dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <ListView
+                android:id="@+id/listview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"></ListView>
+        </FrameLayout>
+    </FrameLayout>
+
+
+</FrameLayout>

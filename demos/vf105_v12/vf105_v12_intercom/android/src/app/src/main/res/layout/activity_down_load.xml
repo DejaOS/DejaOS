@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+    <FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:ignore="MergeRootFrame">
+    <FrameLayout
+        android:id="@+id/video_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#673AB7">
+        </RelativeLayout>
+        <ImageButton
+            android:id="@+id/imageButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="5dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/top_back_normal"
+            />
+
+
+
+    </FrameLayout>
+    <FrameLayout
+        android:id="@+id/call_fragment_container"
+        android:layout_marginTop="80dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <androidx.appcompat.widget.AppCompatSeekBar
+            android:id="@+id/sb_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:maxHeight="10dp"
+            android:minHeight="10dp"
+            android:progress="0"
+            android:progressDrawable="@drawable/progress_bar"
+            android:soundEffectsEnabled="false"
+            android:splitTrack="false" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_toRightOf="@+id/imageView"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="Text View"
+            android:textColor="#808080"
+            android:textSize="20sp"
+            android:textStyle="bold|italic" />
+
+    </FrameLayout>
+</FrameLayout>
+

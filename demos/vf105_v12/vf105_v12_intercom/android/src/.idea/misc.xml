@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/workspace/webrtcsdk/app/src/main/res/layout/activity_down_load.xml" value="0.25" />
+        <entry key="..\:/workspace/webrtcsdk/app/src/main/res/layout/activity_main.xml" value="0.17798913043478262" />
+        <entry key="..\:/workspace/webrtcsdk/app/src/main/res/layout/activity_mjpeg_video.xml" value="0.19635416666666666" />
+        <entry key="..\:/workspace/webrtcsdk/app/src/main/res/layout/activity_real_video.xml" value="0.20989583333333334" />
+        <entry key="..\:/workspace/webrtcsdk/app/src/main/res/layout/activity_remote_play.xml" value="0.2375" />
+        <entry key="..\:/workspace/webrtcsdk/app/src/main/res/layout/content_mjpeg_video.xml" value="0.134375" />
+        <entry key="..\:/workspace/webrtcsdk/app/src/main/res/layout/layout_list.xml" value="0.20989583333333334" />
+        <entry key="..\:/workspace/webrtcsdk/app/src/main/res/layout/list_row_items.xml" value="0.21875" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
