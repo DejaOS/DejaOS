@@ -46,7 +46,7 @@ pageView.init = function () {
 
   // Status label (shows when AC is off)
   let label3 = ui.Label.build(pageID + 'label3', theView)
-  label3.text("状态")
+  label3.text("Status")
   label3.setSize(280, 50)
   label3.setPos(100, 120)
   label3.textAlign(2)
@@ -92,7 +92,7 @@ pageView.init = function () {
   button5.addStyle(buttonStyle)
 
   let label2 = ui.Label.build(pageID + 'button2label', button2)
-  label2.text("制冷")
+  label2.text("Cool")
   label2.setPos(80, 0)
 
   label1.textFont(viewUtils.font58)
@@ -131,7 +131,7 @@ pageView.init = function () {
 
   page5Func.doOff = function () {
     theState = false
-    label1.text("已关")
+    label1.text("OFF")
     button2.hide()
     label3.show()
     button3.addStyle(offStyle)

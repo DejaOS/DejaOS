@@ -56,7 +56,7 @@ pageView.init = function () {
   button6.setSize(80, 80)
   button6.setPos(360, 140)
 
-  // 将样式绑定到按钮上
+  // Apply style to all buttons
   button1.addStyle(buttonStyle)
   button2.addStyle(buttonStyle)
   button3.addStyle(buttonStyle)
@@ -72,11 +72,11 @@ pageView.init = function () {
 
   // Text labels for scene buttons
   let label1 = ui.Label.build(pageID + 'button1label', button1)
-  label1.text("我回来了")
+  label1.text("I'm Back")
   label1.setPos(40, 15)
 
   let label2 = ui.Label.build(pageID + 'button2label', button2)
-  label2.text("晚安")
+  label2.text("Good Night")
   label2.setPos(40, 15)
 
   label1.textFont(viewUtils.font24Bold)
@@ -148,7 +148,7 @@ pageView.init = function () {
   plateView.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
   let plateLabel = ui.Label.build(pageID + 'plateLabel', plateView)
-  plateLabel.text("晚安")
+  plateLabel.text("Good Night")
   plateLabel.textColor(0xffffff)
   plateLabel.textFont(viewUtils.font28)
   plateLabel.align(ui.Utils.ALIGN.CENTER, 0, 0)
@@ -205,7 +205,7 @@ pageView.init = function () {
     plate.show()
     plateView.bgColor(0xFF9900)
     plateLabel.textColor(0xffffff)
-    plateLabel.text('欢迎回家')
+    plateLabel.text('Welcome Home')
     playAudio(5)
     std.setTimeout(() => {
       plate.hide()
@@ -215,7 +215,7 @@ pageView.init = function () {
     plate.show()
     plateView.bgColor(0x000000)
     plateLabel.textColor(0x999999)
-    plateLabel.text('晚安')
+    plateLabel.text('Good Night')
     playAudio(1)
     std.setTimeout(() => {
       plate.hide()
@@ -228,7 +228,7 @@ pageView.init = function () {
     plate.show()
     plateView.bgColor(ys)
     plateLabel.textColor(0x999999)
-    plateLabel.text(clState ? '窗帘已打开' : '窗帘已关闭')
+    plateLabel.text(clState ? 'Curtain Opened' : 'Curtain Closed')
     if (clState) {
       playAudio(2)
     } else {

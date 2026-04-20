@@ -12,7 +12,7 @@ let timer;
 let clockTimer;
 
 function getTime() {
-  const weekArr = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  const weekArr = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const now = new Date();
   const weekDay = now.getDay()
   const year = now.getFullYear();

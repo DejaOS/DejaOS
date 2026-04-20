@@ -72,15 +72,15 @@ pageView.init = function () {
   img6.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
   let label1 = ui.Label.build(pageID + 'label1', theView)
-  label1.text("送风")
+  label1.text("Fan")
   label1.setPos(50, 240)
   label1.setSize(100, 40)
   let label2 = ui.Label.build(pageID + 'label2', theView)
-  label2.text("制热")
+  label2.text("Heat")
   label2.setPos(190, 240)
   label2.setSize(100, 40)
   let label3 = ui.Label.build(pageID + 'label3', theView)
-  label3.text("制冷")
+  label3.text("Cool")
   label3.setPos(330, 240)
   label3.setSize(100, 40)
 

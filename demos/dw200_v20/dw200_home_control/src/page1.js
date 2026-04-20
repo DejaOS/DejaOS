@@ -33,12 +33,12 @@ pageView.init = function () {
   label1.textColor(0xffffff)
 
   // Humidity and air quality info
-  label2.text("湿度 40% \n空气优 10")
+  label2.text("Humidity 40% \nAir Quality 10")
   label2.setPos(230, 180)
   label2.textColor(0xdddddd)
 
   // Location display
-  label3.text("北京 昌平区")
+  label3.text("Beijing Changping")
   label3.setPos(200, 40)
   label3.textColor(0xdddddd)
 

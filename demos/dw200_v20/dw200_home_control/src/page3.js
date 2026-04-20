@@ -58,19 +58,19 @@ pageView.init = function () {
 
   // Button labels with icon spacing
   let label1 = ui.Label.build(pageID + 'button1label', button1)
-  label1.text("晚安")
+  label1.text("Good Night")
   label1.setPos(55, 25)
 
   let label2 = ui.Label.build(pageID + 'button2label', button2)
-  label2.text("窗帘")
+  label2.text("Curtain")
   label2.setPos(55, 25)
 
   let label3 = ui.Label.build(pageID + 'button3label', button3)
-  label3.text("游戏模式")
+  label3.text("Game Mode")
   label3.setPos(55, 25)
 
   let label4 = ui.Label.build(pageID + 'button4label', button4)
-  label4.text("我回来了")
+  label4.text("I'm Back")
   label4.setPos(55, 25)
 
   label1.textFont(viewUtils.font24Bold)
@@ -105,7 +105,7 @@ pageView.init = function () {
   plateView.align(ui.Utils.ALIGN.CENTER, 0, 0)
 
   let plateLabel = ui.Label.build(pageID + 'plateLabel', plateView)
-  plateLabel.text("晚安")
+  plateLabel.text("Good Night")
   plateLabel.textColor(0xffffff)
   plateLabel.textFont(viewUtils.font28)
   plateLabel.align(ui.Utils.ALIGN.CENTER, 0, 0)
@@ -117,7 +117,7 @@ pageView.init = function () {
     plate.show()
     plateView.bgColor(0x000000)
     plateLabel.textColor(0x999999)
-    plateLabel.text('晚安')
+    plateLabel.text('Good Night')
     playAudio(1)
     std.setTimeout(() => {
       plate.hide()
@@ -132,7 +132,7 @@ pageView.init = function () {
     plate.show()
     plateView.bgColor(ys)
     plateLabel.textColor(0x999999)
-    plateLabel.text(clState ? '窗帘已打开' : '窗帘已关闭')
+    plateLabel.text(clState ? 'Curtain Opened' : 'Curtain Closed')
     if (clState) {
       playAudio(2)  // Open sound
     } else {
@@ -147,7 +147,7 @@ pageView.init = function () {
     plate.show()
     plateView.bgColor(0x009999)
     plateLabel.textColor(0xffffff)
-    plateLabel.text('游戏模式已开')
+    plateLabel.text('Game Mode On')
     std.setTimeout(() => {
       plate.hide()
     }, 2000)
@@ -156,7 +156,7 @@ pageView.init = function () {
     plate.show()
     plateView.bgColor(0xFF9900)
     plateLabel.textColor(0xffffff)
-    plateLabel.text('欢迎回家')
+    plateLabel.text('Welcome Home')
     playAudio(5)
     std.setTimeout(() => {
       plate.hide()
