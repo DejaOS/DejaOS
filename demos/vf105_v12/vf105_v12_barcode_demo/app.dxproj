@@ -1,0 +1,60 @@
+{
+  "name": "vf105_v12_access_",
+  "model": "VF105_V12",
+  "components": [
+    {
+      "component": "dxCommon",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxCommonUtils",
+      "version": "1.0.2"
+    },
+    {
+      "component": "dxChannel",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxDriver",
+      "version": "2.0.0"
+    },
+    {
+      "component": "dxEventBus",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxGpio",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxLogger",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxMap",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxOs",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxPwm",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxStd",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxUi",
+      "version": "2.0.0"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp,.git",
+    "file": "md5s.json,md5snew.json"
+  },
+  "version": "2.0.2",
+  "sdkId": "43957835b0974589a68dae7ef0f6108c"
+}

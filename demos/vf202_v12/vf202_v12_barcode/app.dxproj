@@ -1,0 +1,44 @@
+{
+  "name": "vf202_facial_barcode",
+  "model": "VF202_v12",
+  "components": [
+    {
+      "component": "dxAudio",
+      "version": "1.0.3"
+    },
+    {
+      "component": "dxCommon",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxDriver",
+      "version": "1.1.4.1"
+    },
+    {
+      "component": "dxFacial",
+      "version": "1.1.2"
+    },
+    {
+      "component": "dxLogger",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxMap",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxStd",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxUi",
+      "version": "2.0.0"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp",
+    "file": "md5s.json,md5snew.json"
+  },
+  "version": "undefined",
+  "sdkId": "0a058014b51942d0a13a0ddcfebf6349"
+}
