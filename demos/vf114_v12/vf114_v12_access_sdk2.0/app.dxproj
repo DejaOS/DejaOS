@@ -1,0 +1,152 @@
+{
+  "name": "vf114_v12_access_2.0.2",
+  "model": "VF114_V12",
+  "components": [
+    {
+      "component": "dxAudio",
+      "version": "1.0.2"
+    },
+    {
+      "component": "dxBase64",
+      "version": "2.0.0"
+    },
+    {
+      "component": "dxCommon",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxConfig",
+      "version": "2.0.0"
+    },
+    {
+      "component": "dxCommonUtils",
+      "version": "1.0.2"
+    },
+    {
+      "component": "dxCryptoES",
+      "version": "2.0.0"
+    },
+    {
+      "component": "dxChannel",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxDriver",
+      "version": "1.0.8"
+    },
+    {
+      "component": "dxDisplay",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxEventBus",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxFacial",
+      "version": "1.1.0"
+    },
+    {
+      "component": "dxFingerMz",
+      "version": "1.0.7"
+    },
+    {
+      "component": "dxFingerZaz",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxGpio",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxGpioKey",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxHttpClient",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxHttpServer",
+      "version": "1.0.6"
+    },
+    {
+      "component": "dxLogger",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxMap",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxMqttClient",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxNtp",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxNetwork",
+      "version": "1.0.2"
+    },
+    {
+      "component": "dxNfcCard",
+      "version": "1.0.2"
+    },
+    {
+      "component": "dxOta",
+      "version": "2.0.2"
+    },
+    {
+      "component": "dxOs",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxPwm",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxQrRule",
+      "version": "2.0.0"
+    },
+    {
+      "component": "dxStd",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxSqliteDB",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxTimeZones",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxUi",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxUart",
+      "version": "1.0.2"
+    },
+    {
+      "component": "dxVgBle",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxWorkerPool",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxWatchdog",
+      "version": "1.0.1"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp,.git",
+    "file": "md5s.json,md5snew.json"
+  },
+  "version": "",
+  "sdkId": "ba88db6fbb02414f8ed07c745f317f9e"
+}
