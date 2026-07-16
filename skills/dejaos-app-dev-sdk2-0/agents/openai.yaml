@@ -1,4 +1,4 @@
 interface:
   display_name: "DejaOS SDK 2.0 App Dev"
   short_description: "Build and review DejaOS SDK 2.0 embedded JavaScript apps."
-  default_prompt: "Use this skill when building, reviewing, or modifying DejaOS SDK 2.0 apps with dxmodules, app.dxproj, UI workers, hardware modules, or embedded runtime constraints."
+  default_prompt: "Use $dejaos-app-dev-sdk2-0 to build, review, or modify a DejaOS SDK 2.0 app with dxmodules, app.dxproj, UI workers, hardware modules, or embedded runtime constraints."
