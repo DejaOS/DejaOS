@@ -1,0 +1,80 @@
+{
+  "name": "vf203_v14_access_2.0.3",
+  "model": "VF202_v12",
+  "components": [
+    {
+      "component": "dxAudio",
+      "version": "1.0.3"
+    },
+    {
+      "component": "dxCommonUtils",
+      "version": "1.0.3"
+    },
+    {
+      "component": "dxDriver",
+      "version": "1.1.6"
+    },
+    {
+      "component": "dxEventBus",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxHttpClient",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxHttpServer",
+      "version": "1.0.8"
+    },
+    {
+      "component": "dxLogger",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxMap",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxMqttClient",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxNtp",
+      "version": "2.0.6"
+    },
+    {
+      "component": "dxNetwork",
+      "version": "1.0.4"
+    },
+    {
+      "component": "dxOta",
+      "version": "2.0.2"
+    },
+    {
+      "component": "dxOs",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxPwm",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxStd",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxSqliteDB",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxUi",
+      "version": "2.0.2"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp,.git",
+    "file": "md5s.json,md5snew.json"
+  },
+  "version": "",
+  "sdkId": "0a058014b51942d0a13a0ddcfebf6349"
+}

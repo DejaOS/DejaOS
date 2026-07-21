@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DejaOS Studio</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-logo">D</span><div><strong>DejaOS Studio</strong><small>HOST MICRO APP</small></div></div>
+      <p class="nav-title">Workspace</p>
+      <button class="nav-button active"><span>▦</span>Micro Apps</button>
+      <button class="nav-button muted" disabled><span>▣</span>Devices<em>Later</em></button>
+      <p class="nav-title">APIs</p>
+      <a class="nav-button" href="/api/device/apps" target="_blank"><span>⇩</span>Device App Catalog</a>
+      <a class="nav-button" href="/api/time" target="_blank"><span>◷</span>Time API</a>
+      <div class="account"><span>DE</span><div><strong>Demo User</strong><small>Prototype Workspace</small></div></div>
+    </aside>
+
+    <header class="topbar">
+      <div id="breadcrumb">Workspace / <b>Micro Apps</b></div>
+      <div class="service"><i></i><span>Service Online</span><time id="serverTime">--:--</time></div>
+    </header>
+
+    <main>
+      <section id="listView" class="view active">
+        <div class="content">
+          <div class="page-head"><div><h1>My Micro Apps</h1><p>Create, edit, and publish apps to DejaOS Host devices</p></div><button class="primary" id="newAppButton">＋ New App</button></div>
+          <div class="metrics">
+            <article><span>All Apps</span><strong id="totalMetric">0</strong><small>Current workspace</small></article>
+            <article><span>Published</span><strong id="publishedMetric">0</strong><small>Available to devices</small></article>
+            <article><span>Drafts</span><strong id="draftMetric">0</strong><small>Waiting to publish</small></article>
+            <article><span>Prototype Devices</span><strong>1</strong><small>Connected through App Service</small></article>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>App Projects</h2><p id="listHint">Loading app list</p></div><input id="searchInput" placeholder="Search name or App ID" /></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>App</th><th>Visibility</th><th>Draft</th><th>Published</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead>
+                <tbody id="appRows"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="emptyState" hidden>No matching apps</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="editorView" class="view editor-view">
+        <div class="editor-head">
+          <div class="editor-app"><button class="secondary" id="backButton">‹ Back</button><span class="app-badge" id="editorBadge">A</span><div><h1 id="editorTitle">App</h1><p id="editorMeta">Draft Editor</p></div></div>
+          <div class="editor-actions"><span id="saveState">Saved</span><button class="secondary" id="downloadButton">Download Package</button><button class="secondary" id="saveButton">Save Draft</button><button class="primary" id="publishButton">Publish App</button></div>
+        </div>
+        <div class="workspace">
+          <aside class="files">
+            <div class="pane-title">Project Files</div>
+            <button class="file-button active" data-file="app.js"><span>JS</span>app.js</button>
+            <button class="file-button" data-file="manifest.json"><span>{}</span>manifest.json</button>
+            <div class="resource-title">Resources</div>
+            <div class="resource-placeholder">The prototype stores a resource list.<br />A full upload API will be added later.</div>
+          </aside>
+          <section class="code-pane">
+            <div class="code-tab"><span id="activeFile">app.js</span></div>
+            <div class="code-area"><pre id="lineNumbers">1</pre><textarea id="codeEditor" spellcheck="false"></textarea></div>
+            <div class="statusbar"><span>DejaOS Host Micro App</span><span>UTF-8　JavaScript</span></div>
+          </section>
+          <aside class="settings">
+            <div class="pane-title">App Settings</div>
+            <div class="form-content">
+              <label>App Name<input id="settingName" /></label>
+              <label>App ID<input id="settingId" disabled /></label>
+              <label>Version<input id="settingVersion" /></label>
+              <label>App Icon (PNG)
+                <div class="icon-upload-row"><span class="icon-preview" id="settingIconPreview"></span><div><input id="settingIconFile" type="file" accept="image/png,.png" /><small id="settingIconMeta">Select a PNG image</small></div></div>
+              </label>
+              <div class="icon-resize-confirm" id="settingIconDecision" hidden><p id="settingIconDecisionText"></p><div><button type="button" class="secondary" id="settingIconCancelResize">Choose Again</button><button type="button" class="primary" id="settingIconResize">Crop & Resize to 40×40</button></div></div>
+              <label>Icon Background<input id="settingColor" type="color" /></label>
+              <label>Visibility<select id="settingVisibility"><option value="private">My Devices Only</option><option value="official">Official App</option></select></label>
+              <label>Description<textarea id="settingDescription" rows="4"></textarea></label>
+              <div class="api-note"><strong>Device APIs</strong><code>GET /api/device/apps</code><code>GET /api/device/apps/:id/download</code></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-mask" id="newAppModal" hidden>
+    <form class="modal" id="newAppForm">
+      <h2>New Micro App</h2><p>Open the code editor immediately after creation.</p>
+      <label>App Name<input id="newName" required placeholder="For example: Device Inspection" /></label>
+      <label>App ID<input id="newId" required pattern="[a-z][a-z0-9._-]{1,63}" placeholder="inspection" /></label>
+      <label>App Icon (PNG)
+        <div class="icon-upload-row"><span class="icon-preview" id="newIconPreview"></span><div><input id="newIconFile" type="file" accept="image/png,.png" /><small id="newIconMeta">Any PNG can be cropped and resized to 40×40</small></div></div>
+      </label>
+      <div class="icon-resize-confirm" id="newIconDecision" hidden><p id="newIconDecisionText"></p><div><button type="button" class="secondary" id="newIconCancelResize">Choose Again</button><button type="button" class="primary" id="newIconResize">Crop & Resize to 40×40</button></div></div>
+      <label>Icon Background<input id="newColor" type="color" value="#17796e" /></label>
+      <label>Visibility<select id="newVisibility"><option value="private">My Devices Only</option><option value="official">Official App</option></select></label>
+      <div class="modal-actions"><button type="button" class="secondary" id="cancelNewButton">Cancel</button><button class="primary">Create & Develop</button></div>
+    </form>
+  </div>
+  <div class="toast" id="toast"><strong id="toastTitle"></strong><span id="toastText"></span></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
