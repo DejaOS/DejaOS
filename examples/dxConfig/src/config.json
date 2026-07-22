@@ -1,8 +1,0 @@
-{
-    //mqtt相关配置
-    "mqtt.ip": "192.168.2.3",
-    "mqtt.port": 6199,
-    //test相关配置
-    "test.key1": "dfffffffffffffffdaasdff",
-    "test.key2": 3333
-}
