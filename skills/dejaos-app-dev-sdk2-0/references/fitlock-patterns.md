@@ -167,6 +167,9 @@ Responsibilities:
 - Initialize `face.init()` once.
 - Run `face.loop()` periodically.
 - Use `FACE_START` and `FACE_STOP` to gate recognition callbacks.
+- Show the bottom-layer full-screen live camera preview during interactive recognition; make the covering UI background fully or partially transparent so the intended camera area is visible.
+- Decide separately whether the UI should show a face tracking rectangle.
+- During live face enrollment/registration, establish `dxFacial.setStatus(true)` and never use `setStatus(false)` as the enrollment state.
 - Synchronize face features when users are inserted or updated.
 - Download face images with `dxHttpClient`.
 - Extract features from local files.

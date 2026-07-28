@@ -38,8 +38,11 @@ After creation, verify at least:
 - `app.dxproj` exists and contains the requested `model`.
 - `src/`, `resource/`, and `dxmodules/` are present as expected.
 - Required components are named in `app.dxproj` and their wrappers exist in `dxmodules/`.
+- Requested hardware features are supported by the model and confirmed SKU selections in `device-sku-capabilities.md`.
 
 Use `dejaos edit --project <project>` to edit model, SDK, or component selections interactively. After a deliberate manual `app.dxproj` change, run `dejaos install --project <project>`.
+
+After every install, treat the generated project-local `dxmodules/*.js` files as the API contract for those exact component versions. Before running the app, compare every component call in `src/` with the corresponding wrapper: verify exports, member names, argument order/count, constants, return values, and initialization requirements. Never modify the generated wrappers to make invented application calls work.
 
 ## Install the UI font
 
@@ -107,8 +110,9 @@ Record the command outcome and the relevant log excerpt. A successful `run` plus
 
 For every material source, configuration, or resource change:
 
-1. Run available syntax or static checks.
-2. Run `dejaos run --project <project>` when the correct USB device remains confirmed.
-3. Capture and inspect a bounded `dejaos logs --project <project>` startup sample.
-4. Fix obvious errors and repeat.
-5. If no device is available, explicitly mark device execution and logs as pending.
+1. Re-check imported components and API calls against the current `dxmodules/*.js`.
+2. Run available syntax or static checks.
+3. Run `dejaos run --project <project>` when the correct USB device remains confirmed.
+4. Capture and inspect a bounded `dejaos logs --project <project>` startup sample.
+5. Fix obvious errors and repeat.
+6. If no device is available, explicitly mark device execution and logs as pending.

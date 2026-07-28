@@ -1,6 +1,6 @@
 ---
 name: dejaos-app-dev-sdk2-0
-description: Create, build, modify, run, debug, or review DejaOS SDK 2.0 embedded JavaScript applications with the dejaos CLI. Use when working with new or existing DejaOS apps, device-model project scaffolding, USB sync and logs, dxmodules, QuickJS workers, LVGL UI via dxUi, app.dxproj component selection, UIManager page flows, UART, SQLite, MQTT, HTTP, facial recognition, watchdogs, device resources, or embedded runtime constraints.
+description: Create, build, modify, run, debug, or review DejaOS SDK 2.0 embedded JavaScript applications with the dejaos CLI. Use when working with new or existing DejaOS apps, device-model and SKU capability selection, USB sync and logs, generated dxmodules API validation, QuickJS workers, LVGL UI via dxUi, app.dxproj components, UIManager page flows, UART, SQLite, MQTT, HTTP, facial recognition, watchdogs, device resources, or embedded runtime constraints.
 ---
 
 # DejaOS SDK 2.0 App Development
@@ -14,16 +14,18 @@ Treat device execution as the normal development loop, not an optional final ste
 1. Before creating or changing an app, check whether the CLI is available with `dejaos --version`.
 2. If it is unavailable, tell the user that Node.js 18+ and `dejaos-cli` are required. Ask whether to install it, then, after approval, run `npm install -g dejaos-cli` and verify again with `dejaos --version`. Do not claim installation succeeded without the verification result.
 3. For a new app, ask for the exact target device model before creating files. Do not limit the user to a hard-coded model list because the CLI obtains the current supported models from the DejaOS tools service.
-4. Collect or reasonably derive the project name, project directory, whether the app has a UI, and SDK version. Default the SDK to `2.0` when the user does not specify it.
-5. Create the complete project with `dejaos new <model> <name> <directory> 2.0`. Run it from the intended parent directory or use explicit absolute paths. Do not hand-create `app.dxproj` or `dxmodules/` when `dejaos new` can create them.
-6. If the app has a UI, create `resource/font/` and download one font as `resource/font/font.ttf`:
+4. Read `references/device-sku-capabilities.md` for `VF105_V12`, `VF114_V12`, `VF203_V12`, or `VF202_V12`. Ask which optional SKU features are physically present when the requested app depends on them. Reject features that the selected model does not support; for example, do not design Wi-Fi behavior for `VF202_V12`.
+5. Collect or reasonably derive the project name, project directory, whether the app has a UI, and SDK version. Default the SDK to `2.0` when the user does not specify it.
+6. Create the complete project with `dejaos new <model> <name> <directory> 2.0`. Run it from the intended parent directory or use explicit absolute paths. Do not hand-create `app.dxproj` or `dxmodules/` when `dejaos new` can create them.
+7. If the app has a UI, create `resource/font/` and download one font as `resource/font/font.ttf`:
    - For a Chinese conversation or Chinese UI, use `https://raw.githubusercontent.com/DejaOS/DejaOS/main/tools/font_cn.ttf`.
    - For an English conversation and English-only UI, use `https://raw.githubusercontent.com/DejaOS/DejaOS/main/tools/font_en.ttf`.
    - If the requested UI contains non-English glyphs that the English font may not cover, prefer the Chinese font or ask which font coverage is required.
    - Verify the downloaded file exists and is non-empty. Keep code references at `/app/code/resource/font/font.ttf`.
-7. After project creation, ask whether the correct target device is connected by USB. Do not attempt device mutation until the user confirms.
-8. When confirmed, run `dejaos run --project <project-directory>` to connect, sync changed files, and start the app. Use `dejaos sync --all --project <project-directory>` for the first deployment or when incremental state may be stale, followed by `dejaos start --project <project-directory>` if needed.
-9. Capture device output with `dejaos logs --project <project-directory>` for a bounded observation period. Because logs may stream continuously, stop the observation after enough startup output has been collected. Report clear errors and warnings with their evidence; do not equate a quiet log window with proof that the app is correct.
+8. Before finishing code, validate every imported component and API call against the installed project-local `dxmodules/*.js` files.
+9. After project creation, ask whether the correct target device is connected by USB. Do not attempt device mutation until the user confirms.
+10. When confirmed, run `dejaos run --project <project-directory>` to connect, sync changed files, and start the app. Use `dejaos sync --all --project <project-directory>` for the first deployment or when incremental state may be stale, followed by `dejaos start --project <project-directory>` if needed.
+11. Capture device output with `dejaos logs --project <project-directory>` for a bounded observation period. Because logs may stream continuously, stop the observation after enough startup output has been collected. Report clear errors and warnings with their evidence; do not equate a quiet log window with proof that the app is correct.
 
 After every material code or resource change, repeat syntax or static checks, then attempt `dejaos run --project <project-directory>` and inspect a bounded `dejaos logs` sample when a confirmed USB-connected device remains available. If the device is unavailable, say that runtime validation is pending rather than claiming completion.
 
@@ -32,11 +34,14 @@ Read `references/dejaos-cli-workflow.md` when installing the CLI, creating a pro
 ## Project Checks
 
 1. Confirm the target device model before changing project structure or `app.dxproj`.
-2. Inspect the existing `app.dxproj` and `dxmodules/` before importing a component.
-3. If a required `dxmodules/*.js` file is missing, update components through `dejaos edit` or a deliberate `app.dxproj` edit, then run `dejaos install`. Inspect the result instead of modifying `dxmodules/` manually.
-4. Treat `dxmodules/` as vendor code: call it, but do not modify it.
-5. Keep app code under `src/`, resources under `resource/`, and runtime data under `/app/data`.
-6. Use absolute runtime resource paths such as `/app/code/resource/logo.png`.
+2. Use the model to eliminate impossible capabilities, then confirm the device's optional SKU selections before relying on optional hardware or services. Do not confuse “supported option” with “installed on this unit.”
+3. Inspect the existing `app.dxproj` and `dxmodules/` before importing a component.
+4. If a required `dxmodules/*.js` file is missing, update components through `dejaos edit` or a deliberate `app.dxproj` edit, then run `dejaos install`. Inspect the result instead of modifying `dxmodules/` manually.
+5. Treat `dxmodules/` as generated, project-specific, read-only vendor code. Use it as the authoritative API definition for the installed component versions.
+6. For every component call, open the corresponding `dxmodules/*.js` file and verify the exported object, function name, argument order/count, return shape, constants, and required initialization. Do not invent a function because it exists in another SDK version, example, or similarly named module.
+7. Search all app imports and component member calls before completion. Flag any imported module absent from `dxmodules/` and any called member not defined by the installed wrapper.
+8. Keep app code under `src/`, resources under `resource/`, and runtime data under `/app/data`.
+9. Use absolute runtime resource paths such as `/app/code/resource/logo.png`.
 
 ## Project Rules
 
@@ -61,6 +66,15 @@ Read `references/dejaos-cli-workflow.md` when installing the CLI, creating a pro
 - For `uiView`, call `padAll(0)` and usually `scroll(false)` when doing exact layout.
 - Match image control sizes to image asset sizes because `uiImage` does not automatically scale by default.
 
+## Face Recognition Rules
+
+- Treat the live face-camera preview as a full-screen image on the bottommost display layer by default. Normal UI pages and opaque backgrounds render above it and will hide it.
+- When the preview must be visible, make the covering UI page/root background transparent. For a camera window instead of a full-screen view, use a background asset with a transparent region or an equivalent transparent UI region so only that part reveals the bottom camera layer.
+- For apps that use face recognition, show the live camera preview by default unless the user explicitly chooses another interaction. Recognition without preview usually gives poor feedback while the person aligns or moves their face.
+- Decide whether to show a face-detection/tracking rectangle from the product experience; it is optional, unlike the live preview default.
+- During face enrollment/registration, call `dxFacial.setStatus(true)`. Never pass `false` for the enrollment state because registration will not work correctly.
+- Verify the exact preview, tracking, enrollment, and `setStatus` APIs against the installed `dxmodules/dxFacial.js` before coding; keep `dxmodules/` read-only.
+
 ## Common Components
 
 - Base modules: `dxLogger`, `dxStd`, `dxOs`, `dxDriver`, `dxMap`, `dxEventBus`, `dxCommonUtils`.
@@ -74,26 +88,34 @@ Read `references/dejaos-cli-workflow.md` when installing the CLI, creating a pro
 
 When creating a new app:
 
-1. Follow the CLI-first workflow and start with `dejaos new`; inspect its generated `app.dxproj` and `dxmodules/` before adding code.
-2. Include only base modules by default; add `dxUi` only when UI is needed; add hardware/network modules only when required.
+1. Follow the CLI-first workflow: confirm model and required SKU options, then start with `dejaos new`.
+2. Inspect the generated `app.dxproj` and `dxmodules/` before adding code. Include only modules backed by the target model, the actual SKU, and the requested behavior.
 3. Create `src/main.js`.
 4. If UI is needed, create `src/uiWorker.js`, copy or adapt `assets/UIManager.js`, register pages, call `dxui.handler()` in a short interval, and install the conversation-language font.
 5. Put resources in `resource/`, especially fonts and images.
-6. Ask for USB confirmation, deploy and start with the CLI, then inspect startup logs.
+6. Validate every component function call against the generated `dxmodules/*.js`.
+7. Ask for USB confirmation, deploy and start with the CLI, then inspect startup logs.
 
 When modifying an existing app:
 
 1. Check `dejaos --version`, then read nearby code and follow existing worker boundaries.
-2. Check whether the needed component is already present in `dxmodules/`.
-3. Preserve existing page manager, event bus topics, and data directory conventions unless the user asks for a refactor.
-4. Verify JavaScript syntax with the available runtime when possible.
-5. After each material change, attempt the CLI run-and-logs validation loop when the correct device connection has been confirmed.
+2. Confirm that the requested feature is valid for the target model and actual SKU.
+3. Check whether the needed component is already present in `dxmodules/`, then verify each used API against that file.
+4. Preserve existing page manager, event bus topics, and data directory conventions unless the user asks for a refactor.
+5. Verify JavaScript syntax with the available runtime when possible.
+6. After each material change, repeat the dxmodules API audit, then attempt the CLI run-and-logs validation loop when the correct device connection has been confirmed.
 
 When reviewing DejaOS code, prioritize:
 
 - Missing `try/catch` around device and worker boundary code.
+- Features unsupported by the selected model or unconfirmed optional SKU.
+- Imported components absent from the installed `dxmodules/`.
+- Component functions, constants, parameters, or return values that do not match the installed `dxmodules/*.js` definitions.
 - Incorrect relative imports into `dxmodules`.
 - UI code running in the main worker.
+- Face recognition screens that unintentionally hide the bottom-layer camera preview behind an opaque UI background.
+- Face recognition flows with no live preview and no explicit product reason for omitting it.
+- Face enrollment/registration code that calls `dxFacial.setStatus(false)` or does not establish `setStatus(true)`.
 - Direct `console.log`.
 - Missing font handling for Chinese UI.
 - Resource paths that are not runtime absolute paths.
@@ -103,6 +125,7 @@ When reviewing DejaOS code, prioritize:
 
 ## Bundled Resources
 
+- `references/device-sku-capabilities.md`: Hardware and service capability matrix for VF105_V12, VF114_V12, VF203_V12, and VF202_V12. Read before planning features for these models.
 - `references/dejaos-cli-workflow.md`: Exact CLI installation, project creation, font, device-run, and bounded-log workflow. Read for any create, deploy, run, or debug task.
 - `references/dejaos-guide.md`: English DejaOS SDK 2.0 development guide with module notes and code templates. Read when the task involves unfamiliar DejaOS modules or when building a new app structure.
 - `references/fitlock-patterns.md`: English patterns distilled from a production-style FitLock cabinet app in this workspace. Read when designing larger apps with UI, MQTT, SQLite, face recognition, lock control, pending event queues, or multi-worker coordination.

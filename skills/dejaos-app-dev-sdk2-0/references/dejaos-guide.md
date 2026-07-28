@@ -36,13 +36,15 @@ Always confirm the target device model before selecting components or copying pr
 
 ## 2. app.dxproj
 
-`app.dxproj` declares the target model and selected components. Component JavaScript and native files are downloaded into `dxmodules/` by the DejaOS VSCode plugin.
+`app.dxproj` declares the target model and selected components. `dejaos new` or `dejaos install` downloads component JavaScript and native files into `dxmodules/`.
 
 Rules:
 
 - Inspect `app.dxproj` before adding imports.
 - Do not modify files under `dxmodules/`.
-- If a required module is missing from `dxmodules/`, tell the user to enable that component in `app.dxproj` and run install from the DejaOS VSCode plugin.
+- Treat the installed project-local `dxmodules/*.js` as the authoritative API contract. Before completion, verify every component export, function, parameter, constant, return value, and initialization call against these files.
+- If a required module is missing from `dxmodules/`, update the component selection with `dejaos edit` or a deliberate `app.dxproj` edit, then run `dejaos install`.
+- Do not invent component methods from memory, examples, or another SDK version.
 - For new apps, start with base modules only unless the user asks for UI, network, storage, or hardware features.
 - Add `dxUi` only when the app has a UI.
 
@@ -340,6 +342,20 @@ Recommended pattern:
 - Track enrollment state in local storage when the app synchronizes users from a backend.
 - On delete/clear operations, remove both algorithm features and local cache files.
 
+Live preview and UI composition:
+
+- The live face-camera preview is full-screen and rendered on the bottommost display layer by default.
+- Opaque UI pages above the camera layer hide the preview. Make the covering page/root background transparent when the full preview should remain visible.
+- To expose only part of the camera image, use a background image with a transparent window or construct an equivalent transparent region in the UI.
+- Show the live preview by default whenever the app performs interactive face recognition so users can align and move naturally.
+- Treat the face-detection/tracking rectangle as a product choice. Enable it only when it improves the flow; the preview itself remains the default.
+
+Enrollment invariant:
+
+- During live face enrollment/registration, call `dxFacial.setStatus(true)`.
+- Never use `dxFacial.setStatus(false)` for the enrollment state.
+- Verify the exact installed API and surrounding initialization sequence in the project-local `dxmodules/dxFacial.js`; do not infer it from this guide alone.
+
 ## 14. Watchdog
 
 Use `dxWatchdog` for crash recovery.
@@ -358,9 +374,14 @@ When reviewing DejaOS SDK 2.0 code, check:
 
 - Is the target model known and reflected in `app.dxproj`?
 - Are all imported `dxmodules` selected and installed?
+- Does every imported module and called member exist in the installed `dxmodules/*.js`, with the correct parameters and initialization order?
 - Are `dxmodules` treated as read-only vendor files?
 - Is UI isolated in a UI worker?
 - Are UART, MQTT, face recognition, and other loops isolated from UI?
+- If face recognition is interactive, is the live camera preview visible through transparent UI instead of being accidentally covered by an opaque page?
+- If only part of the preview should show, is the intended region actually transparent?
+- Is the optional face tracking rectangle aligned with the intended user experience?
+- Does every face enrollment/registration path establish `dxFacial.setStatus(true)` and avoid `setStatus(false)`?
 - Are hardware/network/file/database boundaries wrapped in `try/catch`?
 - Are resource paths absolute runtime paths?
 - Is Chinese or non-English UI backed by a font file?
