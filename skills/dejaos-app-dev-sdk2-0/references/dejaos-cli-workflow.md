@@ -1,5 +1,14 @@
 # DejaOS CLI Workflow
 
+## Contents
+
+- Command contract
+- Create a project
+- Install the UI font
+- Run on a USB device
+- Inspect logs
+- Repeat after changes
+
 ## Command contract
 
 - npm package: `dejaos-cli`
@@ -28,10 +37,12 @@ dejaos new <model> [name] [directory] [sdk]
 Example:
 
 ```text
-dejaos new DW200_V20 my_project C:\Work\dejaos\my_project 2.0
+dejaos new DW200_V20 my_project ./my_project 2.0
 ```
 
 The command fetches the current device-model metadata, creates `app.dxproj`, installs default SDK components, and prepares `dxmodules/`. It fails if `app.dxproj` already exists. The generated project keeps the selected device model in `model`; `mainModel` may identify the main model used for SDK and component downloads. Preserve both fields.
+
+Read `tools-http-api.md` for the complete model-to-main-model-to-SDK-to-component HTTP lookup contract. Do not rely on an external source checkout to recover these endpoints.
 
 After creation, verify at least:
 

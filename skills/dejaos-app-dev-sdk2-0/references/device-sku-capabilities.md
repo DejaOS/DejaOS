@@ -2,6 +2,14 @@
 
 Use this matrix to constrain application requirements before selecting components or writing hardware-facing code.
 
+## Contents
+
+- Decision rules
+- VF105_V12
+- VF114_V12
+- VF203_V12
+- VF202_V12
+
 ## Decision rules
 
 1. Normalize model spelling to the project/CLI identifier, including `VF202_V12`.

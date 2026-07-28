@@ -2,6 +2,22 @@
 
 This reference summarizes practical rules for building DejaOS SDK 2.0 applications with JavaScript. DejaOS runs on embedded devices using QuickJS, LVGL, and native `dxmodules` wrappers.
 
+## Contents
+
+- Application structure
+- `app.dxproj`
+- Common components
+- Worker model
+- Logging and imports
+- UI development and resources
+- SQLite and data
+- UART
+- Network and MQTT
+- HTTP client
+- Face recognition
+- Watchdog
+- Review checklist
+
 ## 1. Application Structure
 
 Typical project layout:
@@ -24,7 +40,7 @@ Runtime path conventions:
 - Runtime data should be stored under `/app/data`.
 - Resource paths in code should be absolute runtime paths, for example `/app/code/resource/image/logo.png`.
 
-Supported device models include:
+The bundled SKU reference currently documents:
 
 - `DW200_V20`
 - `VF105_V12`
@@ -32,7 +48,7 @@ Supported device models include:
 - `VF202_V12`
 - `VF114_V12`
 
-Always confirm the target device model before selecting components or copying project templates.
+This is not the complete server-supported model list. Query the CLI or `tools-http-api.md`, then confirm the target device model before selecting components or copying project templates.
 
 ## 2. app.dxproj
 
@@ -153,7 +169,7 @@ Rules:
 
 ## 7. UI Development
 
-Run UI in a dedicated worker.
+Run UI in a dedicated worker. Copy `assets/UIManager.js` to `src/UIManager.js`; its bundled imports are relative to that location.
 
 Basic `uiWorker.js` pattern:
 
@@ -226,7 +242,7 @@ export default MyPage;
 
 UI rules:
 
-- Use a page manager such as `assets/UIManager.js` unless the project already has one.
+- Use the bundled `assets/UIManager.js` at `src/UIManager.js` unless the project already has a page manager.
 - A page `init()` must return a root UI object.
 - Put page-specific UI creation inside the page object.
 - `uiButton` has no direct text property; create a child `Label`.

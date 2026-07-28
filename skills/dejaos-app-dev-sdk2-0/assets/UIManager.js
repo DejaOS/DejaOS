@@ -1,8 +1,8 @@
 // UIManager.js 
-// ../ is relative to the dxmodules directory, adjusted according to the current file path
-import log from '../../dxmodules/dxLogger.js';
-import dxui from '../../dxmodules/dxUi.js';
-import std from '../../dxmodules/dxStd.js';
+// Copy this file to src/UIManager.js.
+import log from '../dxmodules/dxLogger.js';
+import dxui from '../dxmodules/dxUi.js';
+import std from '../dxmodules/dxStd.js';
 
 const ttf = '/app/code/resource/font/font.ttf'// If this is not the file, manually modify the ttf path
 const fonts = []
@@ -242,12 +242,12 @@ const UIManager = {
     },
     // Avoid recreating font object
     font: function (size, style) {
+        size = size || 14
+        style = style || dxui.Utils.FONT_STYLE.NORMAL
         const arr = fonts.filter(v => v.size == size && v.style == style)
         if (arr.length > 0) {
             return arr[0].font
         } else {
-            size = size || 14
-            style = style || dxui.Utils.FONT_STYLE.NORMAL
             const font = dxui.Font.build(ttf, size, style)
             fonts.push({
                 size, style, font

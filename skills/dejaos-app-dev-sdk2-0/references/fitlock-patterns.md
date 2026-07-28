@@ -1,23 +1,24 @@
 # FitLock Project Patterns
 
-This reference distills reusable architecture patterns from a production-style DejaOS cabinet application. Do not copy the full project into a skill reference. Use this file as a compact pattern catalog for larger DejaOS SDK 2.0 apps.
+This bundled reference distills reusable architecture patterns from a production-style DejaOS cabinet application for larger SDK 2.0 apps.
 
-## 1. Why Use a Distilled Reference
+## Contents
 
-Full projects are usually too large for skill references. They include business-specific screens, resources, protocol details, temporary files, and unrelated implementation choices. A distilled reference is better because it preserves reusable decisions:
+- High-level architecture
+- Event bus backbone
+- UI state bridge
+- SQLite service layer
+- Configuration service
+- MQTT worker and command routing
+- Face worker
+- Lock worker and protocol isolation
+- Identity-based UI flows
+- Modals and overlays
+- Admin UI
+- Domain rules
+- Error handling
 
-- Worker boundaries.
-- Event bus topic design.
-- SQLite schema and service layering.
-- MQTT command routing and queued event publishing.
-- UI page flow patterns.
-- Hardware protocol isolation.
-- Face enrollment and recognition flow.
-- Operational safeguards for embedded devices.
-
-When adding future reference projects, prefer extracting patterns into separate reference files instead of copying source trees.
-
-## 2. High-Level Architecture
+## 1. High-Level Architecture
 
 The app uses a thin `main.js` plus dedicated workers:
 
@@ -42,7 +43,7 @@ main.js
 
 Keep `main.js` small. Put durable loops in workers.
 
-## 3. Event Bus as the Internal Backbone
+## 2. Event Bus as the Internal Backbone
 
 Use constants for event topics. This avoids string drift across workers.
 
@@ -65,7 +66,7 @@ Important DejaOS detail:
 
 `dxEventBus` supports one handler per topic in a worker. If several pages need the same event, create a local bridge object that owns the real bus subscription and fans out to page listeners.
 
-## 4. UI State Bridge Pattern
+## 3. UI State Bridge Pattern
 
 The project uses a `PageState` object to bridge shared events to multiple pages:
 
@@ -82,7 +83,7 @@ Use this pattern for:
 - MQTT status.
 - Device status that several UI pages need.
 
-## 5. SQLite Service Layer
+## 4. SQLite Service Layer
 
 Use one DB module to own:
 
@@ -109,7 +110,7 @@ Patterns:
 - Apply derived state on read when needed, such as expiration checks.
 - Store retryable outbound events before publishing.
 
-## 6. Configuration Service Pattern
+## 5. Configuration Service Pattern
 
 Use a service module above the DB module for configuration:
 
@@ -120,7 +121,7 @@ Use a service module above the DB module for configuration:
 
 Avoid spreading raw `FitLockDB.getConfig(...)` calls throughout business logic.
 
-## 7. MQTT Worker Pattern
+## 6. MQTT Worker Pattern
 
 Recommended responsibilities:
 
@@ -143,7 +144,7 @@ Outbound durable event pattern:
 
 This pattern prevents data loss when the device is offline or the broker reconnects.
 
-## 8. MQTT Command Routing Pattern
+## 7. MQTT Command Routing Pattern
 
 Split MQTT command handling into two layers:
 
@@ -158,7 +159,7 @@ Handler guidelines:
 - Write local DB state first, then fire side-effect events.
 - For destructive commands, clear related local hardware/algorithm state through events.
 
-## 9. Face Worker Pattern
+## 8. Face Worker Pattern
 
 Use a dedicated worker for `dxFacial`.
 
@@ -190,7 +191,7 @@ faceWorker
 
 The UI should re-check the local `user` table after face recognition. Algorithm libraries can contain stale features if a previous cleanup failed.
 
-## 10. Lock Worker and Protocol Isolation
+## 9. Lock Worker and Protocol Isolation
 
 Use a dedicated lock worker for UART.
 
@@ -215,7 +216,7 @@ UI or command handler
 
 Avoid putting business UI logic inside the lock worker.
 
-## 11. UI Flow Pattern for Identity-Based Actions
+## 10. UI Flow Pattern for Identity-Based Actions
 
 The home page follows this flow:
 
@@ -236,7 +237,7 @@ Pattern for strategy modes:
 
 This avoids accidental bypass through future direct calls.
 
-## 12. Modal and Overlay Pattern
+## 11. Modal and Overlay Pattern
 
 Reusable overlays include:
 
@@ -254,7 +255,7 @@ Guidelines:
 - Keep timers local and clear them on hide.
 - Use one-line page APIs from business pages.
 
-## 13. Admin UI Pattern
+## 12. Admin UI Pattern
 
 Admin pages are normal UIManager pages:
 
@@ -269,7 +270,7 @@ Patterns:
 - Use face login only when `user.role` marks the user as admin.
 - For long operations such as opening all cabinets, maintain a queue and allow cancellation.
 
-## 14. Domain Rules in Services
+## 13. Domain Rules in Services
 
 Put domain rules in DB/service modules rather than scattering them through UI:
 
@@ -283,7 +284,7 @@ Put domain rules in DB/service modules rather than scattering them through UI:
 
 UI should call service functions and focus on interaction flow.
 
-## 15. Error Handling Patterns
+## 14. Error Handling Patterns
 
 Use defensive error handling:
 
@@ -295,35 +296,3 @@ Use defensive error handling:
 - Prefer returning early on invalid input.
 
 Do not let unhandled exceptions terminate a worker.
-
-## 16. When Adding Future Reference Projects
-
-For each reference project, create a new distilled file under `references/`, for example:
-
-```text
-references/payment-kiosk-patterns.md
-references/access-control-patterns.md
-references/scale-terminal-patterns.md
-```
-
-For each project, extract:
-
-- Project purpose.
-- Worker layout.
-- State storage layout.
-- Event bus topics.
-- UI flow patterns.
-- Hardware/protocol isolation.
-- Offline/retry strategy.
-- Error handling conventions.
-- Reusable components.
-- Review checklist.
-
-Avoid copying:
-
-- Full source trees.
-- Large assets.
-- Business credentials.
-- Generated files.
-- Vendor modules.
-- Logs and temporary files.

@@ -7,13 +7,20 @@ description: Create, build, modify, run, debug, or review DejaOS SDK 2.0 embedde
 
 Use this skill for DejaOS SDK 2.0 embedded JavaScript apps. DejaOS runs on QuickJS with native `dxmodules` wrappers for UI, hardware, storage, network, MQTT, HTTP, audio, face recognition, UART, watchdog, and related device features.
 
+## Reference Boundary
+
+- Use only guides, scripts, assets, templates, and reference projects bundled inside this Skill directory as Skill-provided local references.
+- Do not require an external reference checkout or an author-specific local path. If required knowledge is absent from the bundled resources and public APIs, state what is missing instead of inventing it.
+- Treat the user's DejaOS app as task input, not as a Skill reference dependency. The app may be located at any user-selected path; inspect its own `app.dxproj`, `dxmodules/`, source, and resources normally.
+- Resolve bundled resources relative to this Skill directory. Resolve project files relative to the user's selected app root or pass that app root explicitly to commands.
+
 ## CLI-First Workflow
 
 Treat device execution as the normal development loop, not an optional final step.
 
 1. Before creating or changing an app, check whether the CLI is available with `dejaos --version`.
 2. If it is unavailable, tell the user that Node.js 18+ and `dejaos-cli` are required. Ask whether to install it, then, after approval, run `npm install -g dejaos-cli` and verify again with `dejaos --version`. Do not claim installation succeeded without the verification result.
-3. For a new app, ask for the exact target device model before creating files. Do not limit the user to a hard-coded model list because the CLI obtains the current supported models from the DejaOS tools service.
+3. For a new app, ask for the exact target device model before creating files. Do not limit the user to a hard-coded model list because the CLI obtains the current supported models from the DejaOS tools service. Read `references/tools-http-api.md` when model, SDK, or component discovery details are needed.
 4. Read `references/device-sku-capabilities.md` for `VF105_V12`, `VF114_V12`, `VF203_V12`, or `VF202_V12`. Ask which optional SKU features are physically present when the requested app depends on them. Reject features that the selected model does not support; for example, do not design Wi-Fi behavior for `VF202_V12`.
 5. Collect or reasonably derive the project name, project directory, whether the app has a UI, and SDK version. Default the SDK to `2.0` when the user does not specify it.
 6. Create the complete project with `dejaos new <model> <name> <directory> 2.0`. Run it from the intended parent directory or use explicit absolute paths. Do not hand-create `app.dxproj` or `dxmodules/` when `dejaos new` can create them.
@@ -58,7 +65,7 @@ Read `references/dejaos-cli-workflow.md` when installing the CLI, creating a pro
 - Put UI in a dedicated UI worker.
 - If UI text includes Chinese or other non-English text, ensure a TTF font exists, usually `/app/code/resource/font/font.ttf`.
 - Prefer `UIManager.font(size, style)` to avoid repeatedly creating font objects.
-- Use `assets/UIManager.js` as the standard single-screen, multi-page UI manager template when a project does not already have one.
+- Copy `assets/UIManager.js` to `src/UIManager.js` as the standard single-screen, multi-page UI manager when a project does not already have one.
 - A UI page should expose `init()`, return its root `View`, and may implement `onShow(data)` and `onHide()`.
 - `uiButton` does not have a direct text property. Create a `Label` inside the button.
 - `uiImage` is not clickable by itself. Wrap it in a transparent `View` and register the click on the wrapper.
@@ -91,7 +98,7 @@ When creating a new app:
 1. Follow the CLI-first workflow: confirm model and required SKU options, then start with `dejaos new`.
 2. Inspect the generated `app.dxproj` and `dxmodules/` before adding code. Include only modules backed by the target model, the actual SKU, and the requested behavior.
 3. Create `src/main.js`.
-4. If UI is needed, create `src/uiWorker.js`, copy or adapt `assets/UIManager.js`, register pages, call `dxui.handler()` in a short interval, and install the conversation-language font.
+4. If UI is needed, create `src/uiWorker.js`, copy `assets/UIManager.js` to `src/UIManager.js`, register pages, call `dxui.handler()` in a short interval, and install the conversation-language font.
 5. Put resources in `resource/`, especially fonts and images.
 6. Validate every component function call against the generated `dxmodules/*.js`.
 7. Ask for USB confirmation, deploy and start with the CLI, then inspect startup logs.
@@ -125,10 +132,11 @@ When reviewing DejaOS code, prioritize:
 
 ## Bundled Resources
 
+- `references/tools-http-api.md`: Self-contained DejaOS Tools HTTP API contract for resolving device model to main model, SDK, latest component list, component versions, and downloads. Read for model/SDK/component discovery or when diagnosing CLI metadata requests.
 - `references/device-sku-capabilities.md`: Hardware and service capability matrix for VF105_V12, VF114_V12, VF203_V12, and VF202_V12. Read before planning features for these models.
 - `references/dejaos-cli-workflow.md`: Exact CLI installation, project creation, font, device-run, and bounded-log workflow. Read for any create, deploy, run, or debug task.
 - `references/dejaos-guide.md`: English DejaOS SDK 2.0 development guide with module notes and code templates. Read when the task involves unfamiliar DejaOS modules or when building a new app structure.
-- `references/fitlock-patterns.md`: English patterns distilled from a production-style FitLock cabinet app in this workspace. Read when designing larger apps with UI, MQTT, SQLite, face recognition, lock control, pending event queues, or multi-worker coordination.
-- `assets/UIManager.js`: Reusable UIManager page-stack template.
+- `references/fitlock-patterns.md`: Bundled English patterns distilled from a production-style FitLock cabinet app. Read when designing larger apps with UI, MQTT, SQLite, face recognition, lock control, pending event queues, or multi-worker coordination.
+- `assets/UIManager.js`: Reusable UIManager page-stack template intended for `src/UIManager.js`.
 - `assets/DW200_V20-app.dxproj`: Example `app.dxproj` for DW200_V20.
 - `assets/VF105_V12-app.dxproj`: Example `app.dxproj` for VF105_V12.

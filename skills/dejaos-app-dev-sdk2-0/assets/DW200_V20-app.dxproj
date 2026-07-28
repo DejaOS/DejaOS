@@ -107,7 +107,6 @@
     "folder": ".temp",
     "file": "md5s.json,md5snew.json"
   },
-  "folder": ".temp,.prompt",
-  "file": "md5s.json,md5snew.json",
-  "version": "undefined"
+  "sdkId": "43957835b0974589a68dae7ef0f6108c",
+  "mainModel": "DW200_V20"
 }

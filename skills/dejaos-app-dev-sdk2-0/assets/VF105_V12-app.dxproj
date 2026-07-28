@@ -87,7 +87,6 @@
     "folder": ".temp",
     "file": "md5s.json,md5snew.json"
   },
-  "version": "1.0.0",
-  "folder": ".temp",
-  "file": "md5s.json,md5snew.json"
+  "mainModel": "VF105_V12",
+  "sdkId": "43957835b0974589a68dae7ef0f6108c"
 }
