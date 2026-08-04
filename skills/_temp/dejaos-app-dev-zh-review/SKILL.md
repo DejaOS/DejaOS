@@ -144,6 +144,7 @@ description: 使用 dejaos CLI 创建、修改、迁移、运行、调试或审�
 开发人脸功能前读取 `references/face-app-rules.md`，并遵守：
 
 - 实时摄像头画面默认全屏并位于最底层；需要显示时让上层 UI 背景全部或局部透明。
+- 人脸应用使用 `UIManager.js` 时，在复制到项目的文件中创建 `_rootScreen` 后立即增加 `this._rootScreen.bgOpa(0);`，让全局根屏幕透明，避免遮住底层摄像头画面。非人脸应用不能默认启用。
 - 人脸识别应用默认显示实时画面；追踪框是否显示按产品体验决定。
 - 人脸注册期间必须调用 `dxFacial.setStatus(true)`，不能使用 `false`。
 - SDK 2.0 通常由 `dxFacial` 自身封装人脸链路，在人脸 Worker 中初始化 `dxFacial`。

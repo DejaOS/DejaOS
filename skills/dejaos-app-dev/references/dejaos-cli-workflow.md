@@ -91,7 +91,6 @@ dxLogger
 dxStd
 dxOs
 dxDriver
-dxMap
 dxCommonUtils
 dxSystemBus
 ```

@@ -27,13 +27,13 @@ const UIManager = {
         // 1. Create a global main screen container
         // Here use 'act' to indicate it is an Activity/Screen level object
         this._rootScreen = dxui.View.build(std.genRandomStr(10), dxui.Utils.LAYER.MAIN);
-        // Facial apps with a bottom-layer camera preview must add: this._rootScreen.bgOpa(0);
 
-        // 清除默认边距等
+        // Clear default padding / radius / border; keep root transparent for camera preview
         this._rootScreen.radius(0);
         this._rootScreen.borderWidth(0);
         this._rootScreen.padAll(0);
-        this._rootScreen.scroll(false)
+        this._rootScreen.scroll(false);
+        this._rootScreen.bgOpa(0);
 
         // 3. Key: Load this main screen and make it visible
         // Afterwards, all Views are child controls on this screen, switched via show/hide
@@ -141,7 +141,7 @@ const UIManager = {
                 return;
             }
 
-            // Execute init（使用安全调用防止单页初始化异常）
+            // Run init (safe call so one page failure does not break the manager)
             let rootObj = null;
             try {
                 rootObj = nextView.init();

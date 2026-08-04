@@ -144,6 +144,7 @@ Read `references/dxmodules-api-audit.md` for the detailed audit procedure and se
 Read `references/face-app-rules.md` before implementing facial features, and follow these rules:
 
 - The live camera preview is full-screen by default and occupies the bottom display layer. Make the upper UI background fully or partially transparent when the preview must remain visible.
+- If the facial app uses `UIManager.js`, add `this._rootScreen.bgOpa(0);` to the copied project file immediately after creating `_rootScreen`. This keeps the global root screen transparent so it does not hide the bottom-layer camera preview. Do not enable this by default for non-facial apps.
 - Facial-recognition apps show the live preview by default. Whether to show a tracking box depends on product experience.
 - During facial enrollment, call `dxFacial.setStatus(true)`; never use `false` during enrollment.
 - In SDK 2.0, `dxFacial` normally encapsulates the facial pipeline and is initialized in a facial Worker.

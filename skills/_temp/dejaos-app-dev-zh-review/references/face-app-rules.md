@@ -8,6 +8,25 @@
 - 只需要局部摄像头区域时，可使用带透明窗口的背景图，或让对应 UI 区域透明。
 - 透明设计必须同时检查文字、按钮和状态层的可读性。
 
+### UIManager 根屏幕透明
+
+人脸应用使用本 Skill 的 `assets/UIManager.js` 时，复制为 `src/UIManager.js`，并在创建 `_rootScreen` 后立即增加：
+
+```js
+this._rootScreen.bgOpa(0);
+```
+
+示例：
+
+```js
+this._rootScreen = dxui.View.build(std.genRandomStr(10), dxui.Utils.LAYER.MAIN);
+this._rootScreen.bgOpa(0);
+```
+
+- 对需要显示实时摄像头画面的人脸应用执行；不能让通用模板默认透明，以免影响无关应用。
+- 这行代码只让全局根屏幕透明；其上的页面根 View、面板或背景图片也必须透明，或者包含所需的透明窗口。
+- 部署前仍需对照目标项目生成的 `dxUi.js` 包装器确认 `bgOpa`。
+
 ## 识别体验
 
 - 使用人脸识别时默认显示实时画面，帮助用户调整距离、角度和位置。
@@ -83,6 +102,7 @@ dxCapturer.init()
 ## 真机检查
 
 - 摄像头预览实际可见，没有被根 View 遮住。
+- 人脸应用使用 UIManager 时，`src/UIManager.js` 已包含 `this._rootScreen.bgOpa(0);`。
 - 局部透明窗口位置和尺寸正确。
 - 人脸移动时画面与可选追踪框一致。
 - 注册期间日志能证明 `setStatus(true)` 已建立。

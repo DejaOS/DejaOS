@@ -8,6 +8,25 @@
 - For a partial camera region, use a background image with a transparent window or make the corresponding UI area transparent.
 - Check text, button, and status-layer readability whenever transparency is used.
 
+### UIManager Root Transparency
+
+When a facial app uses the bundled `assets/UIManager.js`, copy it to `src/UIManager.js` and add this line immediately after `_rootScreen` is created:
+
+```js
+this._rootScreen.bgOpa(0);
+```
+
+For example:
+
+```js
+this._rootScreen = dxui.View.build(std.genRandomStr(10), dxui.Utils.LAYER.MAIN);
+this._rootScreen.bgOpa(0);
+```
+
+- Apply this to facial apps that show the live camera preview; do not make the reusable template transparent by default for unrelated apps.
+- This only makes the global root screen transparent. Page root Views, panels, or background images above it must also be transparent or contain the required transparent window.
+- Verify `bgOpa` against the target project's generated `dxUi.js` wrapper before deployment.
+
 ## Recognition Experience
 
 - Show the live preview by default during facial recognition so users can adjust distance, angle, and position.
@@ -83,6 +102,7 @@ This is the actual pipeline from the reviewed project, not a fixed function temp
 ## On-Device Checks
 
 - The camera preview is visible and not hidden by the root View.
+- `src/UIManager.js` contains `this._rootScreen.bgOpa(0);` when UIManager is used by a facial app.
 - A partial transparent window has the correct position and dimensions.
 - As the face moves, the video and optional tracking box stay aligned.
 - Enrollment logs prove that `setStatus(true)` was established.
