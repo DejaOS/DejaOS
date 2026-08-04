@@ -37,7 +37,7 @@ Runtime path conventions:
 
 - `src/` is deployed to `/app/code/src`.
 - `resource/` is deployed to `/app/code/resource`.
-- Runtime data should be stored under `/app/data`.
+- Use `/data` as the default runtime data root for device models beginning with `VF`; use `/app/data` for other model families unless the target project or device documentation defines another path.
 - Resource paths in code should be absolute runtime paths, for example `/app/code/resource/image/logo.png`.
 
 The bundled SKU reference currently documents:
@@ -270,7 +270,7 @@ Use `dxSqliteDB` for structured data and `dxKeyValueDB` for simple key-value dat
 
 Rules:
 
-- Put database files under `/app/data/`.
+- Put database files under `/data/` on models beginning with `VF`; use `/app/data/` for other model families unless the target project or device documentation defines another path.
 - Keep quick reads/writes local when safe.
 - Use a dedicated worker or service layer for heavy batch operations or high-frequency writes.
 - Provide small escape/normalization helpers if writing SQL manually.

@@ -47,7 +47,7 @@ Read `references/dejaos-cli-workflow.md` when installing the CLI, creating a pro
 5. Treat `dxmodules/` as generated, project-specific, read-only vendor code. Use it as the authoritative API definition for the installed component versions.
 6. For every component call, open the corresponding `dxmodules/*.js` file and verify the exported object, function name, argument order/count, return shape, constants, and required initialization. Do not invent a function because it exists in another SDK version, example, or similarly named module.
 7. Search all app imports and component member calls before completion. Flag any imported module absent from `dxmodules/` and any called member not defined by the installed wrapper.
-8. Keep app code under `src/`, resources under `resource/`, and runtime data under `/app/data`.
+8. Keep app code under `src/` and resources under `resource/`. Use `/data` as the default runtime data root for device models beginning with `VF`; use `/app/data` for other model families unless the target project or device documentation defines another path.
 9. Use absolute runtime resource paths such as `/app/code/resource/logo.png`.
 
 ## Project Rules

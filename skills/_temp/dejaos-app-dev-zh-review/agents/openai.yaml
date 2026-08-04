@@ -1,0 +1,4 @@
+interface:
+  display_name: "DejaOS App 开发"
+  short_description: "开发和真机验证 DejaOS SDK 2.0/4.0 应用"
+  default_prompt: "使用 $dejaos-app-dev，在确认设备型号和 SDK 版本后创建或修改 DejaOS 应用，并完成组件 API 与真机日志检查。"

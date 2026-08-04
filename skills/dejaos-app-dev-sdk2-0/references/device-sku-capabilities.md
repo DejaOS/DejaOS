@@ -18,6 +18,7 @@ Use this matrix to constrain application requirements before selecting component
 4. Treat service options as unavailable until the user confirms that the service is enabled for the deployment.
 5. Do not implement a feature absent from both the standard and optional lists for the selected model.
 6. After deciding the hardware capability, still verify that its component is installed in `app.dxproj`/`dxmodules/` and that all calls match the generated wrapper API.
+7. Use `/data` as the default runtime data root for model names beginning with `VF`; use `/app/data` for other model families unless target-project or device documentation defines another path.
 
 ## VF105_V12
 

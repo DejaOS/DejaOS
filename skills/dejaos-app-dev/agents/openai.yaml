@@ -1,0 +1,4 @@
+interface:
+  display_name: "DejaOS App Development"
+  short_description: "Develop and validate DejaOS SDK 2.0 and 4.0 apps"
+  default_prompt: "Use $dejaos-app-dev to create or update a DejaOS app after confirming the device model and SDK version, then validate component APIs and device logs."
