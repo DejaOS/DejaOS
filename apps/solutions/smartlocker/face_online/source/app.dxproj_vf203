@@ -1,0 +1,92 @@
+{
+  "name": "vf203_v12_smartlocker_1.1.4",
+  "model": "VF203_V12",
+  "components": [
+    {
+      "component": "dxAudio",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxCommonUtils",
+      "version": "1.0.3"
+    },
+    {
+      "component": "dxCommon",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxDriver",
+      "version": "1.2.5"
+    },
+    {
+      "component": "dxEventBus",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxFacial",
+      "version": "1.1.2"
+    },
+    {
+      "component": "dxHttpClient",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxLogger",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxMap",
+      "version": "2.0.1"
+    },
+    {
+      "component": "dxMqttClient",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxNtp",
+      "version": "2.0.6"
+    },
+    {
+      "component": "dxNetwork",
+      "version": "1.0.9"
+    },
+    {
+      "component": "dxOs",
+      "version": "1.0.2"
+    },
+    {
+      "component": "dxOta",
+      "version": "2.0.2"
+    },
+    {
+      "component": "dxPwm",
+      "version": "2.0.0"
+    },
+    {
+      "component": "dxStd",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxSqliteDB",
+      "version": "1.0.0"
+    },
+    {
+      "component": "dxUi",
+      "version": "2.0.3"
+    },
+    {
+      "component": "dxUart",
+      "version": "1.0.1"
+    },
+    {
+      "component": "dxWatchdog",
+      "version": "1.0.1"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp,refer,test,doc",
+    "file": "md5s.json,md5snew.json,design.md,储物柜产品需求.md,fitlock mqtt协议文档.md"
+  },
+  "sdkId": "e67894e9b90648d79845c97fa54d9496",
+  "mainModel": "VF203_V12"
+}
