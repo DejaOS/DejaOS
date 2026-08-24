@@ -20,11 +20,43 @@ Check and install:
 
 ```text
 dejaos --version
+```
+
+Do not treat a failed direct command as proof that the CLI is uninstalled. Codex, sandboxed tools, IDE terminals, and user terminals may have different `PATH` values.
+
+Before offering installation, run the applicable discovery checks.
+
+Windows:
+
+```text
+Get-Command dejaos -All -ErrorAction SilentlyContinue
+where.exe dejaos
+cmd.exe /d /s /c "dejaos --version"
+npm.cmd prefix -g
+npm.cmd list -g dejaos-cli --depth=0
+<npm-prefix>\dejaos.cmd --version
+%APPDATA%\npm\dejaos.cmd --version
+```
+
+macOS/Linux:
+
+```text
+command -v dejaos
+npm prefix -g
+npm list -g dejaos-cli --depth=0
+<npm-prefix>/bin/dejaos --version
+```
+
+If an executable exists, retain and use its absolute path for the task. If the restricted environment returns access denied, request elevated execution or ask the user to run the absolute-path version command in their normal terminal. Report "installed but not callable from the current execution environment," not "not installed," and do not reinstall merely to repair the current process's `PATH`.
+
+Only when all discovery checks fail, ask for approval and install:
+
+```text
 npm install -g dejaos-cli
 dejaos --version
 ```
 
-Only install after the user approves the global npm installation.
+Do not claim installation succeeded without a verified version result.
 
 ## Create a project
 

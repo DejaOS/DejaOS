@@ -67,7 +67,9 @@ description: 使用 dejaos CLI 创建、修改、迁移、运行、调试或审�
 ## CLI 优先工作流
 
 1. 执行 `dejaos --version`。
-2. CLI 不可用时，说明需要 Node.js 18+ 和 `dejaos-cli`。征得同意后执行 `npm install -g dejaos-cli`，再用 `dejaos --version` 验证。
+2. 直接命令失败不能证明 CLI 未安装。Codex 或其他受限 Shell 可能没有继承用户终端的 `PATH`。提出安装前，必须按 `references/dejaos-cli-workflow.md` 定位已有 CLI：检查 Shell 命令解析、`where.exe`/`command -v`、`npm prefix -g`、Windows 的 `%APPDATA%\npm\dejaos.cmd`，以及 `npm list -g dejaos-cli --depth=0`。
+   - 找到可执行文件后，本次任务后续命令都使用绝对路径。受限环境拒绝执行时，请求授权提升执行权限，或让开发者在正常终端执行 `<绝对路径> --version` 并返回结果。此时应报告“已安装，但当前执行环境无法直接调用”，不能报告“未安装”。
+   - 只有全部定位检查都失败后，才说明需要 Node.js 18+ 和 `dejaos-cli`。征得同意后执行 `npm install -g dejaos-cli`，再验证已安装的可执行文件。
 3. 新项目完成所有门禁后执行：
 
    ```text
@@ -103,6 +105,7 @@ description: 使用 dejaos CLI 创建、修改、迁移、运行、调试或审�
 - 必须安装 `dxSystemBus`，因为组件包装器内部依赖它；普通 App 业务代码不得直接 import 或调用 `dxSystemBus`。
 - 初始化按依赖顺序执行，销毁按相反顺序执行。清理监听器、定时器、客户端、数据库和组件。
 - 需要理解 4.0 的 Promise、事件和生命周期模式时读取 `references/sdk4-api-patterns.md`；具体函数始终以项目安装后生成的包装器为准。
+- 需要具体 SDK 4.0 示例时，先读取 `references/sdk4-reference-project.md`，再按需检查 `references/sdk4-reference-project/src/` 中的相关文件。参考源码只用于学习架构和调用模式，不是 API 权威或项目模板。
 
 ## 项目和组件 API 检查
 
@@ -146,7 +149,7 @@ description: 使用 dejaos CLI 创建、修改、迁移、运行、调试或审�
 - 实时摄像头画面默认全屏并位于最底层；需要显示时让上层 UI 背景全部或局部透明。
 - 人脸应用使用 `UIManager.js` 时，在复制到项目的文件中创建 `_rootScreen` 后立即增加 `this._rootScreen.bgOpa(0);`，让全局根屏幕透明，避免遮住底层摄像头画面。非人脸应用不能默认启用。
 - 人脸识别应用默认显示实时画面；追踪框是否显示按产品体验决定。
-- 人脸注册期间必须调用 `dxFacial.setStatus(true)`，不能使用 `false`。
+- 特征采集和人脸特征库写入前及执行期间必须保证 `dxFacial` 正在运行。仅当目标包装器和真机已经验证时，才可在采集前短暂执行 `false -> true` 重启；不得在引擎保持暂停时采集或写入特征。
 - SDK 2.0 通常由 `dxFacial` 自身封装人脸链路，在人脸 Worker 中初始化 `dxFacial`。
 - SDK 4.0 将图像链路拆成多个组件；完整实时采集、预览和识别按目标包装器核对 `dxCapturer -> dxIvcore -> dxDisplay -> dxFacial` 的依赖和初始化顺序。
 - `dxCapcal` 不是人脸识别必需组件；只在需要摄像头标定且已安装包装器明确支持时使用。
@@ -176,6 +179,8 @@ description: 使用 dejaos CLI 创建、修改、迁移、运行、调试或审�
 - `references/sdk2-large-app-patterns.md`：SDK 2.0 多 Worker 大型应用的分层、状态桥和命令路由。
 - `references/sdk4-runtime.md`：SDK 4.0 单运行时异步架构和迁移规则。
 - `references/sdk4-api-patterns.md`：SDK 4.0 Promise、事件和生命周期模式；函数签名仍需检查项目包装器。
+- `references/sdk4-reference-project.md`：Skill 内置 SDK 4.0 JavaScript 参考源码的导航和使用边界。
+- `references/sdk4-reference-project/src/`：只读 SDK 4.0 应用源码示例；不是可运行模板，不能代替目标项目包装器。
 - `references/dxmodules-api-audit.md`：逐函数 API 校验流程。
 - `references/face-app-rules.md`：人脸预览、图层、注册和清理规则。
 - `assets/UIManager.js`：通用单屏多页面管理器。

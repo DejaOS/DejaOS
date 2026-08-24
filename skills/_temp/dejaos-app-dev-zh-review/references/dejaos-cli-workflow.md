@@ -24,14 +24,41 @@
 dejaos --version
 ```
 
-如果命令不存在，先告知开发者需要进行全局 npm 安装。得到同意后执行：
+不能只根据这条命令失败就判定 CLI 未安装。Codex、沙箱工具、IDE 终端和用户终端的 `PATH` 可能不同。
+
+直接执行失败时，提出安装前先定位已有安装。
+
+Windows：
+
+```text
+Get-Command dejaos -All -ErrorAction SilentlyContinue
+where.exe dejaos
+cmd.exe /d /s /c "dejaos --version"
+npm.cmd prefix -g
+npm.cmd list -g dejaos-cli --depth=0
+<npm-prefix>\dejaos.cmd --version
+%APPDATA%\npm\dejaos.cmd --version
+```
+
+macOS/Linux：
+
+```text
+command -v dejaos
+npm prefix -g
+npm list -g dejaos-cli --depth=0
+<npm-prefix>/bin/dejaos --version
+```
+
+找到可执行文件后，本次任务后续命令都使用绝对路径。如果文件存在但受限执行环境返回拒绝访问，请求授权提升执行权限，或让开发者在正常终端执行绝对路径版本命令并返回结果。必须报告“已安装，但当前执行环境无法直接调用”，不能报告“未安装”，也不能仅为修复当前进程的 `PATH` 而重复安装。
+
+只有全部定位检查都失败时，才告知开发者需要全局安装。得到同意后执行：
 
 ```text
 npm install -g dejaos-cli
 dejaos --version
 ```
 
-第二次版本检查未通过时，不得声称安装成功。
+第二次版本检查未通过时，不得声称安装成功。定位到已有或新安装的可执行文件后，验证并在本次任务中使用其绝对路径。
 
 ## 开发上下文
 

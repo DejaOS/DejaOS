@@ -42,7 +42,8 @@ this._rootScreen.bgOpa(0);
   dxFacial.setStatus(true)
   ```
 
-- Never pass `false` during enrollment, or enrollment will not function correctly.
+- Keep the engine running before and during `getFeaByCap`, `addFea`, and `updateFea`; never call those operations while status remains `false`.
+- A short `false -> true` restart before capture can reset detection or recheck timing. Use it only when the target wrapper and real device have verified that behavior, and restore `true` synchronously before starting capture. Do not treat this restart as a universal facial-enrollment requirement.
 - Entering enrollment, capturing features, saving business records, and leaving enrollment should form an explicit state machine.
 - Handle rollback or recoverable state when feature extraction, photo storage, and database writes partially succeed.
 

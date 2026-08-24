@@ -67,7 +67,9 @@ Read `references/tools-http-api.md` when querying or troubleshooting. The curren
 ## CLI-First Workflow
 
 1. Run `dejaos --version`.
-2. If the CLI is unavailable, explain that Node.js 18+ and `dejaos-cli` are required. After obtaining permission, run `npm install -g dejaos-cli`, then verify with `dejaos --version`.
+2. A failed direct command does not prove that the CLI is uninstalled. Codex or another restricted shell may not inherit the user's terminal `PATH`. Before offering installation, follow the discovery procedure in `references/dejaos-cli-workflow.md`: check shell lookup, `where.exe`/`command -v`, `npm prefix -g`, Windows `%APPDATA%\npm\dejaos.cmd`, and `npm list -g dejaos-cli --depth=0`.
+   - If an executable exists, use its absolute path for all later CLI commands. If the restricted environment denies execution, request elevated execution or ask the developer to run `<absolute-path> --version` in their normal terminal. Report "installed but not callable from the current execution environment," not "not installed."
+   - Only when every discovery check fails, explain that Node.js 18+ and `dejaos-cli` are required. After obtaining permission, run `npm install -g dejaos-cli`, then verify the installed executable.
 3. After all gates pass for a new project, run:
 
    ```text
@@ -103,6 +105,7 @@ Read `references/dejaos-cli-workflow.md` for the complete command and device-val
 - Install `dxSystemBus` because component wrappers depend on it internally. Ordinary application business code must not directly import or call `dxSystemBus`.
 - Initialize in dependency order and destroy in reverse order. Clean up listeners, timers, clients, databases, and components.
 - Read `references/sdk4-api-patterns.md` for Promise, event, and lifecycle patterns. Actual functions must always be verified against the wrappers generated for the project.
+- When a concrete SDK 4.0 example would help, read `references/sdk4-reference-project.md` and then inspect only the relevant files under `references/sdk4-reference-project/src/`. Use the bundled source to learn architecture and usage patterns, never as an API authority or a project template.
 
 ## Project and Component API Audit
 
@@ -146,7 +149,7 @@ Read `references/face-app-rules.md` before implementing facial features, and fol
 - The live camera preview is full-screen by default and occupies the bottom display layer. Make the upper UI background fully or partially transparent when the preview must remain visible.
 - If the facial app uses `UIManager.js`, add `this._rootScreen.bgOpa(0);` to the copied project file immediately after creating `_rootScreen`. This keeps the global root screen transparent so it does not hide the bottom-layer camera preview. Do not enable this by default for non-facial apps.
 - Facial-recognition apps show the live preview by default. Whether to show a tracking box depends on product experience.
-- During facial enrollment, call `dxFacial.setStatus(true)`; never use `false` during enrollment.
+- Ensure `dxFacial` is running before and during feature capture and feature-library writes. A short `false -> true` restart may be used before capture only when the target wrapper and device have verified that pattern; never capture or write features while the engine remains paused.
 - In SDK 2.0, `dxFacial` normally encapsulates the facial pipeline and is initialized in a facial Worker.
 - In SDK 4.0, the image pipeline is split across components. For complete live capture, preview, and recognition, verify the dependencies and initialization order `dxCapturer -> dxIvcore -> dxDisplay -> dxFacial` against the target wrappers.
 - `dxCapcal` is not required for facial recognition. Use it only when camera calibration is needed and the installed wrapper explicitly supports it.
@@ -176,6 +179,8 @@ After every material source, configuration, or asset change:
 - `references/sdk2-large-app-patterns.md`: Layering, state bridge, and command routing for large SDK 2.0 multi-Worker apps.
 - `references/sdk4-runtime.md`: SDK 4.0 unified async runtime architecture and migration rules.
 - `references/sdk4-api-patterns.md`: SDK 4.0 Promise, event, and lifecycle patterns; signatures still require project-wrapper verification.
+- `references/sdk4-reference-project.md`: Navigation and safety boundaries for the bundled SDK 4.0 JavaScript reference source.
+- `references/sdk4-reference-project/src/`: Read-only SDK 4.0 application source examples; not a runnable template and not a substitute for target-project wrappers.
 - `references/dxmodules-api-audit.md`: Per-function API validation process.
 - `references/face-app-rules.md`: Facial preview, layer, enrollment, and cleanup rules.
 - `assets/UIManager.js`: General single-screen, multi-page manager.

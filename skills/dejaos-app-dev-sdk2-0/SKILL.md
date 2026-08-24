@@ -18,8 +18,10 @@ Use this skill for DejaOS SDK 2.0 embedded JavaScript apps. DejaOS runs on Quick
 
 Treat device execution as the normal development loop, not an optional final step.
 
-1. Before creating or changing an app, check whether the CLI is available with `dejaos --version`.
-2. If it is unavailable, tell the user that Node.js 18+ and `dejaos-cli` are required. Ask whether to install it, then, after approval, run `npm install -g dejaos-cli` and verify again with `dejaos --version`. Do not claim installation succeeded without the verification result.
+1. Before creating or changing an app, try `dejaos --version`.
+2. A failed direct command does not prove that the CLI is uninstalled because Codex or another restricted shell may not inherit the user's terminal `PATH`. Before offering installation, follow `references/dejaos-cli-workflow.md`: check shell lookup, `where.exe`/`command -v`, `npm prefix -g`, Windows `%APPDATA%\npm\dejaos.cmd`, and `npm list -g dejaos-cli --depth=0`.
+   - If an executable exists, use its absolute path for all later CLI commands. If the restricted environment denies execution, request elevated execution or ask the user to run `<absolute-path> --version` in their normal terminal. Report "installed but not callable from the current execution environment," not "not installed."
+   - Only when every discovery check fails, tell the user that Node.js 18+ and `dejaos-cli` are required. Ask whether to install it, then, after approval, run `npm install -g dejaos-cli` and verify the installed executable. Do not claim installation succeeded without verification.
 3. For a new app, ask for the exact target device model before creating files. Do not limit the user to a hard-coded model list because the CLI obtains the current supported models from the DejaOS tools service. Read `references/tools-http-api.md` when model, SDK, or component discovery details are needed.
 4. Read `references/device-sku-capabilities.md` for `VF105_V12`, `VF114_V12`, `VF203_V12`, or `VF202_V12`. Ask which optional SKU features are physically present when the requested app depends on them. Reject features that the selected model does not support; for example, do not design Wi-Fi behavior for `VF202_V12`.
 5. Collect or reasonably derive the project name, project directory, whether the app has a UI, and SDK version. Default the SDK to `2.0` when the user does not specify it.
