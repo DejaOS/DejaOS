@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>柜格管理</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        * { scrollbar-width: auto; scrollbar-color: #8f9daa #eef2f5; }
+        *::-webkit-scrollbar { width: 12px; height: 12px; }
+        *::-webkit-scrollbar-track { background: #eef2f5; border-radius: 8px; }
+        *::-webkit-scrollbar-thumb { background: #9aa8b5; border-radius: 8px; border: 2px solid #eef2f5; }
+        *::-webkit-scrollbar-thumb:hover { background: #6f7f8f; }
+        body { margin: 0; padding: 15px; background: #f2f2f2; color: #333; }
+        .locker-workbench { display: grid; grid-template-columns: 280px minmax(420px, 1fr) 320px; gap: 14px; height: calc(100vh - 30px); min-height: 620px; }
+        .panel { background: #fff; border: 1px solid #eee; border-radius: 4px; min-height: 0; display: flex; flex-direction: column; }
+        .panel-header { height: 50px; padding: 0 14px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .panel-title { font-size: 15px; font-weight: 700; }
+        .panel-body { flex: 1; min-height: 0; overflow: auto; padding: 12px; }
+        .muted { color: #8c8c8c; font-size: 12px; }
+        .device-node, .group-node { padding: 9px 10px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .device-node:hover, .group-node:hover { background: #f6fffe; }
+        .device-node.active, .group-node.active { background: #e6fffb; color: #16baaa; }
+        .device-name, .group-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .group-list { margin-left: 16px; padding-left: 10px; border-left: 1px dashed #d9d9d9; }
+        .empty { padding: 60px 20px; text-align: center; color: #999; }
+        .summary { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .summary .layui-btn { margin: 0; }
+        .section { margin-bottom: 18px; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-left: 10px; border-left: 4px solid #16baaa; }
+        .section-title { font-weight: 700; }
+        .locker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+        .locker-box { min-height: 104px; border: 1px solid #e6e6e6; border-radius: 6px; background: #fff; cursor: pointer; padding: 10px; position: relative; transition: box-shadow .16s, border-color .16s, transform .16s; }
+        .locker-box:hover { border-color: #16baaa; box-shadow: 0 4px 12px rgba(0, 0, 0, .08); transform: translateY(-1px); }
+        .locker-box.active { border-color: #16baaa; background: #f6fffe; box-shadow: 0 0 0 2px rgba(22, 186, 170, .16); }
+        .locker-code { position: absolute; top: 8px; right: 8px; color: #999; font-size: 12px; }
+        .locker-name { font-size: 20px; font-weight: 700; margin-top: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .locker-tags { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+        .detail-placeholder { display: flex; align-items: center; justify-content: center; min-height: 240px; color: #999; text-align: center; }
+        .detail-panel.hidden .detail-content { display: none; }
+        .detail-panel:not(.hidden) .detail-placeholder { display: none; }
+        .inline-save-row { display: grid; grid-template-columns: 56px 1fr 64px; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .inline-save-row label { color: #555; text-align: right; }
+        .inline-save-row .layui-input { height: 34px; line-height: 34px; }
+        .inline-save-row .layui-btn { height: 34px; line-height: 34px; padding: 0; }
+        .kv { display: grid; grid-template-columns: 92px 1fr; gap: 8px; padding: 7px 0; border-bottom: 1px solid #f5f5f5; }
+        .kv .k { color: #888; }
+        .detail-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+        .detail-actions .layui-btn { width: 100%; margin: 0; padding: 0 8px; }
+        .detail-actions .wide { grid-column: 1 / -1; }
+        @media (max-width: 1100px) { .locker-workbench { grid-template-columns: 240px 1fr; } .detail-panel { grid-column: 1 / -1; min-height: 360px; } }
+    </style>
+</head>
+<body>
+<div class="locker-workbench">
+    <div class="panel">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title">设备与柜组</div>
+                <div class="muted">选择设备或柜组查看柜格</div>
+            </div>
+            <button class="layui-btn layui-btn-sm layui-btn-primary" id="btnReloadTree"><i class="layui-icon layui-icon-refresh"></i></button>
+        </div>
+        <div class="panel-body" id="treeContainer"></div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title" id="mainTitle">柜格详情</div>
+                <div class="muted" id="mainSubtitle">请选择左侧设备</div>
+            </div>
+            <div class="summary">
+                <button class="layui-btn layui-btn-sm layui-btn-normal" id="btnAddGroup">添加柜组</button>
+                <button class="layui-btn layui-btn-sm layui-btn-primary" id="btnEditGroup">修改柜组</button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger" id="btnDeleteGroup">删除柜组</button>
+                <button class="layui-btn layui-btn-sm layui-btn-warm" id="btnSyncDevice">全部同步</button>
+                <button class="layui-btn layui-btn-sm" id="btnReloadLockers">刷新</button>
+            </div>
+        </div>
+        <div class="panel-body" id="lockerContainer">
+            <div class="empty">请选择一个设备或柜组</div>
+        </div>
+    </div>
+
+    <div class="panel detail-panel hidden" id="detailPanel">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title">柜格操作</div>
+                <div class="muted" id="detailSubtitle">选中柜格后显示</div>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="detail-placeholder">点击中间的柜格后，在这里查看属性和执行操作</div>
+            <div class="detail-content">
+                <form class="layui-form" lay-filter="lockerBasicForm">
+                    <input type="hidden" name="id">
+                    <div class="inline-save-row">
+                        <label>名称</label>
+                        <input name="name" class="layui-input" lay-verify="required">
+                        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveLockerBasic">保存</button>
+                    </div>
+                </form>
+                <form class="layui-form" lay-filter="lockerStatusForm">
+                    <input type="hidden" name="id">
+                    <div class="inline-save-row">
+                        <label>状态</label>
+                        <select name="status">
+                            <option value="1">空闲</option>
+                            <option value="2">使用中</option>
+                            <option value="3">锁定</option>
+                            <option value="4">故障</option>
+                            <option value="5">空格</option>
+                        </select>
+                        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveLockerStatus">保存</button>
+                    </div>
+                </form>
+
+                <div style="margin-top: 16px;" id="lockerProps"></div>
+
+                <div class="detail-actions">
+                    <button class="layui-btn layui-btn-normal wide" id="btnAssignFixed">分配/修改长期柜</button>
+                    <button class="layui-btn layui-btn-primary wide" id="btnConvertTemp">转为临时柜</button>
+                    <button class="layui-btn layui-btn-normal" id="btnRemoteOpen">远程开柜</button>
+                    <button class="layui-btn layui-btn-warm" id="btnRemoteRelease">远程释放</button>
+                    <button class="layui-btn layui-btn-primary wide" id="btnCloseDetail">取消选择</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="groupFormLayer" style="display: none; padding: 18px 20px 4px;">
+    <form class="layui-form" lay-filter="groupForm">
+        <input type="hidden" name="id">
+        <input type="hidden" name="deviceId">
+        <div class="layui-form-item">
+            <label class="layui-form-label">柜组名称</label>
+            <div class="layui-input-block"><input name="channelName" class="layui-input" lay-verify="required"></div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">柜组编号</label>
+            <div class="layui-input-block"><input type="number" name="channelNo" class="layui-input" lay-verify="required|number"></div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">柜格数量</label>
+            <div class="layui-input-block"><input type="number" name="lockerCount" value="50" class="layui-input" lay-verify="required|number"></div>
+        </div>
+    </form>
+</div>
+
+<div id="fixedAssignLayer" style="display: none; padding: 18px 20px 4px;">
+    <form class="layui-form" lay-filter="fixedAssignForm">
+        <input type="hidden" name="lockerId">
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户</label>
+            <div class="layui-input-block">
+                <select name="userId" id="fixedUserSelect" lay-search>
+                    <option value="">不绑定用户</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">开始时间</label>
+            <div class="layui-input-block"><input type="datetime-local" name="startTime" class="layui-input"></div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">结束时间</label>
+            <div class="layui-input-block"><input type="datetime-local" name="endTime" class="layui-input"></div>
+        </div>
+        <div class="layui-word-aux">用户和时间都可以不填；只设置为长期柜时，柜格仍保持空闲。</div>
+    </form>
+</div>
+
+<script src="../../assets/layui/layui.js"></script>
+<script src="../../assets/js/common.js"></script>
+<script>
+layui.use(['form', 'layer'], function () {
+    var $ = layui.jquery, form = layui.form, layer = layui.layer;
+    var state = {devices: [], channels: {}, lockers: [], users: [], selectedDevice: null, selectedGroup: null, selectedLocker: null};
+
+    function request(url, method, data, done, fail) {
+        var loadingIndex = null;
+        if (method !== 'GET') {
+            loadingIndex = layer.load(2, {shade: [0.12, '#fff']});
+        }
+        $.ajax({
+            url: MyConfig.API_BASE + url,
+            type: method,
+            contentType: 'application/json;charset=UTF-8',
+            data: method === 'GET' ? data : JSON.stringify(data || {}),
+            headers: {'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')},
+            success: function (res) {
+                if (res.code === 0 || res.code === 200) {
+                    if (done) done(res.data);
+                } else {
+                    var msg = res.message || res.msg || '操作失败';
+                    layer.msg(msg, {icon: 2});
+                    if (fail) fail(msg);
+                }
+            },
+            error: function (xhr) {
+                var msg = '服务连接异常(' + xhr.status + ')';
+                layer.msg(msg, {icon: 2});
+                if (fail) fail(msg);
+            },
+            complete: function () {
+                if (loadingIndex !== null) {
+                    layer.close(loadingIndex);
+                }
+            }
+        });
+    }
+
+    function statusText(status) {
+        if (status === 1) return '空闲';
+        if (status === 2) return '使用中';
+        if (status === 3) return '锁定';
+        if (status === 4) return '故障';
+        if (status === 5) return '空格';
+        return '未知';
+    }
+
+    function typeText(type) {
+        return type === 1 ? '长期柜' : '临时柜';
+    }
+
+    function statusClass(status) {
+        if (status === 1) return 'layui-bg-green';
+        if (status === 2) return 'layui-bg-orange';
+        if (status === 3) return 'layui-bg-red';
+        if (status === 4) return 'layui-bg-black';
+        return 'layui-bg-gray';
+    }
+
+    function formatTimestamp(value) {
+        if (!value) return '-';
+        var date = new Date(Number(value) * 1000);
+        if (isNaN(date.getTime())) return '-';
+        return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+    }
+
+    function toDateTimeLocal(value) {
+        if (!value) return '';
+        var date = new Date(Number(value) * 1000);
+        if (isNaN(date.getTime())) return '';
+        return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+    }
+
+    function pad(num) {
+        return String(num).length < 2 ? '0' + num : String(num);
+    }
+
+    function currentChannels() {
+        return state.selectedDevice ? (state.channels[state.selectedDevice.id] || []) : [];
+    }
+
+    function selectedGroupChannel() {
+        var list = currentChannels();
+        for (var i = 0; i < list.length; i++) {
+            if (String(list[i].id) === String(state.selectedGroup)) return list[i];
+        }
+        return null;
+    }
+
+    function renderTree() {
+        var html = '';
+        if (!state.devices.length) {
+            $('#treeContainer').html('<div class="empty">暂无设备</div>');
+            return;
+        }
+        $.each(state.devices, function (_, device) {
+            var active = state.selectedDevice && String(state.selectedDevice.id) === String(device.id) && !state.selectedGroup;
+            html += '<div class="device-node ' + (active ? 'active' : '') + '" data-device-id="' + device.id + '">' +
+                '<span class="device-name"><i class="layui-icon layui-icon-engine"></i> ' + (device.deviceName || device.deviceNo) + '</span>' +
+                '<span class="layui-badge ' + (device.onlineStatus === 1 ? 'layui-bg-green' : 'layui-bg-gray') + '">' + (device.onlineStatus === 1 ? '在线' : '离线') + '</span>' +
+                '</div>';
+            var channels = state.channels[device.id] || [];
+            html += '<div class="group-list">';
+            $.each(channels, function (_, group) {
+                var groupActive = state.selectedDevice && String(state.selectedDevice.id) === String(device.id) && String(state.selectedGroup) === String(group.id);
+                html += '<div class="group-node ' + (groupActive ? 'active' : '') + '" data-device-id="' + device.id + '" data-group-id="' + group.id + '">' +
+                    '<span class="group-name"><i class="layui-icon layui-icon-component"></i> ' + (group.channelName || ('柜组 ' + group.channelNo)) + '</span>' +
+                    '<span class="muted">' + (group.lockerCount || 0) + '</span>' +
+                    '</div>';
+            });
+            html += '</div>';
+        });
+        $('#treeContainer').html(html);
+    }
+
+    function loadTree(done) {
+        request('/device/list', 'GET', {}, function (devices) {
+            state.devices = devices || [];
+            var remain = state.devices.length;
+            state.channels = {};
+            if (!remain) {
+                renderTree();
+                if (done) done();
+                return;
+            }
+            $.each(state.devices, function (_, device) {
+                request('/device-channel/page', 'GET', {deviceId: device.id, pageNo: 1, pageSize: 500}, function (page) {
+                    state.channels[device.id] = page && page.records ? page.records : [];
+                    remain--;
+                    if (remain === 0) {
+                        if (!state.selectedDevice && state.devices.length) state.selectedDevice = state.devices[0];
+                        renderTree();
+                        if (done) done();
+                    }
+                }, function () {
+                    state.channels[device.id] = [];
+                    remain--;
+                    if (remain === 0) {
+                        renderTree();
+                        if (done) done();
+                    }
+                });
+            });
+        });
+    }
+
+    function loadLockers() {
+        clearLockerSelection();
+        if (!state.selectedDevice) {
+            $('#mainTitle').text('柜格详情');
+            $('#mainSubtitle').text('请选择左侧设备');
+            $('#lockerContainer').html('<div class="empty">请选择一个设备或柜组</div>');
+            return;
+        }
+        $('#mainTitle').text(state.selectedDevice.deviceName || state.selectedDevice.deviceNo);
+        var group = selectedGroupChannel();
+        $('#mainSubtitle').text(group ? ('柜组：' + (group.channelName || group.channelNo)) : '全部柜组');
+        request('/locker/list', 'GET', {deviceId: state.selectedDevice.id}, function (lockers) {
+            state.lockers = lockers || [];
+            renderLockers();
+        });
+    }
+
+    function renderLockers() {
+        var lockers = state.lockers.slice();
+        if (state.selectedGroup) {
+            lockers = lockers.filter(function (item) { return String(item.channelId) === String(state.selectedGroup); });
+        }
+        if (!lockers.length) {
+            $('#lockerContainer').html('<div class="empty">暂无柜格数据，请先添加柜组</div>');
+            return;
+        }
+        var groups = {};
+        $.each(lockers, function (_, locker) {
+            var key = locker.channelId || 'none';
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(locker);
+        });
+        var html = '';
+        $.each(Object.keys(groups), function (_, key) {
+            var list = groups[key];
+            list.sort(function (a, b) { return (a.cabinetId || 0) - (b.cabinetId || 0); });
+            var title = list[0].groupName || list[0].channelName || ('柜组 ' + (list[0].groupId || key));
+            html += '<div class="section"><div class="section-header"><div class="section-title">' + title + '</div><span class="layui-badge layui-bg-gray">' + list.length + ' 个柜格</span></div>';
+            html += '<div class="locker-grid">';
+            $.each(list, function (_, locker) {
+                html += '<div class="locker-box" data-locker-id="' + locker.id + '">' +
+                    '<div class="locker-code">#' + (locker.cabinetId || '-') + '</div>' +
+                    '<div class="locker-name">' + (locker.cabinetName || locker.lockerNo || locker.id) + '</div>' +
+                    '<div class="locker-tags">' +
+                    '<span class="layui-badge ' + statusClass(locker.status) + '">' + statusText(locker.status) + '</span>' +
+                    '<span class="layui-badge ' + (locker.type === 1 ? 'layui-bg-blue' : 'layui-bg-gray') + '">' + typeText(locker.type) + '</span>' +
+                    '</div></div>';
+            });
+            html += '</div></div>';
+        });
+        $('#lockerContainer').html(html);
+    }
+
+    function clearLockerSelection() {
+        state.selectedLocker = null;
+        $('#detailPanel').addClass('hidden');
+        $('.locker-box').removeClass('active');
+    }
+
+    function selectLocker(id) {
+        var locker = null;
+        $.each(state.lockers, function (_, item) {
+            if (String(item.id) === String(id)) locker = item;
+        });
+        if (!locker) return;
+        state.selectedLocker = locker;
+        $('.locker-box').removeClass('active');
+        $('.locker-box[data-locker-id="' + id + '"]').addClass('active');
+        $('#detailPanel').removeClass('hidden');
+        $('#detailSubtitle').text(locker.cabinetName || locker.lockerNo || '');
+        $('#btnConvertTemp').toggle(locker.type === 1);
+        form.val('lockerBasicForm', {
+            id: locker.id,
+            name: locker.cabinetName || locker.lockerNo || ''
+        });
+        form.val('lockerStatusForm', {
+            id: locker.id,
+            status: locker.status || 1
+        });
+        $('#lockerProps').html(
+            '<div class="kv"><div class="k">柜格ID</div><div>' + locker.id + '</div></div>' +
+            '<div class="kv"><div class="k">类型</div><div>' + typeText(locker.type) + '</div></div>' +
+            '<div class="kv"><div class="k">人员ID</div><div>' + (locker.userId || '-') + '</div></div>' +
+            '<div class="kv"><div class="k">柜组编号</div><div>' + (locker.groupId || '-') + '</div></div>' +
+            '<div class="kv"><div class="k">柜组名称</div><div>' + (locker.groupName || '-') + '</div></div>' +
+            '<div class="kv"><div class="k">柜格编号</div><div>' + (locker.cabinetId || '-') + '</div></div>' +
+            '<div class="kv"><div class="k">开始时间</div><div>' + formatTimestamp(locker.startTimestamp) + '</div></div>' +
+            '<div class="kv"><div class="k">结束时间</div><div>' + formatTimestamp(locker.endTimestamp) + '</div></div>' +
+            '<div class="kv"><div class="k">开门状态</div><div>' + (locker.doorOpen === 1 ? '已开' : '已关') + '</div></div>'
+        );
+        form.render();
+    }
+
+    function openGroupModal(title, data) {
+        form.val('groupForm', data);
+        layer.open({
+            type: 1,
+            title: title,
+            area: ['430px', '330px'],
+            content: $('#groupFormLayer'),
+            btn: ['保存', '取消'],
+            yes: function (index) {
+                var field = form.val('groupForm');
+                field.deviceId = Number(field.deviceId);
+                field.channelNo = Number(field.channelNo);
+                field.lockerCount = Number(field.lockerCount || 50);
+                if (!field.channelName) return layer.msg('请输入柜组名称');
+                request('/device-channel', 'POST', field, function () {
+                    layer.close(index);
+                    layer.msg('柜组已保存', {icon: 1});
+                    loadTree(function () { loadLockers(); });
+                });
+            }
+        });
+    }
+
+    function loadUsers(done) {
+        if (state.users.length) {
+            if (done) done();
+            return;
+        }
+        request('/user/page', 'GET', {pageNo: 1, pageSize: 500}, function (page) {
+            state.users = page && page.records ? page.records : [];
+            var html = '<option value="">不绑定用户</option>';
+            $.each(state.users, function (_, user) {
+                html += '<option value="' + user.userId + '">' + (user.name || user.userId || user.id) + '</option>';
+            });
+            $('#fixedUserSelect').html(html);
+            form.render('select');
+            if (done) done();
+        });
+    }
+
+    function openFixedAssignModal() {
+        if (!state.selectedLocker) return;
+        loadUsers(function () {
+            form.val('fixedAssignForm', {
+                lockerId: state.selectedLocker.id,
+                userId: state.selectedLocker.userId || '',
+                startTime: toDateTimeLocal(state.selectedLocker.startTimestamp),
+                endTime: toDateTimeLocal(state.selectedLocker.endTimestamp)
+            });
+            layer.open({
+                type: 1,
+                title: '分配/修改长期柜',
+                area: ['460px', '390px'],
+                content: $('#fixedAssignLayer'),
+                btn: ['保存', '取消'],
+                yes: function (index) {
+                    var field = form.val('fixedAssignForm');
+                    request('/locker/bindUser', 'POST', {
+                        lockerId: Number(field.lockerId),
+                        userId: field.userId || null,
+                        startTime: field.startTime || null,
+                        endTime: field.endTime || null
+                    }, function () {
+                        layer.close(index);
+                        layer.msg('长期柜信息已保存', {icon: 1});
+                        loadLockers();
+                    });
+                }
+            });
+        });
+    }
+
+    $('#treeContainer').on('click', '.device-node', function () {
+        var id = $(this).data('device-id');
+        state.selectedDevice = state.devices.find(function (item) { return String(item.id) === String(id); });
+        state.selectedGroup = null;
+        renderTree();
+        loadLockers();
+    });
+
+    $('#treeContainer').on('click', '.group-node', function () {
+        var deviceId = $(this).data('device-id');
+        state.selectedDevice = state.devices.find(function (item) { return String(item.id) === String(deviceId); });
+        state.selectedGroup = $(this).data('group-id');
+        renderTree();
+        loadLockers();
+    });
+
+    $('#lockerContainer').on('click', '.locker-box', function () {
+        selectLocker($(this).data('locker-id'));
+    });
+
+    $('#btnReloadTree').on('click', function () { loadTree(function () { loadLockers(); }); });
+    $('#btnReloadLockers').on('click', function () {
+        if (!state.selectedDevice) return layer.msg('请先选择设备');
+        layer.confirm('确认从设备读取柜格状态并更新到服务端吗？只会更新状态、类型、用户ID、开始时间、结束时间和开门状态。', {icon: 3, title: '刷新柜格状态'}, function (index) {
+            request('/locker/refreshDevice', 'POST', {deviceId: state.selectedDevice.id}, function (count) {
+                layer.close(index);
+                layer.msg('已刷新 ' + (count || 0) + ' 个柜格', {icon: 1});
+                loadLockers();
+            });
+        });
+    });
+    $('#btnCloseDetail').on('click', clearLockerSelection);
+
+    $('#btnAddGroup').on('click', function () {
+        if (!state.selectedDevice) return layer.msg('请先选择设备');
+        var channels = currentChannels();
+        var maxNo = 0;
+        $.each(channels, function (_, item) { maxNo = Math.max(maxNo, Number(item.channelNo || 0)); });
+        openGroupModal('添加柜组', {
+            id: '',
+            deviceId: state.selectedDevice.id,
+            channelName: '第' + (maxNo + 1) + '组',
+            channelNo: maxNo + 1,
+            lockerCount: 50
+        });
+    });
+
+    $('#btnEditGroup').on('click', function () {
+        var group = selectedGroupChannel();
+        if (!group) return layer.msg('请先选择一个柜组');
+        openGroupModal('修改柜组', group);
+    });
+
+    $('#btnDeleteGroup').on('click', function () {
+        var group = selectedGroupChannel();
+        if (!group || !state.selectedDevice) return layer.msg('请先选择一个柜组');
+        layer.confirm('确认删除柜组【' + (group.channelName || group.channelNo) + '】吗？删除后会同步删除设备端该柜组下的柜格。', {icon: 3, title: '删除柜组'}, function (index) {
+            request('/device-channel/' + group.id + '?deviceId=' + state.selectedDevice.id, 'DELETE', {}, function () {
+                layer.close(index);
+                state.selectedGroup = null;
+                layer.msg('柜组已删除', {icon: 1});
+                loadTree(function () { loadLockers(); });
+            });
+        });
+    });
+
+    $('#btnSyncDevice').on('click', function () {
+        if (!state.selectedDevice) return layer.msg('请先选择设备');
+        layer.confirm('确认执行全部同步吗？系统会先清空设备端所有柜格，再按服务端当前数据重新下发。', {icon: 3, title: '全部同步'}, function (index) {
+            request('/locker/syncDevice', 'POST', {deviceId: state.selectedDevice.id}, function () {
+                layer.close(index);
+                layer.msg('全部同步完成', {icon: 1});
+                loadLockers();
+            });
+        });
+    });
+
+    form.on('submit(saveLockerBasic)', function (data) {
+        request('/locker/updateBasic', 'POST', data.field, function () {
+            layer.msg('名称已保存', {icon: 1});
+            loadLockers();
+        });
+        return false;
+    });
+
+    form.on('submit(saveLockerStatus)', function (data) {
+        request('/locker/updateStatus', 'POST', data.field, function () {
+            layer.msg('状态已保存', {icon: 1});
+            loadLockers();
+        });
+        return false;
+    });
+
+    $('#btnAssignFixed').on('click', openFixedAssignModal);
+
+    $('#btnConvertTemp').on('click', function () {
+        if (!state.selectedLocker) return;
+        layer.confirm('确认转为临时柜吗？这会清空绑定用户和开始/结束时间，但不会主动开锁。', function (index) {
+            request('/locker/convertTemp', 'POST', {id: state.selectedLocker.id}, function () {
+                layer.close(index);
+                layer.msg('已转为临时柜', {icon: 1});
+                loadLockers();
+            });
+        });
+    });
+
+    $('#btnRemoteOpen').on('click', function () {
+        if (!state.selectedLocker) return;
+        layer.confirm('确认远程打开该柜格吗？', function (index) {
+            request('/locker/remoteOpen', 'POST', {id: state.selectedLocker.id}, function () {
+                layer.close(index);
+                layer.msg('开柜指令已下发', {icon: 1});
+            });
+        });
+    });
+
+    $('#btnRemoteRelease').on('click', function () {
+        if (!state.selectedLocker) return;
+        layer.confirm('确认远程释放该柜格吗？设备会清空占用人与时间；混合策略下长期柜可能变为临时柜。', function (index) {
+            request('/locker/remoteRelease', 'POST', {id: state.selectedLocker.id}, function () {
+                layer.close(index);
+                layer.msg('释放指令已下发', {icon: 1});
+                loadLockers();
+            });
+        });
+    });
+
+    loadTree(function () { loadLockers(); });
+});
+</script>
+</body>
+</html>

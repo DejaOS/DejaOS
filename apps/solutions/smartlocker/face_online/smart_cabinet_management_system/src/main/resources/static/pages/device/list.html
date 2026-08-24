@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>设备管理</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        body { background-color: #f2f2f2; color: #333; padding: 15px; }
+        .layui-card { border-radius: 4px; box-shadow: 0 1px 2px rgba(0, 0, 0, .05); }
+        .search-container { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; padding: 12px 0 20px; }
+        .search-item { display: flex; align-items: center; }
+        .search-item label { margin-right: 10px; color: #555; }
+        .search-item .layui-input { width: 170px; height: 38px; }
+        .search-actions { margin-left: auto; display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+<div class="layui-card">
+    <div class="layui-card-body" style="padding: 20px;">
+        <form class="layui-form search-container" lay-filter="searchForm">
+            <div class="search-item">
+                <label>设备编号</label>
+                <input type="text" name="deviceNo" placeholder="请输入设备SN" class="layui-input">
+            </div>
+            <div class="search-item">
+                <label>设备名称</label>
+                <input type="text" name="deviceName" placeholder="请输入名称" class="layui-input">
+            </div>
+            <div class="search-item">
+                <label>连接状态</label>
+                <div>
+                    <select name="onlineStatus">
+                        <option value="">全部</option>
+                        <option value="1">在线</option>
+                        <option value="0">离线</option>
+                    </select>
+                </div>
+            </div>
+            <div class="search-actions">
+                <button class="layui-btn layui-btn-normal" lay-submit lay-filter="data-search-btn">
+                    <i class="layui-icon layui-icon-search"></i> 查询
+                </button>
+                <button type="reset" class="layui-btn layui-btn-primary" id="btn-reset">重置</button>
+            </div>
+        </form>
+
+        <div style="border-top: 1px solid #f0f0f0; margin: 0 -20px 20px;"></div>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-sm layui-btn-normal" lay-event="add">
+                    <i class="layui-icon layui-icon-add-1"></i> 新增设备
+                </button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+            <a class="layui-btn layui-btn-xs layui-bg-cyan" lay-event="device-config"><i class="layui-icon layui-icon-set"></i>配置</a>
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete"><i class="layui-icon layui-icon-delete"></i>删除</a>
+        </script>
+    </div>
+</div>
+
+<script src="../../assets/layui/layui.js"></script>
+<script src="../../assets/js/common.js"></script>
+<script>
+layui.use(['form', 'table', 'layer'], function () {
+    var $ = layui.jquery, form = layui.form, table = layui.table, layer = layui.layer;
+
+    table.render({
+        elem: '#currentTableId',
+        url: MyConfig.API_BASE + '/device/page',
+        headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')},
+        request: {pageName: 'pageNo', limitName: 'pageSize'},
+        parseData: function (res) {
+            return {
+                code: (res.code === 0 || res.code === 200) ? 0 : 1,
+                msg: res.message,
+                count: res.data ? res.data.total : 0,
+                data: res.data ? res.data.records : []
+            };
+        },
+        toolbar: '#toolbarDemo',
+        cols: [[
+            {type: 'checkbox', width: 50},
+            {field: 'deviceNo', width: 160, title: '设备编号', sort: true},
+            {field: 'deviceName', width: 140, title: '设备名称'},
+            {field: 'ipAddress', width: 140, title: 'IP 地址'},
+            {
+                field: 'onlineStatus', width: 100, title: '连接状态', align: 'center', templet: function (d) {
+                    return d.onlineStatus === 1
+                        ? '<span class="layui-badge layui-bg-green">在线</span>'
+                        : '<span class="layui-badge layui-bg-gray">离线</span>';
+                }
+            },
+            {
+                field: 'lastActiveTime', width: 170, title: '最后心跳时间', sort: true,
+                templet: function (d) { return MyConfig.formatDate(d.lastActiveTime); }
+            },
+            {field: 'version', width: 120, title: '固件版本'},
+            {title: '操作', width: 260, toolbar: '#currentTableBar', align: 'center', fixed: 'right'}
+        ]],
+        page: true,
+        limits: [10, 15, 20],
+        skin: 'line'
+    });
+
+    form.on('submit(data-search-btn)', function (data) {
+        var fields = data.field;
+        for (var key in fields) {
+            if (fields[key] === '') delete fields[key];
+        }
+        table.reload('currentTableId', {page: {curr: 1}, where: fields});
+        return false;
+    });
+
+    $('#btn-reset').on('click', function () {
+        $('form[lay-filter="searchForm"]')[0].reset();
+        table.reload('currentTableId', {page: {curr: 1}, where: {}});
+    });
+
+    table.on('toolbar(currentTableFilter)', function (obj) {
+        if (obj.event === 'add') {
+            MyConfig.openFormModal('form.html', '新增设备', '720px', '380px', function () {
+                table.reload('currentTableId');
+            });
+        }
+    });
+
+    table.on('tool(currentTableFilter)', function (obj) {
+        var data = obj.data;
+        if (obj.event === 'edit') {
+            layer.open({
+                type: 2,
+                title: '编辑设备',
+                area: ['720px', '380px'],
+                content: 'form.html?v=' + Date.now(),
+                success: function (layero) {
+                    var iframeWin = window[layero.find('iframe')[0]['name']];
+                    setTimeout(function () {
+                        if (typeof iframeWin.setData === 'function') iframeWin.setData(data);
+                    }, 100);
+                },
+                end: function () { table.reload('currentTableId'); }
+            });
+        } else if (obj.event === 'delete') {
+            layer.confirm('确认删除该设备及其关联信息吗？', {icon: 3}, function (index) {
+                MyConfig.request('/device/' + data.id, 'DELETE', {}, function () {
+                    layer.msg('删除成功');
+                    obj.del();
+                    layer.close(index);
+                });
+            });
+        } else if (obj.event === 'device-config') {
+            MyConfig.openFormModal('device_config.html?deviceNo=' + encodeURIComponent(data.deviceNo), '设备配置', '960px', '760px');
+        }
+    });
+});
+</script>
+</body>
+</html>

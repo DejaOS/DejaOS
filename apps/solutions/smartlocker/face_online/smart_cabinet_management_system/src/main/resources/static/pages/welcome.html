@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>欢迎页</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f2f2f2;
+            padding: 15px;
+            font-family: "Microsoft YaHei";
+        }
+
+        /* 欢迎横幅 */
+        .welcome-hero {
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .05);
+        }
+
+        .welcome-title {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .welcome-desc {
+            color: #888;
+            font-size: 14px;
+        }
+
+        /* 统计卡片 */
+        .panel {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 25px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+            transition: all 0.3s;
+        }
+
+        .panel:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .panel-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .panel-content h3 {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .panel-content p {
+            color: #888;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* 配色方案 - 保持清新 */
+        .blue {
+            background: #e8f4ff;
+            color: #16baaa;
+        }
+
+        .green {
+            background: #e6fffb;
+            color: #52c41a;
+        }
+
+        .orange {
+            background: #fff7e6;
+            color: #fa8c16;
+        }
+
+        .purple {
+            background: #f9f0ff;
+            color: #722ed1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="layui-row layui-col-space15">
+    <div class="layui-col-md12">
+        <div class="welcome-hero">
+            <h2 class="welcome-title">早安，<span id="welcome-name">管理员</span></h2>
+            <p class="welcome-desc">欢迎回来，今天也要保持高效工作哦！</p>
+        </div>
+    </div>
+</div>
+
+<div class="layui-row layui-col-space15">
+    <div class="layui-col-md3">
+        <div class="panel">
+            <div class="panel-icon blue"><i class="layui-icon layui-icon-engine"></i></div>
+            <div class="panel-content">
+                <h3 id="val-total">-</h3>
+                <p>设备总数</p>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md3">
+        <div class="panel">
+            <div class="panel-icon green"><i class="layui-icon layui-icon-wifi"></i></div>
+            <div class="panel-content">
+                <h3 id="val-online">-</h3>
+                <p>正常运行</p>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md3">
+        <div class="panel">
+            <div class="panel-icon orange"><i class="layui-icon layui-icon-set"></i></div>
+            <div class="panel-content">
+                <h3 id="val-maint">-</h3>
+                <p>维护/离线</p>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md3">
+        <div class="panel">
+            <div class="panel-icon purple"><i class="layui-icon layui-icon-app"></i></div>
+            <div class="panel-content">
+                <h3 id="val-slots">-</h3>
+                <p>使用中/总柜格数</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="../assets/layui/layui.js"></script>
+<script src="../assets/js/common.js"></script>
+<script>
+    layui.use(['jquery'], function () {
+        var $ = layui.jquery;
+
+        // 设置名字
+        var userStr = localStorage.getItem('userInfo');
+        if (userStr) {
+            var u = JSON.parse(userStr);
+            $('#welcome-name').text(u.name || u.userId);
+        }
+
+        // 请求数据
+        MyConfig.request('/device/stats', 'GET', {}, function (data) {
+            // 简单动画效果
+            animateNum('#val-total', data.totalCount);
+            animateNum('#val-online', data.normalCount);
+            animateNum('#val-maint', data.maintenanceCount);
+            animateNum('#val-slots', data.usedSlots + " / " + data.totalSlots);
+        });
+
+        function animateNum(selector, target) {
+            $({val: 0}).animate({val: target}, {
+                duration: 800,
+                step: function () {
+                    $(selector).text(Math.floor(this.val));
+                },
+                complete: function () {
+                    $(selector).text(target);
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

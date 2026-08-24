@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>人员表单</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        body { background: #fff; padding: 24px 30px; }
+        .required-label:after { content: '*'; color: #ff4d4f; margin-left: 4px; font-weight: bold; }
+        .layui-input { border-radius: 4px; }
+        .face-panel { display: flex; gap: 16px; align-items: flex-start; }
+        .face-preview-box { width: 132px; height: 132px; border: 1px dashed #d9d9d9; border-radius: 6px; background: #fafafa; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
+        .face-preview-box:hover { border-color: #16baaa; }
+        .face-preview-box img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .face-placeholder { text-align: center; color: #777; font-size: 12px; }
+        .face-placeholder .layui-icon { display: block; font-size: 30px; color: #999; margin-bottom: 8px; }
+        .face-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+        .face-actions .layui-btn { margin-left: 0 !important; }
+        .face-tip { color: #888; font-size: 12px; line-height: 1.7; margin-top: 2px; }
+        .crop-wrap { padding: 16px; }
+        .crop-stage { width: 620px; height: 420px; background: #222; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .crop-stage img { max-width: 100%; max-height: 100%; display: block; }
+        .crop-box { position: absolute; width: 220px; height: 220px; border: 2px solid #16baaa; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .42); cursor: move; box-sizing: border-box; }
+        .crop-handle { position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px; border-radius: 50%; background: #16baaa; border: 2px solid #fff; cursor: nwse-resize; }
+    </style>
+</head>
+<body>
+
+<form class="layui-form" lay-filter="formFilter" id="mainForm">
+    <input type="hidden" name="id">
+    <input type="hidden" name="faceImageUrl" id="faceImageUrl">
+    <input type="hidden" name="faceImageMd5" id="faceImageMd5">
+    <input type="file" id="faceFileInput" accept="image/*" style="display:none;">
+
+    <div class="layui-row layui-col-space24">
+        <div class="layui-col-xs8">
+            <div class="layui-row layui-col-space18">
+                <div class="layui-col-xs6">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label required-label">人员ID</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="userId" lay-verify="required" placeholder="对应设备端 userId" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-xs6">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label required-label">姓名</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="name" lay-verify="required" placeholder="请输入姓名" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-xs6">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">手机号</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="phone" placeholder="11 位数字，可不填" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-xs6">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">PIN</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="pin" placeholder="6 位数字，可不填" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-xs6">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">所属分组</label>
+                        <div class="layui-input-block">
+                            <select name="groupId" id="groupSelect" lay-search>
+                                <option value="">请选择分组</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-xs6">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">设备角色</label>
+                        <div class="layui-input-block">
+                            <input type="radio" name="role" value="0" title="普通用户" checked>
+                            <input type="radio" name="role" value="1" title="设备管理员">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-xs4">
+            <label class="layui-form-label" style="float:none; display:block; text-align:left; padding-left:0;">人脸照片</label>
+            <div class="face-panel">
+                <div class="face-preview-box" id="btnChooseFace">
+                    <div class="face-placeholder" id="facePlaceholder">
+                        <i class="layui-icon layui-icon-camera"></i>
+                        选择并裁剪
+                    </div>
+                    <img id="facePreview" alt="">
+                </div>
+                <div class="face-actions">
+                    <button type="button" class="layui-btn layui-btn-sm" id="btnChooseFace2">选择图片</button>
+                    <button type="button" class="layui-btn layui-btn-primary layui-btn-sm" id="btnClearFace">清除照片</button>
+                    <div class="face-tip">可不上传照片。上传后会先裁剪，再保存到服务器并下发给设备。</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item" style="text-align:right; margin-top:30px; border-top:1px solid #f0f0f0; padding-top:20px;">
+        <button type="button" class="layui-btn layui-btn-primary" onclick="closeSelf()">取消</button>
+        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">保存</button>
+    </div>
+</form>
+
+<script src="../../assets/layui/layui.js"></script>
+<script src="../../assets/js/common.js"></script>
+<script>
+layui.use(['form', 'layer', 'jquery'], function () {
+    var form = layui.form, $ = layui.jquery, layer = layui.layer;
+    var croppedBlob = null;
+
+    MyConfig.request('/user-group/tree', 'GET', {}, function (data) {
+        var options = '<option value="">请选择分组</option>';
+        function buildOptions(list, level) {
+            layui.each(list || [], function (_, item) {
+                var prefix = level > 0 ? '&nbsp;&nbsp;'.repeat(level) + '└ ' : '';
+                options += '<option value="' + item.id + '">' + prefix + item.name + '</option>';
+                if (item.children) buildOptions(item.children, level + 1);
+            });
+        }
+        buildOptions(data, 0);
+        $('#groupSelect').html(options);
+        if (window.pendingData) {
+            form.val('formFilter', window.pendingData);
+            renderFaceImage(window.pendingData.faceImageUrl);
+        }
+        form.render();
+    });
+
+    $('#btnChooseFace,#btnChooseFace2').on('click', function () {
+        $('#faceFileInput').val('').click();
+    });
+
+    $('#btnClearFace').on('click', function () {
+        croppedBlob = null;
+        $('#faceImageUrl').val('');
+        $('#faceImageMd5').val('');
+        renderFaceImage('');
+    });
+
+    $('#faceFileInput').on('change', function () {
+        var file = this.files && this.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (e) { openCropLayer(e.target.result, file.name); };
+        reader.readAsDataURL(file);
+    });
+
+    function openCropLayer(src, fileName) {
+        var html = '<div class="crop-wrap"><div class="crop-stage" id="cropStage"><img id="cropImage" src="' + src + '"><div class="crop-box" id="cropBox"><div class="crop-handle" id="cropHandle"></div></div></div></div>';
+        layer.open({
+            type: 1,
+            title: '裁剪人脸照片',
+            area: ['690px', '540px'],
+            content: html,
+            btn: ['确认裁剪', '取消'],
+            success: function () { initCropDrag(); },
+            yes: function (index) {
+                cropToBlob(fileName, function (blob, url) {
+                    croppedBlob = blob;
+                    renderFaceImage(url);
+                    $('#faceImageUrl').val('');
+                    $('#faceImageMd5').val('');
+                    layer.close(index);
+                });
+            }
+        });
+    }
+
+    function initCropDrag() {
+        var stage = document.getElementById('cropStage');
+        var box = document.getElementById('cropBox');
+        var img = document.getElementById('cropImage');
+        img.onload = function () {
+            var rect = img.getBoundingClientRect();
+            var stageRect = stage.getBoundingClientRect();
+            var width = Math.min(rect.width, 240);
+            var height = Math.min(rect.height, 240);
+            box.style.width = width + 'px';
+            box.style.height = height + 'px';
+            box.style.left = (rect.left - stageRect.left + (rect.width - width) / 2) + 'px';
+            box.style.top = (rect.top - stageRect.top + (rect.height - height) / 2) + 'px';
+        };
+        if (img.complete) img.onload();
+
+        var dragging = false, resizing = false;
+        var startX = 0, startY = 0, startLeft = 0, startTop = 0, startWidth = 0, startHeight = 0;
+        $('#cropBox').on('mousedown', function (e) {
+            if (e.target.id === 'cropHandle') return;
+            dragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = box.offsetLeft;
+            startTop = box.offsetTop;
+            e.preventDefault();
+        });
+        $('#cropHandle').on('mousedown', function (e) {
+            resizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = box.offsetWidth;
+            startHeight = box.offsetHeight;
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        $(document).off('mousemove.crop mouseup.crop').on('mousemove.crop', function (e) {
+            var imgRect = img.getBoundingClientRect();
+            var stageRect = stage.getBoundingClientRect();
+            var minLeft = imgRect.left - stageRect.left;
+            var minTop = imgRect.top - stageRect.top;
+            var maxRight = minLeft + imgRect.width;
+            var maxBottom = minTop + imgRect.height;
+            if (dragging) {
+                var left = startLeft + e.clientX - startX;
+                var top = startTop + e.clientY - startY;
+                left = Math.max(minLeft, Math.min(left, maxRight - box.offsetWidth));
+                top = Math.max(minTop, Math.min(top, maxBottom - box.offsetHeight));
+                box.style.left = left + 'px';
+                box.style.top = top + 'px';
+            } else if (resizing) {
+                var width = Math.max(80, startWidth + e.clientX - startX);
+                var height = Math.max(80, startHeight + e.clientY - startY);
+                width = Math.min(width, maxRight - box.offsetLeft);
+                height = Math.min(height, maxBottom - box.offsetTop);
+                box.style.width = width + 'px';
+                box.style.height = height + 'px';
+            }
+        }).on('mouseup.crop', function () {
+            dragging = false;
+            resizing = false;
+        });
+    }
+
+    function cropToBlob(fileName, callback) {
+        var stage = document.getElementById('cropStage');
+        var img = document.getElementById('cropImage');
+        var box = document.getElementById('cropBox');
+        var imgRect = img.getBoundingClientRect();
+        var stageRect = stage.getBoundingClientRect();
+        var scaleX = img.naturalWidth / imgRect.width;
+        var scaleY = img.naturalHeight / imgRect.height;
+        var sx = (box.offsetLeft - (imgRect.left - stageRect.left)) * scaleX;
+        var sy = (box.offsetTop - (imgRect.top - stageRect.top)) * scaleY;
+        var sw = box.offsetWidth * scaleX;
+        var sh = box.offsetHeight * scaleY;
+        var canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, 512, 512);
+        canvas.toBlob(function (blob) {
+            blob.name = (fileName || 'face.jpg').replace(/\.[^.]+$/, '') + '_crop.jpg';
+            callback(blob, canvas.toDataURL('image/jpeg', 0.9));
+        }, 'image/jpeg', 0.9);
+    }
+
+    function uploadCroppedFace(done) {
+        if (!croppedBlob) return done();
+        var fd = new FormData();
+        fd.append('file', croppedBlob, croppedBlob.name || 'face_crop.jpg');
+        $.ajax({
+            url: MyConfig.API_BASE + '/file/upload',
+            type: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false,
+            headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')},
+            success: function (res) {
+                if (res.code === 0 || res.code === 200) {
+                    $('#faceImageUrl').val(res.data.url || '');
+                    $('#faceImageMd5').val(res.data.md5 || '');
+                    croppedBlob = null;
+                    done();
+                } else {
+                    layer.msg(res.message || res.msg || '图片上传失败', {icon: 2});
+                }
+            },
+            error: function () { layer.msg('图片上传接口异常', {icon: 2}); }
+        });
+    }
+
+    function renderFaceImage(url) {
+        url = normalizeFileUrl(url);
+        if (url) {
+            $('#facePreview').attr('src', url).show();
+            $('#facePlaceholder').hide();
+        } else {
+            $('#facePreview').hide().attr('src', '');
+            $('#facePlaceholder').show();
+        }
+    }
+
+    function normalizeFileUrl(url) {
+        if (!url || url.indexOf('/files/') !== 0) return url;
+        var firstPath = window.location.pathname.split('/')[1];
+        return firstPath ? '/' + firstPath + url : url;
+    }
+
+    window.setData = function (data) {
+        if ($('#groupSelect option').length <= 1) {
+            window.pendingData = data;
+        } else {
+            form.val('formFilter', data);
+            renderFaceImage(data.faceImageUrl);
+        }
+    };
+
+    form.on('submit(saveBtn)', function (data) {
+        var phone = data.field.phone ? data.field.phone.trim() : '';
+        var pin = data.field.pin ? data.field.pin.trim() : '';
+        if (phone && !/^\d{11}$/.test(phone)) {
+            layer.msg('手机号必须是 11 位数字', {icon: 5, anim: 6});
+            return false;
+        }
+        if (!phone && pin) {
+            layer.msg('填写 PIN 码时必须同时填写手机号', {icon: 5, anim: 6});
+            return false;
+        }
+        if (phone && !pin) {
+            pin = '000000';
+        }
+        if (pin && !/^\d{6}$/.test(pin)) {
+            layer.msg('PIN 码必须是 6 位数字', {icon: 5, anim: 6});
+            return false;
+        }
+        data.field.phone = phone;
+        data.field.pin = pin;
+        uploadCroppedFace(function () {
+            data.field.faceImageUrl = $('#faceImageUrl').val();
+            data.field.faceImageMd5 = $('#faceImageMd5').val();
+            MyConfig.request('/user', 'POST', data.field, function () {
+                layer.msg('保存成功', {icon: 1, time: 1000}, function () { closeSelf(); });
+            });
+        });
+        return false;
+    });
+
+    window.closeSelf = function () {
+        var index = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(index);
+    };
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+[
+  {
+    "enable": true,
+    "id": "face_vf105_js",
+    "intPort": 61702,
+    "name": "face_vf105_js",
+    "port": "61702",
+    "support": "VF105"
+  }
+]

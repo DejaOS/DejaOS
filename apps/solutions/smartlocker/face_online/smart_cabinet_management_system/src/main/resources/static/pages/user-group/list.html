@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>分组管理</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f2f2f2;
+            color: #333;
+            font-family: "Microsoft YaHei";
+            padding: 15px;
+        }
+
+        .layui-card {
+            border-radius: 4px;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .05);
+        }
+
+        .dept-icon {
+            color: #ffb800;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="layui-card">
+    <div class="layui-card-body" style="padding: 20px;">
+        <div style="padding-bottom: 15px;">
+            <button class="layui-btn layui-btn-normal" id="btn-add-root"><i class="layui-icon layui-icon-add-1"></i> 新增根分组</button>
+            <button class="layui-btn layui-btn-primary" id="btn-expand">展开/折叠</button>
+        </div>
+
+        <table id="deptTable" lay-filter="deptTable"></table>
+
+        <script type="text/html" id="deptTbBar">
+            <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="add-child" title="添加子分组"><i class="layui-icon layui-icon-add-circle"></i></a>
+            <a class="layui-btn layui-btn-xs" lay-event="edit" title="编辑"><i class="layui-icon layui-icon-edit"></i></a>
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete" title="删除"><i class="layui-icon layui-icon-delete"></i></a>
+        </script>
+    </div>
+</div>
+
+<script src="../../assets/layui/layui.js"></script>
+<script src="../../assets/js/common.js"></script>
+<script>
+    layui.use(['treeTable', 'layer', 'upload'], function () {
+        var treeTable = layui.treeTable;
+        var layer = layui.layer;
+        var $ = layui.jquery;
+        var upload = layui.upload;
+        var token = localStorage.getItem('token');
+
+        // 1. 渲染树形表格
+        var insTb = treeTable.render({
+            elem: '#deptTable',
+            url: MyConfig.API_BASE + '/user-group/tree',
+            headers: {'Authorization': 'Bearer ' + token},
+            parseData: function (res) {
+                return {"code": 0, "msg": res.message, "data": res.data || []};
+            },
+            tree: {
+                customName: {name: 'name', pid: 'parentId', icon: ''},
+                view: {expandAllDefault: true}
+            },
+            cols: [[
+                {
+                    field: 'name', title: '分组名称', minWidth: 200, templet: function (d) {
+                        return '<i class="layui-icon layui-icon-component dept-icon"></i>' + d.name;
+                    }
+                },
+                {
+                    field: 'userCount', title: '人数', width: 160, align: 'center', templet: function (d) {
+                        return '<span class="layui-badge layui-bg-gray">' + (d.userCount || 0) + '人</span>';
+                    }
+                },
+                {field: 'orderNum', title: '排序', width: 80, align: 'center'},
+                {
+                    field: 'createTime', title: '创建时间', width: 220, align: 'center',
+                    templet: function (d) {
+                        return MyConfig.formatDate(d.createTime);
+                    }
+                },
+                {title: '操作', width: 150, align: 'center', toolbar: '#deptTbBar'}
+            ]],
+            page: false
+        });
+
+        // 2. 新增根分组
+        $('#btn-add-root').click(function () {
+            // 根分组不需要传 data，直接打开
+            MyConfig.openFormModal('form.html', '新增根分组', '500px', '400px', function () {
+                treeTable.reload('deptTable');
+            });
+        });
+
+        // 展开折叠
+        $('#btn-expand').click(function () {
+            var $this = $(this);
+            if ($this.data('expand')) {
+                // 折叠全部：传递第二个参数 false
+                treeTable.expandAll('deptTable', false);
+                $this.data('expand', false);
+            } else {
+                // 展开全部：传递第二个参数 true
+                treeTable.expandAll('deptTable', true);
+                $this.data('expand', true);
+            }
+        });
+
+
+        // 3. 行工具事件 (新增子级 & 编辑)
+        treeTable.on('tool(deptTable)', function (obj) {
+            var data = obj.data;
+
+            if (obj.event === 'add-child') {
+                // 【新增子分组】构造一个特殊对象，告诉子页面这是“添加子级”模式
+                var childData = {
+                    isAddChild: true,
+                    parentId: data.id,
+                    parentName: data.name
+                };
+                openWithData('form.html', '新增下级分组', childData);
+
+            } else if (obj.event === 'edit') {
+                // 【编辑分组】直接把当前行数据传过去
+                openWithData('form.html?id=' + data.id, '编辑分组', data);
+
+            } else if (obj.event === 'delete') {
+                layer.confirm('确定要删除 [' + data.name + '] 吗？', function (index) {
+                    MyConfig.request('/user-group/' + data.id, 'DELETE', {}, function () {
+                        layer.msg('删除成功');
+                        treeTable.reload('deptTable');
+                        layer.close(index);
+                    });
+                });
+            }
+        });
+
+        // 封装带数据回显的弹窗逻辑
+        function openWithData(url, title, data) {
+            // 1. 防缓存处理：智能判断 URL 里有没有问号，拼上时间戳
+            var timestamp = new Date().getTime();
+            var separator = url.indexOf('?') === -1 ? '?' : '&';
+            var finalUrl = url + separator + 'v=' + timestamp;
+
+            layer.open({
+                type: 2,
+                title: title,
+                shade: 0.2,
+                area: ['500px', '400px'],
+                content: finalUrl, // 使用防缓存的 URL
+                success: function (layero, index) {
+                    var iframeWin = window[layero.find('iframe')[0]['name']];
+
+                    // 2. 延迟加载 + 安全校验：防止加载时序问题
+                    setTimeout(function () {
+                        if (typeof iframeWin.setData === 'function') {
+                            iframeWin.setData(data);
+                        } else {
+                            console.error('子页面未找到 setData 方法，可能加载过慢或被缓存');
+                            layer.msg('页面加载异常，请关闭后重试或按 Ctrl+F5 刷新');
+                        }
+                    }, 100);
+                },
+                end: function () {
+                    treeTable.reload('deptTable');
+                }
+            });
+        }
+
+        // 导入
+        upload.render({
+            elem: '#btn-import',
+            url: MyConfig.API_BASE + '/user-group/import',
+            headers: {'Authorization': 'Bearer ' + token},
+            accept: 'file', exts: 'xls|xlsx',
+            done: function (res) {
+                if (res.code === 200 || res.code === 0) {
+                    layer.msg('导入成功');
+                    treeTable.reload('deptTable');
+                } else {
+                    layer.msg('导入失败: ' + res.message);
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

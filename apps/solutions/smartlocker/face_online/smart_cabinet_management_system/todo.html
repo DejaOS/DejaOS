@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>智能柜服务端改造 TODO</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #667085;
+      --border: #d9e2ec;
+      --accent: #0f766e;
+      --danger: #b42318;
+      --warn: #b54708;
+      --ok: #027a48;
+      --code: #eef2f6;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 22px 56px;
+    }
+    header {
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.25;
+    }
+    h2 {
+      margin: 28px 0 12px;
+      padding-left: 10px;
+      border-left: 4px solid var(--accent);
+      font-size: 22px;
+    }
+    h3 {
+      margin: 18px 0 8px;
+      font-size: 17px;
+    }
+    p { margin: 8px 0; }
+    .meta, .note {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-top: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 4px;
+      background: #fff;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 9px 10px;
+      vertical-align: top;
+    }
+    th {
+      background: #f1f5f9;
+      text-align: left;
+      white-space: nowrap;
+    }
+    ul, ol {
+      margin-top: 8px;
+      padding-left: 24px;
+    }
+    li { margin: 5px 0; }
+    code {
+      background: var(--code);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.95em;
+    }
+    .tag {
+      display: inline-block;
+      min-width: 64px;
+      text-align: center;
+      border-radius: 999px;
+      padding: 1px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+    .p0 { color: #fff; background: var(--danger); }
+    .p1 { color: #fff; background: var(--warn); }
+    .p2 { color: #fff; background: var(--accent); }
+    .p3 { color: #fff; background: var(--ok); }
+    .status { color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .diff {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 820px) {
+      .diff { grid-template-columns: 1fr; }
+      main { padding: 20px 12px 36px; }
+      table { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>智能柜服务端改造 TODO</h1>
+    <p class="meta">生成日期：2026-05-28。对照文档：<code>C:\Work\dejaos\VF105 - 副本\fitlock mqtt协议文档.md</code>。</p>
+    <p class="note">目标：先修当前应用的确定性问题，再按新版 Fit Lock Pro MQTT 协议改造服务端与前端联动。</p>
+  </header>
+
+  <section>
+    <h2>一、当前项目先修问题</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>优先级</th>
+        <th>问题</th>
+        <th>涉及文件</th>
+        <th>建议改法</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><span class="tag p0">P0</span></td>
+        <td>MQTT 连接校验里密码可能为 <code>null</code>，日志和校验都会触发 <code>NullPointerException</code>。</td>
+        <td><code>MqttChannelInboundHandler.java</code><br><code>DeviceAdapterService.java</code></td>
+        <td>使用空安全转换：<code>password == null ? "" : new String(password, UTF_8)</code>。校验失败日志不要直接打印明文密码，改为打印是否为空或长度。</td>
+      </tr>
+      <tr>
+        <td><span class="tag p0">P0</span></td>
+        <td>数据库配置写死，启动时强依赖远端 MySQL；数据库不可达会导致应用无法启动。</td>
+        <td><code>application.properties</code><br><code>UserGroupService.java</code><br><code>AuthService.java</code><br><code>DeviceStateResetRunner.java</code></td>
+        <td>把 datasource、JWT secret、设备签名 secret、文件基础 URL 改为环境变量可覆盖。启动初始化逻辑增加清晰错误日志，必要时改为可开关。</td>
+      </tr>
+      <tr>
+        <td><span class="tag p1">P1</span></td>
+        <td>首页设备统计在线数永远为 0，导致离线数等于总数。</td>
+        <td><code>DeviceService.java#getStats</code></td>
+        <td>循环中如果 <code>isOnline</code> 为 true，则 <code>onlineCount++</code>。同时考虑在线状态来源统一为 SDK 实时状态或数据库状态。</td>
+      </tr>
+      <tr>
+        <td><span class="tag p1">P1</span></td>
+        <td>删除设备后才查询设备对象，导致后续同步标记拿不到设备 SN。</td>
+        <td><code>DeviceService.java#remove</code></td>
+        <td>删除前先读取 <code>Device device = getById(id)</code>，成功删除后再使用缓存的 <code>deviceNo</code> 做清理或同步标记。</td>
+      </tr>
+      <tr>
+        <td><span class="tag p1">P1</span></td>
+        <td>网络设备指令和数据库事务强耦合，设备超时会造成页面“保存失败”和数据库回滚。</td>
+        <td><code>DeviceChannelService.java</code><br><code>LockerService.java</code><br><code>DeviceSyncService.java</code></td>
+        <td>把“保存业务数据”和“下发设备同步”拆开。保存先落库并标记 dirty，再由后台同步任务重试；需要强同步的操作单独返回设备下发结果。</td>
+      </tr>
+      <tr>
+        <td><span class="tag p1">P1</span></td>
+        <td>前端 401 跳转路径没有带 <code>/smart-cabinet</code> 上下文。</td>
+        <td><code>static/assets/js/common.js</code></td>
+        <td>改成相对跳转 <code>login.html</code> 或统一从 <code>window.location.pathname</code> 推导 context path。</td>
+      </tr>
+      <tr>
+        <td><span class="tag p2">P2</span></td>
+        <td>模板下载用 <code>?token=</code>，后端只识别 <code>Authorization</code> header，且 token 暴露在 URL 中。</td>
+        <td><code>static/pages/user/list.html</code><br>相关模板下载接口</td>
+        <td>新增免 body 的下载封装，使用 <code>fetch</code> 携带 header 后转 blob 下载，或后端支持短期下载票据。</td>
+      </tr>
+      <tr>
+        <td><span class="tag p2">P2</span></td>
+        <td>源码中文注释和部分字符串在终端显示为乱码，后续维护风险高。</td>
+        <td>多处 Java 与 HTML 文件</td>
+        <td>统一确认文件编码为 UTF-8，无 BOM/有 BOM 二选一并固定 IDE 配置。编译已通过，优先修真实业务问题，编码清理可单独做。</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>二、新版 MQTT 协议核心变化</h2>
+    <div class="diff">
+      <div>
+        <h3>当前服务端仍有旧协议痕迹</h3>
+        <ul>
+          <li>人员下发 topic 仍使用 <code>whitelist/upsert</code>、<code>whitelist/delete</code>、<code>whitelist/clear</code>。</li>
+          <li>柜格规划仍使用 <code>lockerModel/upsert</code> 和 <code>binding/upsert</code>。</li>
+          <li>开柜/释放仍向 <code>control.extra</code> 发送 <code>lockerId</code>。</li>
+          <li>access 事件解析仍读 <code>lockerId</code>，没有使用 <code>groupId + cabinetId</code>。</li>
+          <li>用户人脸字段仍用 <code>face_image_url</code>、<code>face_image_md5</code> 下发。</li>
+        </ul>
+      </div>
+      <div>
+        <h3>新版协议要求</h3>
+        <ul>
+          <li>统一 topic 前缀：<code>fitlock/v1</code>。</li>
+          <li>人员接口：<code>user/upsert</code>、<code>user/delete</code>、<code>user/clear</code>。</li>
+          <li>柜格接口：<code>cabinet/list</code>、<code>cabinet/upsert</code>、<code>cabinet/delete</code>、<code>cabinet/clear</code>。</li>
+          <li>柜格唯一标识：<code>groupId</code> + <code>cabinetId</code>，不再依赖 <code>lockerId</code>。</li>
+          <li>access 事件必须回执到 <code>fitlock/v1/event/{uuid}/access_reply</code>，且 <code>serialNo</code> 必须一致。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>三、MQTT 协议适配 TODO</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>优先级</th>
+        <th>任务</th>
+        <th>当前代码位置</th>
+        <th>改造方案</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><span class="tag p0">P0</span></td>
+        <td>修正人员下发 topic 与字段名。</td>
+        <td><code>FaceVf105JsMqttService#insertUser</code><br><code>FaceVf105JsMqttService#delUser</code><br><code>FaceVf105JsMqttService#clearUser</code><br><code>DeviceSyncService#toMqttUser</code></td>
+        <td>
+          topic 改为 <code>user/upsert</code>、<code>user/delete</code>、<code>user/clear</code>。
+          <br>字段改为 <code>userId</code>、<code>name</code>、<code>faceImageUrl</code>、<code>faceImageMd5</code>、<code>phone</code>、<code>pin</code>、<code>role</code>。
+          <br>批量大小从 50 调整为协议建议的 100 或保守保持 50 但说明原因。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="tag p0">P0</span></td>
+        <td>把柜格同步从旧的“规划 + 绑定”改为新版 <code>cabinet/upsert</code>。</td>
+        <td><code>FaceVf105JsMqttService#upsertLockerModel</code><br><code>FaceVf105JsMqttService#upsertBinding</code><br><code>FaceVf105JsService</code><br><code>LockerService#syncLockerModelToDevice</code></td>
+        <td>
+          新增 <code>cabinetUpsert(uuid, List&lt;Cabinet&gt;)</code>，topic 为 <code>fitlock/v1/cmd/{uuid}/cabinet/upsert</code>。
+          <br>组装每个柜格字段：<code>groupId=DeviceChannel.channelNo</code>，<code>cabinetId=Locker.portNo</code>，<code>groupName=DeviceChannel.channelName</code>，<code>cabinetName=Locker.lockerNo</code>，<code>status</code>，<code>type</code>，<code>userId</code>，<code>startTimestamp</code>，<code>endTimestamp</code>，<code>doorOpen</code>。
+          <br>后续可删除或废弃 <code>lockerModel/upsert</code>、<code>binding/upsert</code> 两套旧方法。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="tag p0">P0</span></td>
+        <td>远程开柜和释放柜格改为发送 <code>groupId + cabinetId</code>。</td>
+        <td><code>LockerService#remoteControl</code><br><code>DeviceAdapterService#openDoor</code><br><code>DeviceAdapterService#control</code></td>
+        <td>
+          查出 <code>Locker.channelId</code> 对应的 <code>DeviceChannel.channelNo</code> 作为 <code>groupId</code>，使用 <code>Locker.portNo</code> 作为 <code>cabinetId</code>。
+          <br><code>control</code> payload 示例：<code>{"command":1,"extra":{"groupId":1,"cabinetId":1}}</code>。
+          <br>释放命令 <code>command=2</code> 同理，不再传 <code>lockerId</code>。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="tag p0">P0</span></td>
+        <td>access 事件解析改为新版数组格式，并保证回执。</td>
+        <td><code>FaceVf105JsMqttService#onMessageReport</code><br><code>FaceVf105JsAccessRecordService#toAccessRecord</code><br><code>AccessDeviceEventHandler#handleAccessRecord</code></td>
+        <td>
+          保留 <code>event/access</code> 收到后立即按相同 <code>serialNo</code> 回执。
+          <br>解析每条事件的 <code>eventId</code>、<code>userId</code>、<code>groupId</code>、<code>cabinetId</code>、<code>timestamp</code>、<code>type</code>、<code>extra</code>。
+          <br>查柜格时改为 <code>deviceId + channelNo(groupId) + portNo(cabinetId)</code>，旧的 <code>lockerId</code> 仅做兼容兜底。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="tag p1">P1</span></td>
+        <td>新增柜格删除、清空、查询能力。</td>
+        <td><code>FaceVf105JsMqttService</code><br><code>FaceVf105JsService</code><br><code>DeviceAdapterService</code></td>
+        <td>
+          新增 SDK 方法：<code>cabinet/list</code>、<code>cabinet/delete</code>、<code>cabinet/clear</code>。
+          <br>后台修改通道数量或删除通道时，若设备在线，可按变更范围下发 <code>cabinet/delete</code>；如果实现成本高，第一阶段仍可全量 <code>cabinet/upsert</code>。
+          <br><code>cabinet/list</code> 可用于运维页面“从设备拉取实际柜格状态”。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="tag p1">P1</span></td>
+        <td>新增 <code>type=4</code> 人脸照片错误事件处理。</td>
+        <td><code>AccessDeviceEventHandler</code><br><code>DeviceEventService</code></td>
+        <td>
+          当 <code>event/access</code> 中 <code>type=4</code> 时，不按柜格事件处理，改为生成设备告警事件。
+          <br>记录 <code>userId</code>、<code>face_image_md5</code>、<code>face_image_url</code>、错误 <code>code</code> 和 <code>message</code>，便于页面提示“某用户人脸下发失败”。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="tag p1">P1</span></td>
+        <td>补齐 <code>event/offline</code> 处理。</td>
+        <td><code>FaceVf105JsMqttService#onMessageReport</code><br><code>AccessDeviceEventHandler#handleAlarm</code></td>
+        <td>
+          现在 <code>offline</code> 只打日志。应转换为 <code>AlarmRecord.TYPE_OFFLINE</code> 或直接调用 handler 更新设备离线状态，并写入设备事件。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="tag p1">P1</span></td>
+        <td>配置项 UI 与协议字段对齐。</td>
+        <td><code>static/pages/device/device_config.html</code><br><code>DeviceConfigController.java</code><br><code>DeviceAdapterService.java</code></td>
+        <td>
+          <code>getConfig</code> 支持分组：<code>sysinfo</code>、<code>network</code>、<code>mqtt</code>、<code>time</code>、<code>audio</code>、<code>lockRule</code>、<code>openModel</code>、<code>cabinetStrategy</code>。
+          <br><code>setConfig</code> 写入时保持对象结构，例如 <code>{"openModel":{"value":"pin"}}</code>，不要传扁平字段。
+          <br>新增管理员口令 <code>adminPin</code> 表单时，注意它只写不读。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="tag p2">P2</span></td>
+        <td>统一消息外壳和响应校验。</td>
+        <td><code>FaceVf105JsMqttService#initSendDataJsonObject</code><br><code>FaceVf105JsMqttService#onMessageReply</code></td>
+        <td>
+          外壳字段保持 <code>serialNo</code>、<code>uuid</code>、<code>time</code>、<code>sign</code>、<code>data</code>。
+          <br>响应必须读取 <code>code</code>、<code>message</code>、<code>data</code>，非 <code>000000</code> 时把设备错误 message 带给业务层。
+        </td>
+      </tr>
+      <tr>
+        <td><span class="tag p2">P2</span></td>
+        <td>签名逻辑和 secret 配置化。</td>
+        <td><code>DeviceAdapterService#getSignConfig</code><br><code>DeviceUtils#hmacMd5</code></td>
+        <td>
+          文档里 <code>sign</code> 可为空；当前代码固定 secret <code>1234567887654321</code>。
+          <br>改为配置项：未配置则空签名，配置后按设备端要求计算。确认设备端签名串是否仍为 <code>uuid + time</code>。
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>四、数据模型与数据库改造</h2>
+    <ol>
+      <li>
+        <strong>柜格标识映射：</strong>
+        当前数据库 <code>Locker.channelId</code> 关联 <code>DeviceChannel.id</code>，<code>Locker.portNo</code> 是端口号。新版协议需要 <code>groupId + cabinetId</code>。
+        建议映射为：<code>groupId = DeviceChannel.channelNo</code>，<code>cabinetId = Locker.portNo</code>。这样不需要马上改表。
+      </li>
+      <li>
+        <strong>柜格显示名：</strong>
+        <code>lockerNo</code> 当前有时是 <code>1-1</code>，有时可能是旧的业务 ID。下发新版协议时建议作为 <code>cabinetName</code>，不要再作为设备唯一 ID。
+      </li>
+      <li>
+        <strong>柜格状态：</strong>
+        新协议状态为 <code>1=空闲, 2=占用, 3=锁定, 4=故障, 5=空格</code>。当前注释里 <code>3</code> 写“禁用”，语义可映射为“锁定”，页面文案也要同步。
+      </li>
+      <li>
+        <strong>长期/临时绑定：</strong>
+        当前 <code>Locker.bindEndTime</code> 是 <code>LocalDate</code>，协议要 10 位秒级 <code>endTimestamp</code>。下发时使用当天 <code>23:59:59</code> 转秒，回传事件也要秒转本地时间。
+      </li>
+      <li>
+        <strong>用户字段：</strong>
+        新协议支持 <code>phone</code> 与 <code>pin</code>。当前后台有 <code>phone</code>，没有独立 <code>pin</code> 字段。若要支持密码开柜，需要新增用户 PIN 字段或明确复用某个字段，不建议复用登录密码。
+      </li>
+      <li>
+        <strong>门状态：</strong>
+        协议 <code>Cabinet.doorOpen</code> 当前数据库无字段。第一阶段可下发固定 <code>0</code>，如果要展示真实门状态，需要给 <code>sys_locker</code> 新增 <code>door_open</code> 并在事件中维护。
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>五、前端页面联动 TODO</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>页面</th>
+        <th>需要调整</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>pages/device/device_config.html</code></td>
+        <td>按新版配置分组重做表单：网络、MQTT、时间、音量、临时柜规则、开柜方式、全柜策略、管理员口令。保存时组装嵌套对象。</td>
+      </tr>
+      <tr>
+        <td><code>pages/device/channel_config.html</code></td>
+        <td>把“通道编号”明确显示为设备协议里的 <code>groupId</code>，避免用户误以为数据库 ID 会下发。</td>
+      </tr>
+      <tr>
+        <td><code>pages/locker/list.html</code></td>
+        <td>远程开柜/释放按钮需要后端返回新的 <code>groupId</code>、<code>cabinetId</code> 或后端内部转换。页面文案把“释放柜门”改成“释放柜格/解除锁定”。</td>
+      </tr>
+      <tr>
+        <td><code>pages/user/form.html</code></td>
+        <td>如果启用 <code>openModel=pin</code>，新增用户 PIN 输入项，校验 6 位数字，并下发到设备 <code>User.pin</code>。</td>
+      </tr>
+      <tr>
+        <td><code>pages/log/list.html</code></td>
+        <td>支持展示 <code>type=4</code> 人脸照片错误事件，最好显示错误码、用户 ID、人脸 MD5、图片 URL。</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>六、推荐实施顺序</h2>
+    <ol>
+      <li><span class="tag p0">第 1 步</span>修 MQTT 空密码 NPE、数据库配置环境变量、设备统计在线数、前端 401 跳转。</li>
+      <li><span class="tag p0">第 2 步</span>改人员接口：<code>whitelist/*</code> 到 <code>user/*</code>，字段改 camelCase。</li>
+      <li><span class="tag p0">第 3 步</span>改柜格下发：新增 <code>cabinet/upsert</code>，让通道保存、柜格绑定、全量同步都走新版柜格模型。</li>
+      <li><span class="tag p0">第 4 步</span>改远程控制：后端用 <code>groupId + cabinetId</code> 组装 <code>control.extra</code>。</li>
+      <li><span class="tag p1">第 5 步</span>改 access 事件：按新版字段解析、处理 type 0~4，并确保回执。</li>
+      <li><span class="tag p1">第 6 步</span>补配置页面、柜格查询/删除/清空、离线事件处理。</li>
+      <li><span class="tag p2">第 7 步</span>抽象协议 DTO，补单元测试和本地 MQTT 模拟器脚本，避免后续协议继续变更时散落改代码。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>七、验证清单</h2>
+    <ul>
+      <li>使用 JDK 17 执行 <code>gradlew compileJava</code> 和 <code>gradlew build</code>。</li>
+      <li>构造 MQTT CONNECT 不带密码的设备连接，确认不会再 NPE。</li>
+      <li>模拟 <code>event/connect</code>，确认设备在线、IP、版本更新。</li>
+      <li>模拟 <code>event/access</code> type 0、1、2、3、4，确认记录、柜格状态、告警和回执都正确。</li>
+      <li>调用用户新增/删除，抓包确认 topic 为 <code>fitlock/v1/cmd/{uuid}/user/upsert</code> 与 <code>user/delete</code>。</li>
+      <li>调用柜格同步，抓包确认 topic 为 <code>fitlock/v1/cmd/{uuid}/cabinet/upsert</code>，payload 使用 <code>groupId + cabinetId</code>。</li>
+      <li>调用远程开柜/释放，抓包确认 <code>control.extra</code> 不再包含 <code>lockerId</code>。</li>
+      <li>配置页面分别保存 <code>network</code>、<code>mqtt</code>、<code>openModel</code>、<code>cabinetStrategy</code>，确认设备端响应 <code>000000</code>。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>八、本轮已落地的联调改动（2026-05-28）</h2>
+    <ul>
+      <li><span class="tag p0">已完成</span>MQTT 用户 topic 已从 <code>whitelist/*</code> 改为 <code>user/*</code>，下发字段改为 <code>faceImageUrl</code>、<code>faceImageMd5</code>、<code>phone</code>、<code>pin</code>、<code>role</code>。</li>
+      <li><span class="tag p0">已完成</span>柜门下发改为 <code>cabinet/upsert</code>，服务端组装 <code>groupId</code>、<code>cabinetId</code>、<code>cabinetName</code>、<code>status</code>、<code>type</code>、<code>userId</code>、<code>startTimestamp</code>、<code>endTimestamp</code>、<code>doorOpen</code>。</li>
+      <li><span class="tag p0">已完成</span>远程开柜/释放不再依赖旧 <code>lockerId</code>，改为向 <code>control.extra</code> 发送 <code>groupId + cabinetId</code>。</li>
+      <li><span class="tag p0">已完成</span><code>event/access</code> 按新协议解析，优先用 <code>deviceId + groupId + cabinetId</code> 定位柜门，并处理 <code>type=0..4</code>。</li>
+      <li><span class="tag p0">已完成</span>修复 MQTT 密码为空时的 <code>NullPointerException</code>。</li>
+      <li><span class="tag p0">已完成</span>设备主动上报 <code>event/offline</code> 时会转成离线告警，复用现有设备离线状态更新逻辑。</li>
+      <li><span class="tag p0">已完成</span>设备配置页已按新协议分组重写，支持 <code>network</code>、<code>mqtt</code>、<code>lockRule</code>、<code>openModel</code>、<code>cabinetStrategy</code>、<code>adminPin</code>。</li>
+      <li><span class="tag p1">已完成</span>人员导入模板补充 <code>PIN</code>，导入时同步写入 <code>phone</code> 和 <code>pin</code>。</li>
+      <li><span class="tag p0">已完成</span>新增库表变更脚本 <code>sql/fitlock_schema_delta.sql</code>。注意：MyBatis-Plus 不会自动创建或迁移库表，联调前需要先执行该脚本或手工同步列。</li>
+      <li><span class="tag p1">待做</span>后续还需要补充 MQTT 模拟器脚本、柜门 <code>cabinet/list/delete/clear</code> 的后台操作入口，以及更完整的页面展示字段。</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

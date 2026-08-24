@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>设备配置</title>
+    <link href="../../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        body { padding: 18px; background: #f6f8fb; }
+        .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .topbar h2 { flex: 1; margin: 0; font-size: 18px; font-weight: 700; color: #1f2937; }
+        .status-line { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .status-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px 12px; }
+        .status-item span { color: #667085; display: block; font-size: 12px; }
+        .status-item strong { display: block; margin-top: 2px; font-size: 14px; color: #111827; word-break: break-all; }
+        .layui-card { border-radius: 6px; box-shadow: 0 1px 3px rgba(15, 23, 42, .08); margin-bottom: 14px; }
+        .layui-card-header { font-weight: 700; }
+        .form-actions { margin-top: 18px; }
+        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .inline-actions { display: flex; gap: 8px; align-items: center; }
+        .inline-actions .layui-input { flex: 1; }
+        .muted { color: #6b7280; }
+        @media (max-width: 900px) { .status-line { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <h2 id="pageTitle">设备配置</h2>
+    <button class="layui-btn layui-btn-normal" id="btnRefreshConfig"><i class="layui-icon layui-icon-refresh"></i> 刷新配置</button>
+</div>
+
+<div class="status-line">
+    <div class="status-item"><span>设备 SN</span><strong id="deviceNoText">--</strong></div>
+    <div class="status-item"><span>型号</span><strong id="sysModel">--</strong></div>
+    <div class="status-item"><span>固件版本</span><strong id="sysVersion">--</strong></div>
+    <div class="status-item"><span>IP</span><strong id="sysIp">--</strong></div>
+</div>
+
+<div class="layui-tab layui-tab-brief">
+    <ul class="layui-tab-title">
+        <li class="layui-this">远程控制</li>
+        <li>网络</li>
+        <li>MQTT</li>
+        <li>其它配置</li>
+        <li>升级</li>
+    </ul>
+    <div class="layui-tab-content">
+        <div class="layui-tab-item layui-show">
+            <div class="layui-card">
+                <div class="layui-card-header">设备控制</div>
+                <div class="layui-card-body toolbar">
+                    <button class="layui-btn layui-btn-danger" id="btnReboot">重启</button>
+                    <button class="layui-btn layui-btn-primary" id="btnClearBusiness">清空业务数据</button>
+                    <button class="layui-btn layui-btn-primary layui-border-red" id="btnFactoryReset">设备重置</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-tab-item">
+            <form class="layui-form layui-form-pane" lay-filter="networkForm">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">网络类型</label>
+                    <div class="layui-input-block">
+                        <select name="netType" lay-filter="netType">
+                            <option value="ETH">以太网</option>
+                            <option value="WIFI">Wi-Fi</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item"><label class="layui-form-label">SSID</label><div class="layui-input-block"><input name="ssid" class="layui-input"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">Wi-Fi 密码</label><div class="layui-input-block"><input name="psk" class="layui-input"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">DHCP</label><div class="layui-input-block"><input type="checkbox" name="dhcp" lay-filter="dhcp" lay-skin="switch" lay-text="开启|关闭" value="true"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">IP</label><div class="layui-input-block"><input name="ip" class="layui-input"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">子网掩码</label><div class="layui-input-block"><input name="mask" class="layui-input"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">网关</label><div class="layui-input-block"><input name="gw" class="layui-input"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">DNS</label><div class="layui-input-block"><input name="dns" class="layui-input"></div></div>
+                <div class="form-actions"><button class="layui-btn" lay-submit lay-filter="saveNetwork">保存网络配置</button></div>
+            </form>
+        </div>
+
+        <div class="layui-tab-item">
+            <form class="layui-form layui-form-pane" lay-filter="mqttForm">
+                <div class="layui-form-item"><label class="layui-form-label">服务器</label><div class="layui-input-block"><input name="host" class="layui-input" lay-verify="required"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">端口</label><div class="layui-input-block"><input type="number" name="port" class="layui-input" lay-verify="required"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">Client ID</label><div class="layui-input-block"><input name="clientId" class="layui-input"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">用户名</label><div class="layui-input-block"><input name="user" class="layui-input"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">密码</label><div class="layui-input-block"><input type="password" name="pass" class="layui-input"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">清除会话</label><div class="layui-input-block"><input type="checkbox" name="cleanSession" lay-skin="switch" lay-text="是|否" value="true"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">QoS</label><div class="layui-input-block"><input type="number" name="qos" value="1" class="layui-input"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">心跳秒数</label><div class="layui-input-block"><input type="number" name="keepAlive" value="60" class="layui-input"></div></div>
+                <div class="form-actions"><button class="layui-btn" lay-submit lay-filter="saveMqtt">保存 MQTT 配置</button></div>
+            </form>
+        </div>
+
+        <div class="layui-tab-item">
+            <form class="layui-form layui-form-pane" lay-filter="otherForm">
+                <div class="layui-card">
+                    <div class="layui-card-header">开柜规则</div>
+                    <div class="layui-card-body">
+                        <div class="layui-form-item"><label class="layui-form-label">开柜方式</label><div class="layui-input-block"><select name="openModel"><option value="face">刷脸开柜</option><option value="pin">手机号 + 密码开柜</option></select></div></div>
+                        <div class="layui-form-item"><label class="layui-form-label">临时柜时长</label><div class="layui-input-block"><input type="number" name="tempDelay" class="layui-input" placeholder="小时"></div></div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">取物模式</label>
+                            <div class="layui-input-block">
+                                <select name="tempPickupMode">
+                                    <option value="1">可取物开柜，也可取物并释放</option>
+                                    <option value="0">仅取物并释放</option>
+                                </select>
+                                <div class="layui-form-mid layui-word-aux">仅影响已有临时占用时的取物行为，新分配临时柜不受影响。</div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item"><label class="layui-form-label">延时锁定</label><div class="layui-input-block"><input type="checkbox" name="timeDelayEnable" lay-skin="switch" lay-text="开启|关闭" value="true"></div></div>
+                        <div class="layui-form-item"><label class="layui-form-label">延时类型</label><div class="layui-input-block"><select name="timeDelayType"><option value="timeout">到期后延迟小时数</option><option value="static">到期后对齐固定整点</option></select></div></div>
+                        <div class="layui-form-item"><label class="layui-form-label">延时值</label><div class="layui-input-block"><input type="number" name="timeDelayValue" class="layui-input" placeholder="小时或整点 0-24"></div></div>
+                    </div>
+                </div>
+
+                <div class="layui-card">
+                    <div class="layui-card-header">全柜策略</div>
+                    <div class="layui-card-body">
+                        <div class="layui-form-item"><label class="layui-form-label">柜格策略</label><div class="layui-input-block"><select name="strategyMode"><option value="0">临时/长期混合</option><option value="1">全部临时柜</option><option value="2">全部长期柜</option></select></div></div>
+                    </div>
+                </div>
+
+                <div class="layui-card">
+                    <div class="layui-card-header">设备时间与音量</div>
+                    <div class="layui-card-body">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">设备时间</label>
+                            <div class="layui-input-block inline-actions">
+                                <input name="timeValue" class="layui-input" placeholder="YYYY-MM-DD HH:mm:ss">
+                                <button type="button" class="layui-btn layui-btn-primary" id="btnGetDeviceTime">获取设备时间</button>
+                                <button type="button" class="layui-btn layui-btn-normal" id="btnSyncSystemTime">同步系统时间</button>
+                            </div>
+                        </div>
+                        <div class="layui-form-item"><label class="layui-form-label">音量</label><div class="layui-input-block"><input type="number" name="volume" class="layui-input" placeholder="0-10"></div></div>
+                        <div class="layui-form-item"><label class="layui-form-label">开门超时</label><div class="layui-input-block"><input type="number" name="doorOpenTimeout" class="layui-input" placeholder="秒，最小 30"></div></div>
+                    </div>
+                </div>
+
+                <div class="layui-card">
+                    <div class="layui-card-header">管理员密码</div>
+                    <div class="layui-card-body">
+                        <div class="layui-form-item"><label class="layui-form-label">旧密码</label><div class="layui-input-block"><input type="password" name="oldPwd" class="layui-input" placeholder="6 位数字"></div></div>
+                        <div class="layui-form-item"><label class="layui-form-label">新密码</label><div class="layui-input-block"><input type="password" name="newPwd" class="layui-input" placeholder="6 位数字"></div></div>
+                    </div>
+                </div>
+                <button class="layui-btn" lay-submit lay-filter="saveOther">保存其它配置</button>
+            </form>
+        </div>
+
+        <div class="layui-tab-item">
+            <form class="layui-form layui-form-pane" lay-filter="otaForm">
+                <div class="layui-form-item"><label class="layui-form-label">升级地址</label><div class="layui-input-block"><input name="url" class="layui-input" lay-verify="required|url"></div></div>
+                <div class="layui-form-item"><label class="layui-form-label">MD5</label><div class="layui-input-block"><input name="md5" class="layui-input" lay-verify="required"></div></div>
+                <input type="hidden" name="type" value="0">
+                <button class="layui-btn layui-btn-danger" lay-submit lay-filter="sendOta">推送升级</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="../../assets/layui/layui.js"></script>
+<script src="../../assets/js/common.js"></script>
+<script>
+layui.use(['form', 'element', 'layer'], function () {
+    var $ = layui.jquery;
+    var form = layui.form;
+    var layer = layui.layer;
+    var deviceNo = MyConfig.getUrlParam('deviceNo');
+    var currentConfig = {};
+
+    $('#deviceNoText').text(deviceNo || '--');
+    $('#pageTitle').text('设备配置');
+    if (!deviceNo) {
+        layer.alert('缺少 deviceNo', {icon: 2});
+        return;
+    }
+
+    function request(url, method, data, done) {
+        MyConfig.request(url, method, data || {}, function (res) {
+            if (done) done(res || {});
+        });
+    }
+
+    function requestRefresh(key, done, always) {
+        var url = MyConfig.API_BASE + '/device/config/refresh?deviceNo=' + encodeURIComponent(deviceNo);
+        if (key) url += '&key=' + encodeURIComponent(key);
+        $.ajax({
+            url: url,
+            type: 'POST',
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify({}),
+            headers: {'Authorization': localStorage.getItem('token') ? ('Bearer ' + localStorage.getItem('token')) : ''},
+            success: function (res) {
+                if (res.code === 200 || res.code === 0) {
+                    if (done) done(res.data || {});
+                } else {
+                    layer.msg(res.message || res.msg || '刷新配置失败', {icon: 2});
+                }
+            },
+            error: function (xhr) {
+                layer.msg('刷新配置失败，设备可能离线或服务不可达 (' + xhr.status + ')', {icon: 2});
+            },
+            complete: function () {
+                if (always) always();
+            }
+        });
+    }
+
+    function group(name) {
+        var value = currentConfig ? currentConfig[name] : {};
+        return value && typeof value === 'object' ? value : {};
+    }
+
+    function boolToSwitch(value) {
+        return value === true ? 'true' : '';
+    }
+
+    function switchToBool(value) {
+        return value === 'true' || value === true || value === 'on';
+    }
+
+    function intValue(value) {
+        if (value === '' || value == null) return null;
+        var num = parseInt(value, 10);
+        return isNaN(num) ? null : num;
+    }
+
+    function readInput(name) {
+        return $('[name="' + name + '"]').val();
+    }
+
+    function renderConfig(data) {
+        currentConfig = data || {};
+        var sysinfo = group('sysinfo');
+        var network = group('network');
+        var mqtt = group('mqtt');
+        var lockRule = group('lockRule');
+        var timeDelay = lockRule.timeDelay || {};
+        var openModel = group('openModel');
+        var tempPickupMode = group('tempPickupMode');
+        var strategy = group('cabinetStrategy');
+        var doorOpenTimeout = group('doorOpenTimeout');
+        var time = group('time');
+        var audio = group('audio');
+
+        $('#sysModel').text(sysinfo.model || '--');
+        $('#sysVersion').text(sysinfo.appVersion || '--');
+        $('#sysIp').text(network.ip || '--');
+
+        form.val('networkForm', {
+            netType: network.netType || 'ETH',
+            ssid: network.ssid || '',
+            psk: network.psk || '',
+            dhcp: boolToSwitch(network.dhcp),
+            ip: network.ip || '',
+            mask: network.mask || '',
+            gw: network.gw || '',
+            dns: network.dns || ''
+        });
+
+        form.val('mqttForm', {
+            host: mqtt.host || '',
+            port: mqtt.port || '',
+            clientId: mqtt.clientId || '',
+            user: mqtt.user || '',
+            pass: mqtt.pass || '',
+            cleanSession: boolToSwitch(mqtt.cleanSession),
+            qos: mqtt.qos == null ? 1 : mqtt.qos,
+            keepAlive: mqtt.keepAlive == null ? 60 : mqtt.keepAlive
+        });
+
+        form.val('otherForm', {
+            openModel: openModel.value || 'face',
+            tempDelay: lockRule.tempDelay == null ? '' : lockRule.tempDelay,
+            tempPickupMode: tempPickupMode.value == null ? 1 : tempPickupMode.value,
+            timeDelayEnable: boolToSwitch(timeDelay.enable),
+            timeDelayType: timeDelay.type || 'timeout',
+            timeDelayValue: timeDelay.value == null ? '' : timeDelay.value,
+            strategyMode: strategy.mode == null ? 0 : strategy.mode,
+            timeValue: time.value || '',
+            volume: audio.volume == null ? '' : audio.volume,
+            doorOpenTimeout: doorOpenTimeout.value == null ? '' : doorOpenTimeout.value
+        });
+
+        form.render();
+        updateNetworkState();
+    }
+
+    function jsonEquals(a, b) {
+        return JSON.stringify(a || null) === JSON.stringify(b || null);
+    }
+
+    function sendChanged(payload, successText) {
+        var changed = {};
+        Object.keys(payload).forEach(function (key) {
+            if (key === 'adminPin' || !jsonEquals(currentConfig[key], payload[key])) {
+                changed[key] = payload[key];
+            }
+        });
+        if (Object.keys(changed).length === 0) {
+            layer.msg('配置未变化');
+            return;
+        }
+        request('/device/config?deviceNo=' + encodeURIComponent(deviceNo), 'POST', changed, function () {
+            Object.keys(changed).forEach(function (key) {
+                if (key !== 'adminPin') currentConfig[key] = changed[key];
+            });
+            layer.msg(successText || '配置已下发', {icon: 1});
+        });
+    }
+
+    function updateNetworkState() {
+        var netType = readInput('netType');
+        var dhcp = $('[name="dhcp"]').prop('checked');
+        var wifiDisabled = netType === 'ETH';
+        $('[name="ssid"],[name="psk"]').prop('disabled', wifiDisabled);
+        $('[name="ip"],[name="mask"],[name="gw"]').prop('disabled', dhcp);
+        form.render();
+    }
+
+    form.on('select(netType)', updateNetworkState);
+    form.on('switch(dhcp)', updateNetworkState);
+
+    function collectNetwork() {
+        return {
+            netType: readInput('netType') || 'ETH',
+            dhcp: $('[name="dhcp"]').prop('checked'),
+            ssid: readInput('ssid') || '',
+            psk: readInput('psk') || '',
+            ip: readInput('ip') || '',
+            mask: readInput('mask') || '',
+            gw: readInput('gw') || '',
+            dns: readInput('dns') || ''
+        };
+    }
+
+    function collectMqtt() {
+        return {
+            host: readInput('host') || '',
+            port: intValue(readInput('port')),
+            user: readInput('user') || '',
+            pass: readInput('pass') || '',
+            clientId: readInput('clientId') || '',
+            qos: intValue(readInput('qos')),
+            cleanSession: $('[name="cleanSession"]').prop('checked'),
+            keepAlive: intValue(readInput('keepAlive'))
+        };
+    }
+
+    function collectOther() {
+        var payload = {
+            openModel: {value: readInput('openModel') || 'face'},
+            lockRule: {
+                tempDelay: intValue(readInput('tempDelay')),
+                timeDelay: {
+                    enable: $('[name="timeDelayEnable"]').prop('checked'),
+                    type: readInput('timeDelayType') || 'timeout',
+                    value: intValue(readInput('timeDelayValue'))
+                }
+            },
+            cabinetStrategy: {mode: intValue(readInput('strategyMode'))}
+        };
+        payload.tempPickupMode = {value: intValue(readInput('tempPickupMode'))};
+        var timeValue = readInput('timeValue');
+        if (timeValue) payload.time = {value: timeValue};
+        var volume = intValue(readInput('volume'));
+        if (volume !== null) payload.audio = {volume: volume};
+        var doorOpenTimeout = intValue(readInput('doorOpenTimeout'));
+        if (doorOpenTimeout !== null) payload.doorOpenTimeout = {value: doorOpenTimeout};
+        var oldPwd = readInput('oldPwd');
+        var newPwd = readInput('newPwd');
+        if (oldPwd || newPwd) payload.adminPin = {oldPwd: oldPwd || '', newPwd: newPwd || ''};
+        return payload;
+    }
+
+    form.on('submit(saveNetwork)', function () {
+        sendChanged({network: collectNetwork()}, '网络配置已下发');
+        return false;
+    });
+
+    form.on('submit(saveMqtt)', function () {
+        sendChanged({mqtt: collectMqtt()}, 'MQTT 配置已下发');
+        return false;
+    });
+
+    form.on('submit(saveOther)', function () {
+        sendChanged(collectOther(), '其它配置已下发');
+        return false;
+    });
+
+    function pad2(value) {
+        return value < 10 ? '0' + value : '' + value;
+    }
+
+    function formatNow() {
+        var now = new Date();
+        return now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '-' + pad2(now.getDate()) +
+            ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
+    }
+
+    function control(command, confirmText) {
+        var doSend = function () {
+            request('/device/control', 'POST', {deviceNo: deviceNo, command: command}, function () {
+                layer.msg('指令已下发', {icon: 1});
+            });
+        };
+        if (confirmText) {
+            layer.confirm(confirmText, {icon: 3}, function (idx) {
+                layer.close(idx);
+                doSend();
+            });
+        } else {
+            doSend();
+        }
+    }
+
+    $('#btnReboot').on('click', function () { control(0, '确认重启设备？'); });
+    $('#btnClearBusiness').on('click', function () { control(3, '确认清空设备业务数据？该操作会保留终端配置。'); });
+    $('#btnFactoryReset').on('click', function () { control(4, '确认执行设备重置？该操作会清除全部数据与配置。'); });
+
+    form.on('submit(sendOta)', function (data) {
+        data.field.deviceNo = deviceNo;
+        data.field.type = 0;
+        request('/device/upgrade', 'POST', data.field, function () {
+            layer.msg('升级指令已下发', {icon: 1});
+        });
+        return false;
+    });
+
+    $('#btnRefreshConfig').on('click', function () {
+        var index = layer.load(2);
+        requestRefresh(null, function (data) {
+            renderConfig(data);
+            layer.msg('配置已刷新', {icon: 1});
+        }, function () {
+            layer.close(index);
+        });
+    });
+
+    $('#btnGetDeviceTime').on('click', function () {
+        var index = layer.load(2);
+        requestRefresh('time', function (data) {
+            renderConfig(data);
+            var time = data && data.time ? data.time.value : '';
+            if (time) layer.msg('设备时间已获取', {icon: 1});
+        }, function () {
+            layer.close(index);
+        });
+    });
+
+    $('#btnSyncSystemTime').on('click', function () {
+        var value = formatNow();
+        $('[name="timeValue"]').val(value);
+        sendChanged({time: {value: value}}, '系统时间已同步到设备');
+    });
+
+    request('/device/config?deviceNo=' + encodeURIComponent(deviceNo), 'GET', {}, function (data) {
+        renderConfig(data);
+    });
+});
+</script>
+</body>
+</html>

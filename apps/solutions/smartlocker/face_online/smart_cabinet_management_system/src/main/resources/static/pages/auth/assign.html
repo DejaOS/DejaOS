@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>分配关联</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #fff;
+            padding: 20px;
+        }
+
+        #transferContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .layui-transfer {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .layui-transfer-box {
+            width: 42% !important;
+            height: 450px !important;
+            min-width: 250px;
+        }
+
+        .layui-transfer-active {
+            margin: 0 15px !important;
+        }
+
+        .btn-bar {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        /* 优化穿梭框内标题的垂直对齐 */
+        .layui-transfer-data li {
+            display: flex;
+            align-items: center;
+        }
+
+        /* 强制覆盖 layui-badge-dot 的显示，防止被内部样式挤压 */
+        .layui-transfer-data li .layui-badge-dot {
+            display: inline-block;
+            vertical-align: middle;
+            margin-top: -2px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="transferContainer"></div>
+
+<div class="btn-bar">
+    <button type="button" class="layui-btn layui-btn-primary" onclick="closeSelf()">取消</button>
+    <button type="button" class="layui-btn layui-btn-normal" id="btn-save">保存配置</button>
+</div>
+
+<script src="../../assets/layui/layui.js"></script>
+<script src="../../assets/js/common.js"></script>
+<script>
+    layui.use(['transfer', 'layer', 'util'], function () {
+        var $ = layui.jquery,
+            transfer = layui.transfer,
+            layer = layui.layer,
+            util = layui.util;
+
+        var groupId = MyConfig.getUrlParam('groupId');
+        var type = MyConfig.getUrlParam('type');
+
+        if (!groupId || !type) {
+            layer.msg('参数错误', {icon: 2});
+            return;
+        }
+
+        var config = {
+            user: {
+                listApi: '/user/page?pageSize=10000',
+                assignedApi: '/auth-group/' + groupId + '/users',
+                saveApi: '/auth-group/assign/users',
+                titles: ['待选用户', '已选用户'],
+                parseData: function (item) {
+                    return {"value": item.id, "title": item.name + " (" + item.userId + ")"};
+                }
+            },
+            device: {
+                listApi: '/device/page?pageSize=10000',
+                assignedApi: '/auth-group/' + groupId + '/devices',
+                saveApi: '/auth-group/assign/devices',
+                titles: ['待选设备', '已选设备'],
+                parseData: function (item) {
+                    var titleStr = item.deviceName + " (" + item.deviceNo + ")";
+                    if (item.onlineStatus === 1) {
+                        return {"value": item.id, "title": "[在线]" + titleStr};
+                    } else {
+                        return {"value": item.id, "title": "[离线]" + titleStr};
+                    }
+                }
+            }
+        };
+
+        var currentConfig = config[type];
+
+        var listReq = $.ajax({
+            url: MyConfig.API_BASE + currentConfig.listApi,
+            type: 'GET',
+            headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}
+        });
+
+        var assignedReq = $.ajax({
+            url: MyConfig.API_BASE + currentConfig.assignedApi,
+            type: 'GET',
+            headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}
+        });
+
+        $.when(listReq, assignedReq).done(function (listRes, assignedRes) {
+            var listData = listRes[0].data.records || [];
+            var assignedIds = assignedRes[0].data || [];
+
+            var transferData = [];
+            layui.each(listData, function (index, item) {
+                transferData.push(currentConfig.parseData(item));
+            });
+
+            // 渲染穿梭框
+            transfer.render({
+                elem: '#transferContainer',
+                title: currentConfig.titles,
+                data: transferData,
+                value: assignedIds,
+                showSearch: true,
+                id: 'mainTransfer',
+                // width: 300, // 去掉这里的固定宽度，交由 CSS 百分比控制
+                height: 450
+            });
+
+        }).fail(function (xhr) {
+            layer.msg('数据加载失败', {icon: 2});
+        });
+
+        $('#btn-save').click(function () {
+            var getData = transfer.getData('mainTransfer');
+            var targetIds = [];
+            layui.each(getData, function (index, item) {
+                targetIds.push(item.value);
+            });
+
+            var postData = {
+                groupId: groupId,
+                targetIds: targetIds
+            };
+
+            MyConfig.request(currentConfig.saveApi, 'POST', postData, function (res) {
+                layer.msg('保存成功', {icon: 1, time: 1000}, function () {
+                    closeSelf();
+                });
+            });
+        });
+
+        window.closeSelf = function () {
+            var index = parent.layer.getFrameIndex(window.name);
+            parent.layer.close(index);
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>登录 - 智能储物柜管理系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link href="./assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        /* 1. 背景：保持渐变风格 */
+        body {
+            background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        /* 2. 登录卡片 */
+        .login-wrapper {
+            width: 380px;
+            background: #fff;
+            padding: 40px 35px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            animation: fadeIn Up 0.6s ease;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .login-header h2 {
+            color: #16baaa;
+            font-weight: bold;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: #999;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        /* --- 3. 核心修复：图标绝对对齐 --- */
+        .layui-input-wrap {
+            margin-bottom: 20px;
+            position: relative; /* 必须相对定位，作为锚点 */
+        }
+
+        /* 输入框：高度 44px */
+        .layui-input {
+            height: 44px;
+            line-height: 44px;
+            padding-left: 45px; /* 左边留出图标的位置 */
+            border-color: #eee;
+            transition: all 0.3s;
+        }
+
+        .layui-input:focus {
+            border-color: #16baaa !important;
+            box-shadow: 0 0 0 3px rgba(22, 186, 170, 0.1);
+        }
+
+        /* 图标容器：高度也是 44px，行高也是 44px */
+        .layui-input-prefix {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 45px; /* 宽度和 input 的 padding-left 一致 */
+            height: 44px; /* 高度撑满 */
+            line-height: 44px; /* 【关键】让图标垂直居中 */
+            text-align: center; /* 让图标水平居中 */
+            color: #ccc;
+            font-size: 18px;
+            z-index: 10;
+            transition: color 0.3s;
+        }
+
+        /* 聚焦时图标变色 */
+        .layui-input:focus + .layui-input-prefix {
+            color: #16baaa;
+        }
+
+        /* 登录按钮 */
+        .btn-login {
+            background-color: #16baaa;
+            width: 100%;
+            height: 44px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 4px;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(22, 186, 170, 0.3);
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .btn-login:hover {
+            background-color: #139d90;
+            box-shadow: 0 6px 16px rgba(22, 186, 170, 0.4);
+            transform: translateY(-1px);
+            cursor: pointer;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #ccc;
+            font-size: 12px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- 4. 修复右侧 lay-affix 图标 (如密码眼睛) 的位置 --- */
+        .layui-input-suffix {
+            top: 0 !important;
+            bottom: 0 !important;
+            height: 100% !important; /* 强制占满父容器高度 (44px) */
+            display: flex !important;
+            align-items: center !important; /* 垂直居中 */
+            right: 10px !important; /* 稍微往左挪一点，不要贴边 */
+        }
+
+        /* 微调右侧图标的大小和颜色，使其跟左边一致 */
+        .layui-input-suffix .layui-icon {
+            font-size: 18px !important;
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .layui-input-suffix .layui-icon:hover {
+            color: #16baaa;
+        }
+    </style>
+
+    <script>
+        if (localStorage.getItem('token')) {
+            window.location.replace('index.html');
+        }
+    </script>
+</head>
+<body>
+
+<div class="login-wrapper">
+    <div class="login-header">
+        <h2>智能储物柜管理系统</h2>
+        <p>Smart Locker Management System</p>
+    </div>
+
+    <form class="layui-form">
+        <div class="layui-input-wrap">
+            <input type="text" name="account" lay-verify="required" placeholder="请输入账号 / 手机号" class="layui-input">
+            <div class="layui-input-prefix">
+                <i class="layui-icon layui-icon-username"></i>
+            </div>
+        </div>
+
+        <div class="layui-input-wrap">
+            <input type="password" name="password" lay-verify="required" placeholder="请输入密码" class="layui-input" lay-affix="eye">
+            <div class="layui-input-prefix">
+                <i class="layui-icon layui-icon-password"></i>
+            </div>
+        </div>
+
+        <button class="layui-btn btn-login" lay-submit lay-filter="login-btn">立即登录</button>
+    </form>
+
+    <div class="footer">© 2026 北京微光互联科技有限公司</div>
+</div>
+
+<script src="./assets/layui/layui.js"></script>
+<script src="./assets/js/common.js"></script>
+<script>
+    layui.use(['form', 'layer', 'jquery'], function () {
+        var form = layui.form, layer = layui.layer, $ = layui.jquery;
+
+        form.on('submit(login-btn)', function (data) {
+            var btn = $(data.elem);
+            btn.addClass('layui-btn-disabled').prop('disabled', true).text('登录中...');
+
+            MyConfig.request('/auth/login', 'POST', data.field, function (resData) {
+                layer.msg('登录成功', {icon: 1, time: 800}, function () {
+                    localStorage.setItem('token', resData.token);
+                    localStorage.setItem('userInfo', JSON.stringify({
+                        userId: resData.userId,
+                        name: resData.name,
+                        permissionGroup: resData.permissionGroup
+                    }));
+                    window.location.replace('index.html');
+                });
+            });
+
+            // 兜底恢复
+            setTimeout(function () {
+                btn.removeClass('layui-btn-disabled').prop('disabled', false).text('立即登录');
+            }, 3000);
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

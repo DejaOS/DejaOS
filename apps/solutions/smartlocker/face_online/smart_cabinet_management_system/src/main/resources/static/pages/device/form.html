@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>设备表单</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        body { background-color: #fff; padding: 18px 30px; }
+        .required-label:after { content: '*'; color: #ff4d4f; margin-left: 4px; font-weight: bold; }
+        .layui-input, .layui-textarea { border-radius: 4px; border-color: #d9d9d9; }
+        .layui-input:focus, .layui-textarea:focus { border-color: #16baaa !important; box-shadow: 0 0 0 2px rgba(22, 186, 170, 0.1); }
+        .bottom-bar { margin-top: 12px; text-align: right; border-top: 1px solid #eee; padding-top: 12px; }
+        .layui-textarea { min-height: 68px; }
+        .view-mode input, .view-mode textarea { background-color: #f5f5f5; color: #666; cursor: not-allowed; border-color: #eee; }
+    </style>
+</head>
+<body>
+<form class="layui-form" lay-filter="formFilter" id="mainForm">
+    <input type="hidden" name="id">
+
+    <div class="layui-row layui-col-space20">
+        <div class="layui-col-xs6">
+            <div class="layui-form-item">
+                <label class="layui-form-label required-label">设备编号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="deviceNo" lay-verify="required" placeholder="请输入设备 SN" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-xs6">
+            <div class="layui-form-item">
+                <label class="layui-form-label required-label">设备名称</label>
+                <div class="layui-input-block">
+                    <input type="text" name="deviceName" lay-verify="required" placeholder="请输入设备名称" class="layui-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-xs6">
+            <div class="layui-form-item">
+                <label class="layui-form-label">IP 地址</label>
+                <div class="layui-input-block">
+                    <input type="text" name="ipAddress" placeholder="如 192.168.1.100" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-xs6">
+            <div class="layui-form-item">
+                <label class="layui-form-label">固件版本</label>
+                <div class="layui-input-block">
+                    <input type="text" name="version" placeholder="如 1.0.2" class="layui-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-xs12">
+            <div class="layui-form-item layui-form-text">
+                <label class="layui-form-label">备注</label>
+                <div class="layui-input-block">
+                    <textarea name="remark" class="layui-textarea" placeholder="请输入备注"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-bar" id="action-area">
+        <button type="button" class="layui-btn layui-btn-primary" onclick="closeSelf()">取消</button>
+        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">保存</button>
+    </div>
+</form>
+
+<script src="../../assets/layui/layui.js"></script>
+<script src="../../assets/js/common.js"></script>
+<script>
+layui.use(['form', 'layer', 'jquery'], function () {
+    var form = layui.form, layer = layui.layer, $ = layui.jquery;
+
+    var mode = MyConfig.getUrlParam('mode');
+    if (mode === 'view') {
+        $('#mainForm').addClass('view-mode');
+        $('input, textarea').prop('disabled', true);
+        $('#action-area button[lay-submit]').hide();
+    }
+
+    window.setData = function (data) {
+        if (data) {
+            form.val('formFilter', data);
+        }
+    };
+
+    form.on('submit(saveBtn)', function (data) {
+        MyConfig.request('/device', 'POST', data.field, function () {
+            layer.msg('保存成功', {icon: 1, time: 1000}, function () {
+                closeSelf();
+            });
+        });
+        return false;
+    });
+
+    window.closeSelf = function () {
+        var index = parent.layer.getFrameIndex(window.name);
+        parent.layer.close(index);
+    };
+});
+</script>
+</body>
+</html>

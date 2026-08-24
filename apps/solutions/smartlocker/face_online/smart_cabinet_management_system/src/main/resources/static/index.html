@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>智能储物柜管理系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link href="./assets/layui/css/layui.css" rel="stylesheet">
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.replace('login.html');
+        }
+    </script>
+    <style>
+        body { background-color: #f2f2f2; }
+        .layui-layout-admin .layui-header { background-color: #fff; border-bottom: 1px solid #f0f0f0; box-shadow: 0 1px 4px rgba(0, 21, 41, .08); }
+        .layui-layout-admin .layui-logo { background-color: #fff; color: #16baaa; box-shadow: none; border-right: 1px solid #f0f0f0; font-weight: bold; font-size: 18px; }
+        .layui-header .layui-nav .layui-nav-item a { color: #333; }
+        .layui-header .layui-nav .layui-nav-item a:hover { color: #16baaa; }
+        .layui-header .layui-nav-more { border-top-color: #666; }
+        .layui-layout-admin .layui-side { background-color: #fff !important; box-shadow: 2px 0 8px rgba(29, 35, 41, .05); border-right: 1px solid #f0f0f0; }
+        .layui-side .layui-nav { background-color: transparent !important; color: #555; }
+        .layui-side .layui-nav .layui-nav-item a { color: #555 !important; height: 50px; line-height: 50px; }
+        .layui-side .layui-nav .layui-nav-item a:hover { color: #16baaa !important; background-color: #f8fcfb !important; }
+        .layui-nav-tree .layui-nav-child dd.layui-this { background-color: transparent !important; }
+        .layui-nav-tree .layui-nav-item.layui-this > a,
+        .layui-nav-tree .layui-nav-child dd.layui-this a { background-color: #e6fffb !important; color: #16baaa !important; border-right: 3px solid #16baaa; }
+        .layui-nav-itemed > .layui-nav-child { background-color: #fff !important; padding: 0; }
+        .layui-nav-tree .layui-nav-child dd a { padding-left: 50px !important; }
+        .layui-nav-tree .layui-nav-more { border-top-color: #999 !important; }
+        .layui-nav-tree .layui-nav-itemed > a .layui-nav-more { border-top-color: transparent !important; border-bottom-color: #999 !important; }
+        .layui-layout-admin .layui-body { bottom: 0; padding-bottom: 0; background-color: #f8f9fa; }
+    </style>
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo">智能储物柜管理系统</div>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;">
+                    <img src="//tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg" class="layui-nav-img" alt="">
+                    <span id="header-username">管理员</span>
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a href="javascript:;" id="btn-change-password">修改密码</a></dd>
+                    <dd><a href="javascript:;" id="btn-logout">退出登录</a></dd>
+                </dl>
+            </li>
+        </ul>
+    </div>
+
+    <div class="layui-side">
+        <div class="layui-side-scroll">
+            <ul class="layui-nav layui-nav-tree" lay-shrink="all">
+                <li class="layui-nav-item layui-this">
+                    <a href="javascript:;" onclick="loadPage('pages/welcome.html')"><i class="layui-icon layui-icon-console" style="margin-right:10px;"></i>控制台</a>
+                </li>
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-engine" style="margin-right:10px;"></i>设备管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" onclick="loadPage('pages/device/list.html')">设备列表</a></dd>
+                        <dd><a href="javascript:;" onclick="loadPage('pages/locker/list.html')">柜格管理</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-user" style="margin-right:10px;"></i>人员管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" onclick="loadPage('pages/user/list.html')">人员列表</a></dd>
+                        <dd><a href="javascript:;" onclick="loadPage('pages/user-group/list.html')">分组管理</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-auz" style="margin-right:10px;"></i>权限管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" onclick="loadPage('pages/auth/list.html')">权限组配置</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-log" style="margin-right:10px;"></i>日志记录</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" onclick="loadPage('pages/log/list.html')">设备日志</a></dd>
+                        <dd><a href="javascript:;" onclick="loadPage('pages/mqtt-log/list.html')">MQTT 记录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="layui-body">
+        <iframe id="main-iframe" src="pages/welcome.html" style="width:100%; height:100%; border:none; display:block;"></iframe>
+    </div>
+</div>
+
+<script src="./assets/layui/layui.js"></script>
+<script src="./assets/js/common.js"></script>
+<script>
+function loadPage(url) {
+    document.getElementById('main-iframe').src = url;
+}
+
+layui.use(['jquery', 'layer', 'element'], function () {
+    var $ = layui.jquery, layer = layui.layer;
+    var userStr = localStorage.getItem('userInfo');
+    if (userStr) {
+        var user = JSON.parse(userStr);
+        $('#header-username').text(user.name || user.userId || 'admin');
+    }
+
+    $('#btn-change-password').click(function () {
+        var html =
+            '<div class="layui-form" style="padding:22px 28px 0 0;">' +
+            '<div class="layui-form-item"><label class="layui-form-label">旧密码</label><div class="layui-input-block"><input type="password" id="oldPassword" class="layui-input" placeholder="请输入旧密码"></div></div>' +
+            '<div class="layui-form-item"><label class="layui-form-label">新密码</label><div class="layui-input-block"><input type="password" id="newPassword" class="layui-input" placeholder="至少 6 位"></div></div>' +
+            '<div class="layui-form-item"><label class="layui-form-label">确认密码</label><div class="layui-input-block"><input type="password" id="confirmPassword" class="layui-input" placeholder="再次输入新密码"></div></div>' +
+            '</div>';
+        layer.open({
+            type: 1,
+            title: '修改管理员密码',
+            area: ['460px', '320px'],
+            content: html,
+            btn: ['保存', '取消'],
+            yes: function (index, layero) {
+                var oldPassword = layero.find('#oldPassword').val();
+                var newPassword = layero.find('#newPassword').val();
+                var confirmPassword = layero.find('#confirmPassword').val();
+                if (!oldPassword || !newPassword) return layer.msg('旧密码和新密码不能为空', {icon: 5});
+                if (newPassword.length < 6) return layer.msg('新密码至少 6 位', {icon: 5});
+                if (newPassword !== confirmPassword) return layer.msg('两次输入的新密码不一致', {icon: 5});
+                MyConfig.request('/auth/password', 'PUT', {oldPassword: oldPassword, newPassword: newPassword}, function () {
+                    layer.msg('密码修改成功，请重新登录', {icon: 1, time: 1000}, function () {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('userInfo');
+                        window.location.replace('login.html');
+                    });
+                    layer.close(index);
+                });
+            }
+        });
+    });
+
+    $('#btn-logout').click(function () {
+        layer.confirm('确定退出登录？', {icon: 3, title: '提示'}, function (index) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            window.location.replace('login.html');
+            layer.close(index);
+        });
+    });
+});
+</script>
+</body>
+</html>

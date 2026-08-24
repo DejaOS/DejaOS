@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>分组表单</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        body { background-color: #fff; padding: 25px; }
+        .layui-form-item { margin-bottom: 25px; }
+        .required:after { content: '*'; color: red; margin-left: 5px; }
+    </style>
+</head>
+<body>
+
+<form class="layui-form" lay-filter="formFilter" id="mainForm">
+    <input type="hidden" name="id">
+    <input type="hidden" name="parentId" value="0">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">上级分组</label>
+        <div class="layui-input-block">
+            <input type="text" id="parentNameShow" value="顶级分组" class="layui-input" disabled style="background-color: #f8f8f8; color: #666;">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">分组名称</label>
+        <div class="layui-input-block">
+            <input type="text" name="name" lay-verify="required" placeholder="请输入分组名称" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">排序号</label>
+        <div class="layui-input-block">
+            <input type="number" name="orderNum" value="1" lay-verify="required|number" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item" style="text-align: right; margin-top: 30px;">
+        <button type="button" class="layui-btn layui-btn-primary" onclick="closeSelf()">取消</button>
+        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">保存</button>
+    </div>
+</form>
+
+<script src="../../assets/layui/layui.js"></script>
+<script src="../../assets/js/common.js"></script>
+<script>
+    layui.use(['form', 'layer'], function () {
+        var form = layui.form, layer = layui.layer, $ = layui.jquery;
+
+        // 供父页面调用的核心回显方法
+        window.setData = function(data) {
+            if(!data) return;
+
+            if(data.isAddChild) {
+                // --- 场景A：新增子分组 ---
+                // 清空ID，重置名称，设置父级信息
+                form.val('formFilter', {
+                    id: '',             // 肯定是新数据
+                    parentId: data.parentId,
+                    name: '',       // 名称留空
+                    orderNum: 1         // 默认排序
+                });
+                $('#parentNameShow').val(data.parentName || ('父级ID:' + data.parentId));
+            } else {
+                // --- 场景B：编辑分组 ---
+                form.val('formFilter', data);
+
+                // 处理父级名称显示
+                if(data.parentId === 0 || data.parentId === '0') {
+                    $('#parentNameShow').val("顶级分组");
+                } else {
+                    // 如果列表页没有传 parentName 过来，暂时显示 ID
+                    // 完美做法是后端返回 parentName，或者这里再去查一次详情
+                    $('#parentNameShow').val(data.parentName || ("上级ID: " + data.parentId));
+                }
+            }
+        };
+
+        // 提交表单
+        form.on('submit(saveBtn)', function (data) {
+            MyConfig.request('/user-group', 'POST', data.field, function() {
+                layer.msg('保存成功', {icon: 1, time: 1000}, function() {
+                    closeSelf();
+                });
+            });
+            return false;
+        });
+
+        // 关闭自身
+        window.closeSelf = function() {
+            var index = parent.layer.getFrameIndex(window.name);
+            parent.layer.close(index);
+        }
+    });
+</script>
+</body>
+</html>

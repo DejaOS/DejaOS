@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>设备日志</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        body { background-color: #f2f2f2; color: #333; padding: 15px; font-family: "Microsoft YaHei", sans-serif; }
+        .layui-card { border-radius: 4px; box-shadow: 0 1px 2px rgba(0, 0, 0, .05); }
+        .search-container { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; padding: 12px 0 20px; }
+        .search-item { display: flex; align-items: center; }
+        .search-item label { margin-right: 10px; color: #555; font-weight: 500; white-space: nowrap; }
+        .search-item .layui-input, .search-item .layui-form-select .layui-input { width: 150px; height: 38px; }
+        .search-actions { margin-left: auto; display: flex; gap: 10px; }
+        .type-tag { display: inline-block; height: 22px; line-height: 20px; padding: 0 8px; border-radius: 2px; font-size: 12px; border: 1px solid #d9d9d9; background: #fafafa; box-sizing: border-box; vertical-align: middle; }
+        .type-access { color: #1677ff; background: #e6f4ff; border-color: #91caff; }
+        .type-warning { color: #fa8c16; background: #fff7e6; border-color: #ffd591; }
+        .type-device { color: #16baaa; background: #e6fffb; border-color: #87e8de; }
+        .type-offline { color: #ff4d4f; background: #fff1f0; border-color: #ffa39e; }
+        .json-box { white-space: pre-wrap; word-break: break-all; background: #1f2933; color: #e6edf3; padding: 14px; border-radius: 4px; max-height: 520px; overflow: auto; font-family: Consolas, Menlo, monospace; font-size: 12px; line-height: 1.6; }
+        .detail-grid { display: grid; grid-template-columns: 110px 1fr 110px 1fr; gap: 10px 14px; margin-bottom: 14px; }
+        .detail-grid .label { color: #888; text-align: right; }
+        .detail-grid .value { color: #333; word-break: break-all; }
+    </style>
+</head>
+<body>
+<div class="layui-card">
+    <div class="layui-card-body" style="padding: 20px;">
+        <form class="layui-form search-container" lay-filter="searchForm">
+            <div class="search-item">
+                <label>设备编号</label>
+                <input type="text" name="deviceNo" placeholder="设备SN" class="layui-input">
+            </div>
+            <div class="search-item">
+                <label>事件类型</label>
+                <div style="width: 160px;">
+                    <select name="eventType">
+                        <option value="">全部</option>
+                        <option value="0">关柜</option>
+                        <option value="1">开柜</option>
+                        <option value="2">临时占用</option>
+                        <option value="3">临时释放</option>
+                        <option value="faceSyncFailure">人脸同步失败</option>
+                        <option value="5">开柜超时未关</option>
+                        <option value="6">柜格已锁定</option>
+                        <option value="connect">设备上线</option>
+                        <option value="offline">设备离线</option>
+                    </select>
+                </div>
+            </div>
+            <div class="search-item">
+                <label>人员ID</label>
+                <input type="text" name="userId" placeholder="人员ID" class="layui-input">
+            </div>
+            <div class="search-item">
+                <label>柜组</label>
+                <input type="number" name="groupId" placeholder="柜组ID" class="layui-input" style="width: 100px;">
+            </div>
+            <div class="search-item">
+                <label>柜格</label>
+                <input type="number" name="cabinetId" placeholder="柜格ID" class="layui-input" style="width: 100px;">
+            </div>
+            <div class="search-item">
+                <label>发生时间</label>
+                <input type="text" class="layui-input" id="dateRange" placeholder="开始 - 结束" style="width: 280px;">
+                <input type="hidden" name="startTime" id="startTime">
+                <input type="hidden" name="endTime" id="endTime">
+            </div>
+            <div class="search-actions">
+                <button class="layui-btn layui-btn-normal" lay-submit lay-filter="searchBtn"><i class="layui-icon layui-icon-search"></i> 查询</button>
+                <button type="reset" class="layui-btn layui-btn-primary" id="btn-reset">重置</button>
+            </div>
+        </form>
+
+        <div style="border-top: 1px solid #f0f0f0; margin: 0 -20px 20px;"></div>
+
+        <table id="eventTable" lay-filter="eventTable"></table>
+
+        <script type="text/html" id="rowBar">
+            <a class="layui-btn layui-btn-xs" lay-event="detail">详情</a>
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete">删除</a>
+        </script>
+    </div>
+</div>
+
+<script src="../../assets/layui/layui.js"></script>
+<script src="../../assets/js/common.js"></script>
+<script>
+layui.use(['form', 'table', 'layer', 'laydate'], function () {
+    var $ = layui.jquery, form = layui.form, table = layui.table, layer = layui.layer, laydate = layui.laydate;
+    var token = localStorage.getItem('token');
+
+    laydate.render({
+        elem: '#dateRange',
+        type: 'datetime',
+        range: true,
+        done: function (value) {
+            if (value) {
+                var parts = value.split(' - ');
+                $('#startTime').val(parts[0]);
+                $('#endTime').val(parts[1]);
+            } else {
+                $('#startTime').val('');
+                $('#endTime').val('');
+            }
+        }
+    });
+
+    table.render({
+        elem: '#eventTable',
+        url: MyConfig.API_BASE + '/device-event/page',
+        headers: {'Authorization': 'Bearer ' + token},
+        request: {pageName: 'pageNo', limitName: 'pageSize'},
+        parseData: function (res) {
+            return {
+                code: (res.code === 0 || res.code === 200) ? 0 : 1,
+                msg: res.message,
+                count: res.data ? res.data.total : 0,
+                data: res.data ? res.data.records : []
+            };
+        },
+        cols: [[
+            {field: 'deviceName', title: '设备', width: 210, templet: function (d) {
+                return (d.deviceName || '-') + '<br><span style="color:#999;font-size:12px;">' + (d.deviceNo || '-') + '</span>';
+            }},
+            {field: 'eventTypeText', title: '事件类型', width: 130, align: 'center', templet: function (d) {
+                return '<span class="' + typeClass(d.eventType) + '">' + (d.eventTypeText || d.eventType || '-') + '</span>';
+            }},
+            {field: 'userId', title: '人员ID', width: 130, templet: function (d) { return d.userId || '-'; }},
+            {field: 'groupId', title: '柜组', width: 80, align: 'center', templet: function (d) { return d.groupId == null ? '-' : d.groupId; }},
+            {field: 'cabinetId', title: '柜格', width: 80, align: 'center', templet: function (d) { return d.cabinetId == null ? '-' : d.cabinetId; }},
+            {field: 'message', title: '摘要', minWidth: 260, templet: function (d) { return escapeHtml(d.message || '-'); }},
+            {field: 'eventTime', title: '发生时间', width: 180, sort: true, templet: function (d) { return MyConfig.formatDate(d.eventTime); }},
+            {title: '操作', toolbar: '#rowBar', width: 130, align: 'center', fixed: 'right'}
+        ]],
+        page: true,
+        limit: 10,
+        limits: [10, 20, 50],
+        skin: 'line'
+    });
+
+    form.on('submit(searchBtn)', function (data) {
+        var fields = data.field;
+        for (var key in fields) if (fields[key] === '') delete fields[key];
+        table.reload('eventTable', {page: {curr: 1}, where: fields});
+        return false;
+    });
+
+    $('#btn-reset').on('click', function () {
+        $('form[lay-filter="searchForm"]')[0].reset();
+        $('#startTime').val('');
+        $('#endTime').val('');
+        table.reload('eventTable', {page: {curr: 1}, where: {}});
+    });
+
+    table.on('tool(eventTable)', function (obj) {
+        var data = obj.data;
+        if (obj.event === 'detail') {
+            MyConfig.request('/device-event/' + data.id, 'GET', {}, function (detail) {
+                showDetail(detail || data);
+            });
+        } else if (obj.event === 'delete') {
+            layer.confirm('确定删除这条设备日志吗？', {icon: 3}, function (index) {
+                MyConfig.request('/device-event/' + data.id, 'DELETE', {}, function () {
+                    layer.msg('删除成功');
+                    obj.del();
+                    layer.close(index);
+                });
+            });
+        }
+    });
+
+    function showDetail(d) {
+        var raw = prettyJson(d.rawPayload || d.extra || '');
+        var html =
+            '<div style="padding:18px;">' +
+            '<div class="detail-grid">' +
+            item('设备', (d.deviceName || '-') + ' / ' + (d.deviceNo || '-')) +
+            item('事件类型', d.eventTypeText || d.eventType || '-') +
+            item('SerialNo', d.serialNo || '-') +
+            item('EventId', d.eventId || '-') +
+            item('人员ID', d.userId || '-') +
+            item('柜格', d.groupId == null || d.cabinetId == null ? '-' : d.groupId + '-' + d.cabinetId) +
+            item('设备IP', d.ipAddress || '-') +
+            item('发生时间', MyConfig.formatDate(d.eventTime)) +
+            '</div>' +
+            '<div style="margin-bottom:8px;color:#666;">报文详情</div>' +
+            '<pre class="json-box">' + escapeHtml(raw) + '</pre>' +
+            '</div>';
+        layer.open({type: 1, title: '设备日志详情', area: ['820px', '680px'], content: html});
+    }
+
+    function item(label, value) {
+        return '<div class="label">' + label + '</div><div class="value">' + escapeHtml(value) + '</div>';
+    }
+
+    function typeClass(type) {
+        if (type === 'connect') return 'type-tag type-device';
+        if (type === 'offline') return 'type-tag type-offline';
+        if (type === 'faceSyncFailure' || type === '5' || type === '6') return 'type-tag type-warning';
+        return 'type-tag type-access';
+    }
+
+    function prettyJson(value) {
+        if (!value) return '';
+        try { return JSON.stringify(JSON.parse(value), null, 2); } catch (e) { return value; }
+    }
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (s) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[s];
+        });
+    }
+});
+</script>
+</body>
+</html>

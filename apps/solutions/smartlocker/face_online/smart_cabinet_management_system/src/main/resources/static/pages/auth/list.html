@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>权限组管理</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../../assets/layui/css/layui.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f2f2f2;
+            color: #333;
+            padding: 15px;
+            font-family: "Microsoft YaHei";
+        }
+
+        .layui-card {
+            border-radius: 4px;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .05);
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 12px 0 20px 0;
+        }
+
+        .search-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .search-item label {
+            white-space: nowrap;
+            margin-right: 10px;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .search-item .layui-input, .search-item .layui-form-select .layui-input {
+            width: 180px;
+            height: 38px;
+            line-height: 38px;
+            border-radius: 4px;
+        }
+
+        .search-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-actions .layui-btn {
+            height: 38px;
+            line-height: 38px;
+            padding: 0 20px;
+            border-radius: 4px;
+        }
+
+        .search-actions .btn-reset {
+            background-color: #fff;
+            border: 1px solid #e6e6e6;
+            color: #666;
+        }
+
+        /* 状态样式 */
+        .status-enable {
+            color: #52c41a;
+            background: #f6ffed;
+            padding: 2px 8px;
+            border: 1px solid #b7eb8f;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+
+        .status-disable {
+            color: #ff4d4f;
+            background: #fff1f0;
+            padding: 2px 8px;
+            border: 1px solid #ffa39e;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+
+        /* 统计数字徽章 */
+        .count-badge {
+            background-color: #f0f5ff;
+            color: #2f54eb;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="layui-card">
+    <div class="layui-card-body" style="padding: 20px;">
+
+        <form class="layui-form search-container" lay-filter="searchForm">
+            <div class="search-item">
+                <label>权限组名称</label>
+                <input type="text" name="groupName" placeholder="请输入名称" class="layui-input">
+            </div>
+            <div class="search-item">
+                <label>描述</label>
+                <input type="text" name="description" placeholder="请输入描述" class="layui-input">
+            </div>
+            <div class="search-item">
+                <label>状态</label>
+                <div style="width: 180px;">
+                    <select name="status">
+                        <option value="">全部</option>
+                        <option value="1">启用</option>
+                        <option value="0">禁用</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="search-actions">
+                <button class="layui-btn layui-btn-normal" lay-submit lay-filter="data-search-btn">
+                    <i class="layui-icon layui-icon-search"></i> 查询
+                </button>
+                <button type="reset" class="layui-btn btn-reset" id="btn-reset">
+                    <i class="layui-icon layui-icon-refresh"></i> 重置
+                </button>
+            </div>
+        </form>
+
+        <div style="border-top: 1px solid #f0f0f0; margin: 0 -20px 20px -20px;"></div>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-sm layui-btn-normal" lay-event="add">
+                    <i class="layui-icon layui-icon-add-1"></i> 新建权限组
+                </button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-xs" lay-event="edit" title="编辑基本信息"><i class="layui-icon layui-icon-edit"></i></a>
+            <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="assignUser" title="分配人员">
+                <i class="layui-icon layui-icon-user"></i>
+            </a>
+            <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="assignDevice" title="分配设备">
+                <i class="layui-icon layui-icon-engine"></i>
+            </a>
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete" title="删除"><i class="layui-icon layui-icon-delete"></i></a>
+        </script>
+    </div>
+</div>
+
+<script src="../../assets/layui/layui.js"></script>
+<script src="../../assets/js/common.js"></script>
+<script>
+    layui.use(['form', 'table', 'layer'], function () {
+        var $ = layui.jquery, form = layui.form, table = layui.table, layer = layui.layer;
+        var token = localStorage.getItem('token');
+
+        // 1. 渲染表格
+        table.render({
+            elem: '#currentTableId',
+            url: MyConfig.API_BASE + '/auth-group/page', // 对应 AuthGroupQueryDTO
+            headers: {'Authorization': 'Bearer ' + token},
+            request: {pageName: 'pageNo', limitName: 'pageSize'},
+            parseData: function (res) {
+                var records = res.data ? res.data.records : [];
+                var total = (res.data && res.data.total) ? res.data.total : (records.length > 0 ? records.length : 0);
+                return {
+                    "code": (res.code === 0 || res.code === 200) ? 0 : 1,
+                    "msg": res.message,
+                    "count": total,
+                    "data": records
+                };
+            },
+            toolbar: '#toolbarDemo',
+            cols: [[
+                {type: "checkbox", width: 50},
+                {field: 'id', width: 80, title: 'ID', sort: true},
+                {field: 'groupName', width: 180, title: '权限组名称', style: 'font-weight: bold;'},
+                {field: 'description', title: '描述', minWidth: 200},
+                {
+                    field: 'status', width: 100, title: '状态', align: 'center', templet: function (d) {
+                        return d.status === 1 ? '<span class="status-enable">启用</span>' : '<span class="status-disable">禁用</span>';
+                    }
+                },
+                // 关联用户数
+                {
+                    field: 'userCount', width: 120, title: '关联用户', align: 'center', templet: function (d) {
+                        return '<span class="count-badge" style="color:#1677ff; background:#e6f7ff;">' + (d.userCount || 0) + ' 人</span>';
+                    }
+                },
+                // 关联设备数
+                {
+                    field: 'deviceCount', width: 120, title: '关联设备', align: 'center', templet: function (d) {
+                        return '<span class="count-badge" style="color:#fa8c16; background:#fff7e6;">' + (d.deviceCount || 0) + ' 台</span>';
+                    }
+                },
+
+                {
+                    field: 'createTime', width: 220, title: '创建时间', sort: true,
+                    templet: function (d) {
+                        return MyConfig.formatDate(d.createTime);
+                    }
+                },
+
+                {title: '操作', width: 200, toolbar: '#currentTableBar', align: 'center'}
+            ]],
+            limits: [10, 15, 20], limit: 10, page: true, skin: 'line'
+        });
+
+        // 2. 搜索
+        form.on('submit(data-search-btn)', function (data) {
+            table.reload('currentTableId', {page: {curr: 1}, where: data.field});
+            return false;
+        });
+
+        $('#btn-reset').click(function () {
+            $('form[lay-filter="searchForm"]')[0].reset();
+            table.reload('currentTableId', {page: {curr: 1}, where: {}});
+        });
+
+        // 3. 工具栏事件
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {
+                MyConfig.openFormModal('form.html', '新建权限组', function () {
+                    table.reload('currentTableId');
+                });
+            }
+        });
+
+        // 4. 行操作事件
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') {
+                // 编辑基本信息
+                var timestamp = new Date().getTime(); // 1. 生成时间戳防缓存
+                layui.layer.open({
+                    type: 2, title: '编辑权限组', area: ['700px', '350px'],
+                    content: 'form.html?id=' + data.id + '&v=' + timestamp, // 追加版本号参数
+                    success: function (layero) {
+                        var iframeWin = window[layero.find('iframe')[0]['name']];
+
+                        // 2. 延迟加载 + 安全校验：防止别的电脑环境解析太慢导致报错
+                        setTimeout(function () {
+                            if (typeof iframeWin.setData === 'function') {
+                                iframeWin.setData(data);
+                            } else {
+                                console.error('子页面未找到 setData 方法，可能加载过慢或被缓存');
+                                layer.msg('页面加载异常，请关闭后重试或按 Ctrl+F5 刷新');
+                            }
+                        }, 100);
+                    },
+                    end: function () {
+                        table.reload('currentTableId');
+                    }
+                });
+            } else if (obj.event === 'assignUser') {
+                // 分配人员 (type=user)
+                MyConfig.openFormModal('assign.html?type=user&groupId=' + data.id, '分配人员 - ' + data.groupName, '800px', '600px', function () {
+                    table.reload('currentTableId'); // 关闭后刷新统计数字
+                });
+            } else if (obj.event === 'assignDevice') {
+                // 分配设备 (type=device)
+                MyConfig.openFormModal('assign.html?type=device&groupId=' + data.id, '分配设备 - ' + data.groupName, '800px', '600px', function () {
+                    table.reload('currentTableId'); // 关闭后刷新统计数字
+                });
+            } else if (obj.event === 'delete') {
+                layer.confirm('确定要删除该权限组吗？', function (index) {
+                    MyConfig.request('/auth-group/' + data.id, 'DELETE', {}, function () {
+                        layer.msg('删除成功');
+                        obj.del();
+                        layer.close(index);
+                    });
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>
