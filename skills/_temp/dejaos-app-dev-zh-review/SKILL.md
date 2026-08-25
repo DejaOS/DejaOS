@@ -105,7 +105,7 @@ description: 使用 dejaos CLI 创建、修改、迁移、运行、调试或审�
 - 必须安装 `dxSystemBus`，因为组件包装器内部依赖它；普通 App 业务代码不得直接 import 或调用 `dxSystemBus`。
 - 初始化按依赖顺序执行，销毁按相反顺序执行。清理监听器、定时器、客户端、数据库和组件。
 - 需要理解 4.0 的 Promise、事件和生命周期模式时读取 `references/sdk4-api-patterns.md`；具体函数始终以项目安装后生成的包装器为准。
-- 需要具体 SDK 4.0 示例时，先读取 `references/sdk4-reference-project.md`，再按需检查 `references/sdk4-reference-project/src/` 中的相关文件。参考源码只用于学习架构和调用模式，不是 API 权威或项目模板。
+- 默认不要读取内置 SDK 4.0 源码。只有遇到具体问题、需要查找实现示例时，才先读取 `references/sdk4-reference-project.md`，再检查 `references/sdk4-reference-project/src/` 中最少量的相关文件，包括按需查询组件调用方式。不得把该项目的架构用于普通 App；它有意采用复杂的大型应用结构，不适合作为默认项目结构。
 
 ## 项目和组件 API 检查
 
@@ -179,8 +179,8 @@ description: 使用 dejaos CLI 创建、修改、迁移、运行、调试或审�
 - `references/sdk2-large-app-patterns.md`：SDK 2.0 多 Worker 大型应用的分层、状态桥和命令路由。
 - `references/sdk4-runtime.md`：SDK 4.0 单运行时异步架构和迁移规则。
 - `references/sdk4-api-patterns.md`：SDK 4.0 Promise、事件和生命周期模式；函数签名仍需检查项目包装器。
-- `references/sdk4-reference-project.md`：Skill 内置 SDK 4.0 JavaScript 参考源码的导航和使用边界。
-- `references/sdk4-reference-project/src/`：只读 SDK 4.0 应用源码示例；不是可运行模板，不能代替目标项目包装器。
+- `references/sdk4-reference-project.md`：Skill 内置 SDK 4.0 JavaScript 参考源码的按问题导航和使用边界。
+- `references/sdk4-reference-project/src/`：只在具体问题和组件调用方式查询时使用的只读示例；不是架构范本、可运行模板，也不能代替目标项目包装器。
 - `references/dxmodules-api-audit.md`：逐函数 API 校验流程。
 - `references/face-app-rules.md`：人脸预览、图层、注册和清理规则。
 - `assets/UIManager.js`：通用单屏多页面管理器。

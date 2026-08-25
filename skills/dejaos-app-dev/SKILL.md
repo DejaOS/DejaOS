@@ -105,7 +105,7 @@ Read `references/dejaos-cli-workflow.md` for the complete command and device-val
 - Install `dxSystemBus` because component wrappers depend on it internally. Ordinary application business code must not directly import or call `dxSystemBus`.
 - Initialize in dependency order and destroy in reverse order. Clean up listeners, timers, clients, databases, and components.
 - Read `references/sdk4-api-patterns.md` for Promise, event, and lifecycle patterns. Actual functions must always be verified against the wrappers generated for the project.
-- When a concrete SDK 4.0 example would help, read `references/sdk4-reference-project.md` and then inspect only the relevant files under `references/sdk4-reference-project/src/`. Use the bundled source to learn architecture and usage patterns, never as an API authority or a project template.
+- Do not read the bundled SDK 4.0 source by default. Only when a concrete problem needs an implementation example, read `references/sdk4-reference-project.md` and inspect the smallest relevant set of files under `references/sdk4-reference-project/src/`, including component usage examples when useful. Never use that project's architecture as a model for an ordinary app; it is intentionally complex and unsuitable as the default project structure.
 
 ## Project and Component API Audit
 
@@ -179,8 +179,8 @@ After every material source, configuration, or asset change:
 - `references/sdk2-large-app-patterns.md`: Layering, state bridge, and command routing for large SDK 2.0 multi-Worker apps.
 - `references/sdk4-runtime.md`: SDK 4.0 unified async runtime architecture and migration rules.
 - `references/sdk4-api-patterns.md`: SDK 4.0 Promise, event, and lifecycle patterns; signatures still require project-wrapper verification.
-- `references/sdk4-reference-project.md`: Navigation and safety boundaries for the bundled SDK 4.0 JavaScript reference source.
-- `references/sdk4-reference-project/src/`: Read-only SDK 4.0 application source examples; not a runnable template and not a substitute for target-project wrappers.
+- `references/sdk4-reference-project.md`: Problem-oriented navigation and safety boundaries for the bundled SDK 4.0 JavaScript reference source.
+- `references/sdk4-reference-project/src/`: Read-only examples to query for concrete problems and component usage; not an architecture model, runnable template, or substitute for target-project wrappers.
 - `references/dxmodules-api-audit.md`: Per-function API validation process.
 - `references/face-app-rules.md`: Facial preview, layer, enrollment, and cleanup rules.
 - `assets/UIManager.js`: General single-screen, multi-page manager.
