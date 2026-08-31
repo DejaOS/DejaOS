@@ -1,0 +1,61 @@
+{
+  "name": "dejaos_desktop_demo",
+  "model": "VF105_V12",
+  "mainModel": "VF105_V12",
+  "sdkId": "96c8ed681d7c49c08b552de2a965759f",
+  "version": "",
+  "components": [
+    {
+      "component": "dxLogger",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxStd",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxOs",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxDriver",
+      "version": "4.0.3"
+    },
+    {
+      "component": "dxCommonUtils",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxSystemBus",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxUi",
+      "version": "2.0.4"
+    },
+    {
+      "component": "dxAudio",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxCapturer",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxIvcore",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxDisplay",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxFacial",
+      "version": "4.0.4"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp,tools,design_sources",
+    "file": "md5s.json,md5snew.json,desktop-preview.png,music-preview.png,map-preview.png,THIRD_PARTY_ASSETS.md"
+  }
+}
