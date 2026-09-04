@@ -1,0 +1,40 @@
+{
+  "name": "startup_animation_demo",
+  "model": "VF105_V12",
+  "mainModel": "VF105_V12",
+  "sdkId": "96c8ed681d7c49c08b552de2a965759f",
+  "components": [
+    {
+      "component": "dxCommonUtils",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxDriver",
+      "version": "4.0.4"
+    },
+    {
+      "component": "dxLogger",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxOs",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxStd",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxSystemBus",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxUi",
+      "version": "2.0.6"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp",
+    "file": "md5s.json,md5snew.json"
+  }
+}
