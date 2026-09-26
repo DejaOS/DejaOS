@@ -164,9 +164,10 @@ After every material source, configuration, or asset change:
 3. When the correct USB device is confirmed, run `dejaos connect --project <project>` to verify connectivity.
 4. Run `dejaos run --project <project>` to connect, incrementally synchronize, and start the app.
 5. On first deployment or when incremental state is invalid, run `dejaos sync --all --project <project>`, followed by `dejaos start --project <project>` when necessary.
-6. Collect `dejaos logs --project <project>` for a bounded period and inspect syntax, module loading, asset, uncaught exception, and hardware-initialization errors.
-7. Fix obvious errors and repeat the run and log checks.
-8. If no device is available, connection fails, or logs were not inspected, explicitly label the result as "static validation only" and never claim on-device validation passed.
+6. When debugging a new start or a suspected startup failure, begin `dejaos logs --project <project>` in a live terminal **before** running `dejaos run` or `dejaos start`, and leave that log subscription attached through startup. Starting logs afterwards can miss the application's early standard-error output and may return only USB connection-layer messages.
+7. Collect and inspect the attached log output for syntax, module loading, asset, uncaught exception, and hardware-initialization errors.
+8. Fix obvious errors and repeat the pre-start log subscription, run, and log checks.
+9. If no device is available, connection fails, or logs were not inspected, explicitly label the result as "static validation only" and never claim on-device validation passed.
 
 ## Reference Map
 
