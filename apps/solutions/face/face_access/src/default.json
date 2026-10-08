@@ -1,0 +1,106 @@
+{
+    // 人脸识别
+    "face.similarity": 0.5,
+    "face.livenessOff": 1,
+    "face.livenessVal": 5,
+    // 陌生人策略和分时段语音由audio_domain在通行通知阶段执行。
+    "face.stranger": 1,
+    "face.recheck": 8,
+    "face.recognitionTimeout": 5,
+    "face.voiceMode": 1,
+    "face.voiceModeDate": "欢迎光临",
+
+    // MQTT
+    "mqtt.addr": "mqtt://office.feocey.com:61702",
+    "mqtt.username": "admin",
+    "mqtt.password": "password",
+    "mqtt.qos": 1,
+    "mqtt.prefix": "",
+    "mqtt.onlinecheck": 0,
+    "mqtt.timeout": 5,
+    "mqtt.willTopic": "access_device/v2/event/offline",
+    "mqtt.cleanSession": 0,
+    "mqtt.clientIdSuffix": 0,
+
+    // WebRTC可视对讲服务（仅具备/etc/app/.intercom能力标志的设备启用）。
+    "intercom.server": "webrtc.dxiot.com",
+    "intercom.port": 6699,
+
+    // 网络：type 1=以太网、2=Wi-Fi、4=4G；dhcp 1=静态、2=动态
+    "net.type": 1,
+    "net.ssid": "",
+    "net.psk": "",
+    "net.dhcp": 2,
+    "net.ip": "",
+    "net.gateway": "",
+    "net.mask": "",
+    "net.dns": "",
+
+    // 时间
+    "ntp.server": "182.92.12.11",
+    "ntp.timeZone": "Asia/Shanghai",
+
+    // 通行
+    "access.offlineAccessNum": 2000,
+    // 1=MQTT确认上报成功后删除本地记录，0=保留记录并标记为已上传
+    "access.deleteRecordAfterUpload": 1,
+    "access.relayTime": 3,
+    // 火警/防拆由 alarm_service 监听 GPIO Key 并联动继电器与报警音。
+    "access.fire": 0,
+    "access.fireStatus": 0,
+    "access.tamper": 0,
+    "access.uploadToCloud": 0,
+    // 人脸通行记录 MQTT extra 是否上报比对分/活检分：0 关，1 开。
+    "access.uploadFaceScores": 0,
+    // 核验模式：0普通单凭证，1多人识别，2单人多凭证，3双人核验。
+    "access.verifyMode": 0,
+    // 因子序列按顺序执行；运行时按数组建模，本期配置入口最多开放两个不同因子。
+    "access.factorSequence": ["face", "card"],
+    "access.verifyTimeout": 15,
+
+    // 基础设置
+    // TODO：当前UI和语音资源仅闭环中英文，其余协议语言枚举待补齐。
+    "base.language": "CN",
+    "base.password": "password",
+    // UI首次设密流程内部维护，对外配置接口只读。
+    "base.firstLogin": 0,
+    // 息屏与屏保共享LVGL空闲时间，0表示永不自动触发。
+    "base.screenOff": 3,
+    "base.screensaver": 1,
+    "base.backlight": 70,
+    // 白光与红外补光百分比；是否实际驱动取决于 /etc/app/.pwm（white/nir/all）。
+    // 白光模式：0自动（有人时按环境光调节亮度）1常开 2常闭。
+    "base.whiteLightMode": 0,
+    "base.brightness": 70,
+    "base.nirBrightness": 80,
+    "base.volume": 10,
+    // IP/SN显示已闭环；程序码显示仍待实现。
+    "base.showIp": 1,
+    "base.showSn": 1,
+    // 通行成功时允许展示的人员字段；结果状态始终显示，失败时不展示人员信息。
+    "base.accessDisplayFields": ["name", "department"],
+
+    // 系统
+    "sys.model": "VF105_V12",
+    "sys.heart_en": 0,
+    "sys.heart_time": 30,
+    // 刷卡核验开关默认开启，修改后动态启停NFC底层句柄。
+    "sys.nfc": 1,
+    "sys.pwd": 1,
+    // 人员密码凭证位数，仅允许4、6、8位；修改后既有不同位数密码需重新录入。
+    "sys.passwordLength": 6,
+    // 人脸照片留存：1保留，0不留存；不留存时仅允许流程内临时落盘并立即删除。
+    "sys.faceImageRetention": 1,
+    "sys.strangerImage": 1,
+    "sys.nfcIdentityCardEnable": 1,
+    "sys.scanInterval": 1,
+    // 企微设备绑定状态 1:已绑定 0:未绑定（业务只读，不可 setConfig）
+    "sys.weComStatus": 0,
+    // 企微模式 MQTT 地址（出厂/业务维护，只读，不可 setConfig；与标品 mqtt.addr 分开）
+    "sys.weComMqttAddr": "mqtt://139.224.104.54:61011",
+
+    // 当前批次模块默认配置
+    "watchdog.timeoutMs": 20000,
+    "watchdog.channelId": 1,
+    "watchdog.feedIntervalMs": 10000
+}

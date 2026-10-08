@@ -1,0 +1,123 @@
+/**
+ * @layer    core
+ * @module   commands
+ * @fires    none
+ * @listens  none
+ * @depends  none
+ */
+
+/*
+ * Command只描述业务意图，不携带MQTT Topic、HTTP路径或UI页面信息。
+ * MQTT、HTTP和UI使用同一组Command，保证同类事务最终进入同一套Service。
+ */
+const commands = {
+    LOGIN: 'CMD_LOGIN', // 管理端登录并创建会话。
+    GET_PUBLIC_CONFIG: 'CMD_GET_PUBLIC_CONFIG', // 查询登录前允许公开的设备配置与能力。
+    VERIFY_SESSION: 'CMD_VERIFY_SESSION', // 校验管理会话是否仍有效。
+
+    GET_CONFIG: 'CMD_GET_CONFIG', // 按配置组查询当前生效配置。
+    RESTORE_CONFIG_DEFAULTS: 'CMD_RESTORE_CONFIG_DEFAULTS', // 恢复default.json默认配置。
+    SET_CONFIG: 'CMD_SET_CONFIG', // 校验并更新发生真实变化的配置。
+    COMPLETE_FIRST_LOGIN: 'CMD_COMPLETE_FIRST_LOGIN', // 完成首次管理员密码设置。
+    GET_DEVICE_INFO: 'CMD_GET_DEVICE_INFO', // 查询设备型号、版本、容量等信息。
+    GET_SYSTEM_TIME: 'CMD_GET_SYSTEM_TIME', // 查询设备当前日期与时间。
+    SET_SYSTEM_TIME: 'CMD_SET_SYSTEM_TIME', // 手动设置系统及硬件时钟。
+    GET_DEVICE_CAPABILITIES: 'CMD_GET_DEVICE_CAPABILITIES', // 查询可选硬件模块能力。
+    UPGRADE_FIRMWARE: 'CMD_UPGRADE_FIRMWARE', // 使用远程升级包执行异步OTA。
+    GET_ADVERTISEMENTS: 'CMD_GET_ADVERTISEMENTS', // 查询屏保广告配置与清单。
+    UPDATE_ADVERTISEMENTS_REMOTE: 'CMD_UPDATE_ADVERTISEMENTS_REMOTE', // 从远程地址更新广告资源包。
+    UPLOAD_ADVERTISEMENT_CHUNK: 'CMD_UPLOAD_ADVERTISEMENT_CHUNK', // 接收Web广告包分片并在完成后发布。
+    ABORT_ADVERTISEMENT_UPLOAD: 'CMD_ABORT_ADVERTISEMENT_UPLOAD', // 终止并清理未完成的广告上传。
+    GET_ADVERTISEMENT_IMAGE: 'CMD_GET_ADVERTISEMENT_IMAGE', // 读取指定广告图片。
+    GET_MQTT_STATUS: 'CMD_GET_MQTT_STATUS', // 查询MQTT连接状态。
+    CONTROL_DEVICE: 'CMD_CONTROL_DEVICE', // 执行重启、开门、重置等设备控制。
+    GET_DOOR_SCHEDULES: 'CMD_GET_DOOR_SCHEDULES', // 查询常开常闭时段及当前门状态。
+    SET_DOOR_SCHEDULES: 'CMD_SET_DOOR_SCHEDULES', // 全量校验并保存常开常闭时段。
+    SCAN_WIFI: 'CMD_SCAN_WIFI', // 扫描附近Wi-Fi热点。
+    GET_NETWORK_STATUS: 'CMD_GET_NETWORK_STATUS', // 查询当前网络类型、连接与地址状态。
+    PING_HOST: 'CMD_PING_HOST', // 对指定主机执行单项Ping诊断。
+    RUN_NETWORK_DIAG: 'CMD_RUN_NETWORK_DIAG', // 执行网关、DNS、外网、MQTT、WebRTC联合诊断。
+    GET_WEBRTC_STATUS: 'CMD_GET_WEBRTC_STATUS', // 查询WebRTC服务连接状态。
+    PREPARE_LOG_EXPORT: 'CMD_PREPARE_LOG_EXPORT', // 打包设备运行日志供WebServer下载。
+    PREPARE_DB_EXPORT: 'CMD_PREPARE_DB_EXPORT', // 导出人脸特征库或业务库供WebServer下载。
+    GET_FACE_DIAG_STATUS: 'CMD_GET_FACE_DIAG_STATUS', // 查询人脸实时分数显示开关。
+    SET_FACE_DIAG_STATUS: 'CMD_SET_FACE_DIAG_STATUS', // 修改本次运行的人脸诊断开关。
+    PASSWORD_ACCESS: 'CMD_PASSWORD_ACCESS', // 发起密码通行鉴权流程。
+    SCAN_ACCESS: 'CMD_SCAN_ACCESS', // 发起扫码通行鉴权流程。
+    SET_DISPLAY_AWAKE: 'CMD_SET_DISPLAY_AWAKE', // 唤醒屏幕并重置无操作计时。
+    CAPTURE_CARD: 'CMD_CAPTURE_CARD', // 进入刷卡采集并返回下一张卡号。
+    CANCEL_CARD_CAPTURE: 'CMD_CANCEL_CARD_CAPTURE', // 取消刷卡采集会话。
+
+    INSERT_USER: 'CMD_INSERT_USER', // 新增人员基础档案。
+    DELETE_USER: 'CMD_DELETE_USER', // 删除指定人员及关联数据。
+    CLEAR_USER: 'CMD_CLEAR_USER', // 清空全部人员数据。
+    GET_USER: 'CMD_GET_USER', // 查询人员列表或详情。
+    MODIFY_USER: 'CMD_MODIFY_USER', // 修改人员基础档案。
+
+    // 人员档案用于一次性处理人员、默认权限、卡和密码，避免多次Command产生半成功 主要用于UI。
+    GET_USER_PROFILE: 'CMD_GET_USER_PROFILE', // 聚合查询人员、凭证与默认权限。
+    SAVE_USER_PROFILE: 'CMD_SAVE_USER_PROFILE', // 受控事务保存完整人员档案。
+    DELETE_USER_PROFILE: 'CMD_DELETE_USER_PROFILE', // 受控事务删除完整人员档案。
+
+    INSERT_KEY: 'CMD_INSERT_KEY', // 新增凭证密钥。
+    GET_KEY: 'CMD_GET_KEY', // 查询凭证密钥。
+    DELETE_KEY: 'CMD_DELETE_KEY', // 删除指定凭证密钥。
+    CLEAR_KEY: 'CMD_CLEAR_KEY', // 清空凭证密钥。
+    MODIFY_KEY: 'CMD_MODIFY_KEY', // 修改凭证密钥。
+    SAVE_LOCAL_KEYS: 'CMD_SAVE_LOCAL_KEYS', // 受控事务保存Web人员页面管理的卡、码、密码凭证。
+
+    INSERT_PERMISSION: 'CMD_INSERT_PERMISSION', // 新增人员通行权限。
+    GET_PERMISSION: 'CMD_GET_PERMISSION', // 查询人员通行权限。
+    DELETE_PERMISSION: 'CMD_DELETE_PERMISSION', // 删除指定通行权限。
+    CLEAR_PERMISSION: 'CMD_CLEAR_PERMISSION', // 清空通行权限。
+    MODIFY_PERMISSION: 'CMD_MODIFY_PERMISSION', // 修改人员通行权限。
+
+    INSERT_SECURITY: 'CMD_INSERT_SECURITY', // 新增人员凭证。
+    GET_SECURITY: 'CMD_GET_SECURITY', // 查询卡、密码、人脸等凭证。
+    DELETE_SECURITY: 'CMD_DELETE_SECURITY', // 删除指定人员凭证。
+    CLEAR_SECURITY: 'CMD_CLEAR_SECURITY', // 清空人员凭证。
+
+    GET_RECORDS: 'CMD_GET_RECORDS', // 分页查询通行记录。
+    DELETE_RECORDS: 'CMD_DELETE_RECORDS', // 按条件删除通行记录。
+    GET_RECORD_IMAGE: 'CMD_GET_RECORD_IMAGE', // 读取指定通行记录图片。
+
+    GET_CALL_CONTACTS: 'CMD_GET_CALL_CONTACTS', // 查询设备可主动呼叫的联系人。
+    START_CALL: 'CMD_START_CALL', // 发起设备主叫流程。
+    HANGUP_CALL: 'CMD_HANGUP_CALL', // 挂断当前对讲会话。
+    SET_CALL_AUDIO: 'CMD_SET_CALL_AUDIO', // 调整当前通话音频开关。
+    GET_CALL_STATE: 'CMD_GET_CALL_STATE', // 查询可视对讲会话状态。
+
+    ACTIVATE_EID: 'CMD_ACTIVATE_EID', // 激活云证能力。
+    INTERRUPT_FINGER: 'CMD_INTERRUPT_FINGER', // 中断指纹采集。
+    ENROLL_FINGER: 'CMD_ENROLL_FINGER', // 执行本地或远程指纹录入并生成模板。
+    START_FINGER_ACCESS: 'CMD_START_FINGER_ACCESS', // 开启首页指纹通行比对。
+    PAUSE_FINGER_ACCESS: 'CMD_PAUSE_FINGER_ACCESS', // 暂停指纹通行比对，释放录入场景。
+    ENROLL_FACE: 'CMD_ENROLL_FACE', // 抓拍提取特征并注册人脸。
+    REMOVE_FACE: 'CMD_REMOVE_FACE', // 删除指定用户的人脸特征。
+    CAPTURE_FACE: 'CMD_CAPTURE_FACE', // 抓拍并提取特征但不写入特征库。
+    RELEASE_FACE_CAPTURE: 'CMD_RELEASE_FACE_CAPTURE', // 清理未保存的人脸临时资源。
+    ACTIVATE_PRODUCT_MODE: 'CMD_ACTIVATE_PRODUCT_MODE', // 初始化产品形态与区域标志。
+    GET_PRODUCT_STATUS: 'CMD_GET_PRODUCT_STATUS', // 查询产品形态、区域与绑定状态。
+    FETCH_WECOM_BIND_QR: 'CMD_FETCH_WECOM_BIND_QR', // 获取企微绑定二维码。
+    GET_WECOM_PANEL_STATUS: 'CMD_GET_WECOM_PANEL_STATUS', // 查询企微页面设备状态。
+    CAPTURE_WECOM_FACE: 'CMD_CAPTURE_WECOM_FACE', // 执行企微远程人脸抓拍。
+    APPLY_WECOM_BIND_STATUS: 'CMD_APPLY_WECOM_BIND_STATUS', // 应用企微绑定或解绑状态。
+
+    START_FACE_RECOGNITION: 'CMD_START_FACE_RECOGNITION', // 启动首页人脸识别消费。
+    PAUSE_FACE_RECOGNITION: 'CMD_PAUSE_FACE_RECOGNITION', // 暂停首页人脸识别消费。
+    START_CONFIG_FACE_AUTH: 'CMD_START_CONFIG_FACE_AUTH', // 启动配置入口管理员人脸认证。
+    CANCEL_CONFIG_FACE_AUTH: 'CMD_CANCEL_CONFIG_FACE_AUTH', // 取消配置入口人脸认证。
+    START_FACE_ENROLL: 'CMD_START_FACE_ENROLL', // 开启本地人脸注册页检测与跟踪。
+    PAUSE_FACE_ENROLL: 'CMD_PAUSE_FACE_ENROLL', // 离开本地人脸注册页并暂停检测跟踪。
+
+    START_CAMERA_CALIBRATION: 'CMD_START_CAMERA_CALIBRATION', // 开始摄像头标定会话。
+    STOP_CAMERA_CALIBRATION: 'CMD_STOP_CAMERA_CALIBRATION', // 结束或中断摄像头标定。
+    CALCULATE_CAMERA_CALIBRATION: 'CMD_CALCULATE_CAMERA_CALIBRATION', // 执行当前档位标定计算。
+    PLAY_CAMERA_CALIBRATION_STAGE_AUDIO: 'CMD_PLAY_CAMERA_CALIBRATION_STAGE_AUDIO', // 播放标定阶段提示音。
+    COMPLETE_CAMERA_CALIBRATION: 'CMD_COMPLETE_CAMERA_CALIBRATION', // 完成标定并持久化结果。
+
+    UPLOAD_FIRMWARE_CHUNK: 'CMD_UPLOAD_FIRMWARE_CHUNK', // 接收固件分片并在完成后触发升级。
+    ABORT_FIRMWARE_UPLOAD: 'CMD_ABORT_FIRMWARE_UPLOAD', // 终止并清理未完成的固件上传。
+};
+
+export default commands;

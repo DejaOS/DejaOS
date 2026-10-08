@@ -1,0 +1,216 @@
+/**
+ * @layer    view
+ * @module   settings_page
+ * @fires    none
+ * @listens  none
+ * @depends  dxUi,BaseView,router,font,layout,theme,i18n,page_header,confirm,settings_menu
+ *
+ * 设置菜单页：由身份验证成功后进入。
+ * 图标 + 文字宫格，2 行 × 4 列居中（样式对齐 landscape/configView.js）；点击进入对应子页。
+ * 返回首页前弹出二次确认。
+ */
+
+import dxui from '../../../../dxmodules/dxUi.js';
+import BaseView from '../../pages/base_view.js';
+import router from '../../router/core.js';
+import font from '../../components/font.js';
+import layout from '../../components/layout.js';
+import theme from '../../components/theme.js';
+import pageHeader from '../../components/page_header.js';
+import confirm from '../../components/confirm.js';
+import { t } from '../../i18n/index.js';
+import { SETTINGS_MENU_ITEMS } from '../../pages/settings/settings_menu.js';
+import capabilityStore from '../../core/capability_store.js';
+
+/** 每行菜单项数（对齐 configView：4 列 × 2 行） */
+const COLS = 4;
+/** 单元格高度 */
+const CELL_H = 176;
+/** 单元格间距 */
+const MENU_GAP = 10;
+/** 菜单左右内边距（加大留白） */
+const MENU_PAD = 80;
+/** 图标底尺寸 */
+const ICON_BOX = 112;
+/** 图标底圆角 */
+const ICON_RADIUS = 20;
+/** 图标底默认色 */
+const ICON_BG = 0xf6f6f6;
+/** 图标底按下加深色 */
+const ICON_BG_PRESSED = 0xd0d0d0;
+/** 菜单文字色（对齐 configView） */
+const MENU_TEXT = 0x767676;
+
+export default class SettingsPage extends BaseView {
+    constructor() {
+        super('settings');
+        this._header = null;
+        /** @type {{ label: object, item: object, bg: object }[]} */
+        this._menuCells = [];
+    }
+
+    onCreate() {
+        const self = this;
+        this.root = dxui.View.build('page_settings', dxui.Utils.LAYER.MAIN);
+        this.root.setSize(layout.width, layout.height);
+        layout.clearStyle(this.root);
+        this.root.bgColor(theme.pageBg);
+        this.root.bgOpa(100);
+        this.root.scroll(false);
+
+        this._header = pageHeader.build(this.root, {
+            idPrefix: 'settings',
+            titleKey: 'settings.title',
+            onBack: function () {
+                self._confirmExit();
+            },
+        });
+        this._buildMenuGrid();
+    }
+
+    onEnter() {
+        this._refreshTexts();
+        // 防止按下态在跳转后残留
+        for (let i = 0; i < this._menuCells.length; i++) {
+            const cell = this._menuCells[i];
+            if (cell.bg) {
+                cell.bg.bgColor(ICON_BG);
+            }
+        }
+    }
+
+    onExit() {
+        confirm.hide();
+    }
+
+    /** 退出设置回首页前二次确认。 */
+    _confirmExit() {
+        confirm.show({
+            title: t('settings.exit.title'),
+            message: t('settings.exit.message'),
+            confirmText: t('settings.exit.confirm'),
+            cancelText: t('settings.exit.cancel'),
+            onConfirm: function () {
+                router.back();
+            },
+        });
+    }
+
+    /**
+     * 图标 + 文字宫格：2 行 × 4 列居中，尺寸对齐 landscape/configView.js。
+     */
+    _buildMenuGrid() {
+        const self = this;
+        const top = pageHeader.contentTop();
+        const padX = layout.x(MENU_PAD);
+        const gap = layout.x(MENU_GAP);
+        const cellH = layout.y(CELL_H);
+        const iconBox = layout.x(ICON_BOX);
+        const menuAreaW = layout.width;
+        const cellW = Math.floor((menuAreaW - padX * 2 - gap * (COLS - 1)) / COLS);
+        const gridH = cellH * 2 + gap;
+
+        const grid = dxui.View.build('settings_menu_grid', this.root);
+        layout.clearStyle(grid);
+        grid.setSize(menuAreaW, gridH);
+        grid.align(dxui.Utils.ALIGN.TOP_MID, 0, top + layout.y(48));
+        grid.bgOpa(0);
+        grid.scroll(false);
+        grid.flexFlow(dxui.Utils.FLEX_FLOW.ROW_WRAP);
+        grid.flexAlign(
+            dxui.Utils.FLEX_ALIGN.START,
+            dxui.Utils.FLEX_ALIGN.START,
+            dxui.Utils.FLEX_ALIGN.START
+        );
+        grid.padLeft(padX);
+        grid.padRight(padX);
+        grid.obj.lvObjSetStylePadGap(gap, dxui.Utils.ENUM._LV_STYLE_STATE_CMP_SAME);
+
+        this._menuCells = [];
+        for (let i = 0; i < SETTINGS_MENU_ITEMS.length; i++) {
+            const item = SETTINGS_MENU_ITEMS[i];
+            if (item.requireNfc && !capabilityStore.hasNfc()) {
+                continue;
+            }
+            const cell = dxui.View.build('settings_menu_' + item.id, grid);
+            layout.clearStyle(cell);
+            cell.setSize(cellW, cellH);
+            cell.bgOpa(0);
+            cell.clickable(true);
+            cell.on(dxui.Utils.EVENT.CLICK, function () {
+                self._onMenuClick(item);
+            });
+
+            const bg = dxui.View.build('settings_menu_' + item.id + '_bg', cell);
+            layout.clearStyle(bg);
+            bg.setSize(iconBox, iconBox);
+            bg.bgColor(ICON_BG);
+            bg.bgColor(ICON_BG_PRESSED, dxui.Utils.STATE.PRESSED);
+            bg.bgOpa(100);
+            bg.radius(layout.x(ICON_RADIUS));
+            bg.align(dxui.Utils.ALIGN.TOP_MID, 0, layout.y(12));
+            bg.clickable(false);
+
+            const img = dxui.Image.build('settings_menu_' + item.id + '_img', bg);
+            img.source(item.icon);
+            img.align(dxui.Utils.ALIGN.CENTER, 0, 0);
+            img.clickable(false);
+
+            const label = dxui.Label.build('settings_menu_' + item.id + '_lbl', cell);
+            label.setSize(cellW, layout.y(40));
+            label.align(dxui.Utils.ALIGN.BOTTOM_MID, 0, 0);
+            label.text(t(item.labelKey));
+            label.textFont(font.get(layout.fontSize(24)));
+            label.textColor(MENU_TEXT);
+            label.textAlign(dxui.Utils.TEXT_ALIGN.CENTER);
+            label.longMode(dxui.Utils.LABEL_LONG_MODE.CLIP);
+            label.clickable(false);
+
+            // 父级 cell 可点：按下时同步加深图标底（子 View 自身不会进 PRESSED）
+            cell.on(dxui.Utils.ENUM.LV_EVENT_PRESSED, (function (iconBg) {
+                return function () {
+                    iconBg.bgColor(ICON_BG_PRESSED);
+                };
+            })(bg));
+            cell.on(dxui.Utils.ENUM.LV_EVENT_RELEASED, (function (iconBg) {
+                return function () {
+                    iconBg.bgColor(ICON_BG);
+                };
+            })(bg));
+            if (dxui.Utils.ENUM.LV_EVENT_PRESS_LOST !== undefined) {
+                cell.on(dxui.Utils.ENUM.LV_EVENT_PRESS_LOST, (function (iconBg) {
+                    return function () {
+                        iconBg.bgColor(ICON_BG);
+                    };
+                })(bg));
+            }
+
+            this._menuCells.push({ label: label, item: item, bg: bg });
+        }
+    }
+
+    /**
+     * 按当前 locale 刷新标题与菜单文案。
+     */
+    _refreshTexts() {
+        if (this._header) {
+            this._header.refresh();
+        }
+        const menuFont = font.get(layout.fontSize(24));
+        for (let i = 0; i < this._menuCells.length; i++) {
+            const cell = this._menuCells[i];
+            cell.label.text(t(cell.item.labelKey));
+            cell.label.textFont(menuFont);
+        }
+    }
+
+    /**
+     * @param {{ id: string, labelKey: string, icon: string, route: string }} item
+     */
+    _onMenuClick(item) {
+        if (!item || !item.route) {
+            return;
+        }
+        router.navigate(item.route);
+    }
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "enabled": true,
+  "intervalSec": 10,
+  "showClock": true,
+  "items": [
+    {
+      "id": "default_01",
+      "file": "ad_default_01.jpg",
+      "name": "默认屏保 1"
+    },
+    {
+      "id": "default_02",
+      "file": "ad_default_02.jpg",
+      "name": "默认屏保 2"
+    },
+    {
+      "id": "default_03",
+      "file": "ad_default_03.jpg",
+      "name": "默认屏保 3"
+    },
+    {
+      "id": "default_04",
+      "file": "ad_default_04.jpg",
+      "name": "默认屏保 4"
+    },
+    {
+      "id": "default_05",
+      "file": "ad_default_05.jpg",
+      "name": "默认屏保 5"
+    }
+  ]
+}

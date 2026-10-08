@@ -1,0 +1,124 @@
+{
+  "name": "vf203_v12_access_4.0.0",
+  "model": "VF203_V12",
+  "components": [
+    {
+      "component": "dxAudio",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxChannel",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxCommonUtils",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxCapturer",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxCapcal",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxDriver",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxDisplay",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxFacial",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxGpio",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxGpioKey",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxHttpClient",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxHttpServer",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxIvcore",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxIntercom",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxLogger",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxMqttClient",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxNetwork",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxNfcCard",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxNtp",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxOs",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxOta",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxPwm",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxStd",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxSystemBus",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxSqliteDB",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxTimeZones",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxUi",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxWatchdog",
+      "version": "4.0.0"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp,docs",
+    "file": "md5s.json,md5snew.json"
+  },
+  "sdkId": "ba0e70ef8ef14d788c0b27f463dfc02d",
+  "mainModel": "VF203_V12"
+}

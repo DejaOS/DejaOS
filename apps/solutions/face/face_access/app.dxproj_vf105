@@ -1,0 +1,132 @@
+{
+  "name": "vf105_v1.2_access_4.0.0",
+  "model": "VF105_V12",
+  "components": [
+    {
+      "component": "dxAudio",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxChannel",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxCommonUtils",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxCapturer",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxCapcal",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxDriver",
+      "version": "4.0.5"
+    },
+    {
+      "component": "dxDisplay",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxFacial",
+      "version": "4.0.4"
+    },
+    {
+      "component": "dxFingerZaz",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxGpio",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxGpioKey",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxHttpClient",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxHttpServer",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxIvcore",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxIntercom",
+      "version": "4.0.4"
+    },
+    {
+      "component": "dxLogger",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxMqttClient",
+      "version": "4.0.4"
+    },
+    {
+      "component": "dxNetwork",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxNfcCard",
+      "version": "4.0.4"
+    },
+    {
+      "component": "dxNtp",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxOs",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxOta",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxPwm",
+      "version": "4.0.4"
+    },
+    {
+      "component": "dxQrRule",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxStd",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxSystemBus",
+      "version": "4.0.2"
+    },
+    {
+      "component": "dxSqliteDB",
+      "version": "4.0.1"
+    },
+    {
+      "component": "dxTimeZones",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxUi",
+      "version": "4.0.0"
+    },
+    {
+      "component": "dxWatchdog",
+      "version": "4.0.1"
+    }
+  ],
+  "ignore": {
+    "folder": ".temp,docs",
+    "file": "md5s.json,md5snew.json"
+  },
+  "sdkId": "96c8ed681d7c49c08b552de2a965759f",
+  "mainModel": "VF105_V12"
+}
