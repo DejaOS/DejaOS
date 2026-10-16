@@ -141,6 +141,7 @@ Read `references/dxmodules-api-audit.md` for the detailed audit procedure and se
 - Use `dxui.Utils.LAYER.TOP` only for true top-level overlays.
 - For precise layout, call `padAll(0)` on a View and usually call `scroll(false)` as well.
 - Images are not scaled automatically by default. Match control size to asset size.
+- Do not assume all generated style wrappers normalize colors equally. In the current `uiBase` wrapper, `bgColor()` and `borderColor()` parse `#RRGGBB` strings, but `shadow()` passes its color directly to the native API. Pass a numeric RGB value such as `0x163D37` to `shadow()`, not `'#163D37'`; an invalid native style call can abort UI construction and leave a blank screen.
 
 ## Facial Application Rules
 
