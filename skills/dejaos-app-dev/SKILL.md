@@ -36,9 +36,10 @@ Use one entry point to develop SDK 2.0 or SDK 4.0 applications. Determine the de
 
 1. Resolve the exact model to its main model.
 2. Query the SDK by main model and SDK version.
-3. Query the latest component list with `sdkId`.
+3. Query the latest component list with `sdkId`, and use that returned component set as the initial project baseline. Do not selectively pin an older component from another project while keeping the rest on current versions.
 4. Continue only when the component list is non-empty.
 5. If the HTTP request fails, the target SDK is missing, or the component list is empty, treat the selected SDK as unsupported for that model according to the current query. Report the original error or empty result and stop. Do not guess components; a maintainer may later adjust the data or rules manually.
+6. If the app was created with the live latest component set but fails at runtime with a verified component-compatibility problem, a known-good example project's `app.dxproj` may be used as a compatibility baseline. Copy its complete, internally compatible component-version set for the same model and SDK, then run `dejaos install` and audit the newly generated target wrappers. Do not copy only one old component version such as `dxFacial` or `dxDriver` into an otherwise latest-version project.
 
 Read `references/tools-http-api.md` when querying or troubleshooting. The current device-mapping snapshot is in `references/device-models.md`, but runtime support decisions must come from a live query.
 
