@@ -63,6 +63,7 @@ Read `references/tools-http-api.md` when querying or troubleshooting. The curren
 - Ask whether the correct device is connected by USB.
 - `dejaos connect` only verifies that a device is connected to the computer by USB. It does not discover or confirm the device model.
 - `connect` requires an existing `app.dxproj`, so a new project must complete model confirmation and project creation first.
+- A `Device not found` result from a restricted or sandboxed execution environment can mean that environment lacks permission to open the USB handle, not that the physical device is absent. Before reporting a device-connection failure, retry the same absolute `dejaos` command in an approved elevated environment that can access USB. Only treat the device as unavailable when that retry also fails, or when elevated USB access is not available.
 - Do not synchronize, start, stop, restart, or otherwise change a device until the correct device is confirmed.
 
 ## CLI-First Workflow
@@ -163,7 +164,7 @@ After every material source, configuration, or asset change:
 
 1. Repeat the SKU, component, and API static checks.
 2. Run available syntax or static checks.
-3. When the correct USB device is confirmed, run `dejaos connect --project <project>` to verify connectivity.
+3. When the correct USB device is confirmed, run `dejaos connect --project <project>` to verify connectivity. If the restricted shell returns `Device not found`, follow the USB-access fallback under “Confirm USB status” before diagnosing a cable, driver, or device issue.
 4. Run `dejaos run --project <project>` to connect, incrementally synchronize, and start the app.
 5. On first deployment or when incremental state is invalid, run `dejaos sync --all --project <project>`, followed by `dejaos start --project <project>` when necessary.
 6. When debugging a new start or a suspected startup failure, begin `dejaos logs --project <project>` in a live terminal **before** running `dejaos run` or `dejaos start`, and leave that log subscription attached through startup. Starting logs afterwards can miss the application's early standard-error output and may return only USB connection-layer messages.
